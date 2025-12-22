@@ -62,16 +62,19 @@ hostname 99-blf1
 vlan 10
 name SERVER-NETWORK-1
 interface Ethernet1
+mtu 9194
 description to-99-sp1-E1
 no switchport
 ip address 10.99.241.0/31
 no shutdown
 interface Ethernet2
+mtu 9194
 description to-99-sp2-E1
 no switchport
 ip address 10.99.242.0/31
 no shutdown
 interface Ethernet3
+mtu 9194
 description to-Linux1
 switchport mode access
 switchport access vlan 10
@@ -88,16 +91,19 @@ hostname 99-blf2
 vlan 20
 name SERVER-NETWORK-2
 interface Ethernet1
+mtu 9194
 description to-99-sp1-E2
 no switchport
 ip address 10.99.241.2/31
 no shutdown
 interface Ethernet2
+mtu 9194
 description to-99-sp2-E2
 no switchport
 ip address 10.99.242.2/31
 no shutdown
 interface Ethernet3
+mtu 9194
 description to-Linux2
 switchport mode access
 switchport access vlan 20
@@ -116,18 +122,22 @@ interface Ethernet1
 description to-99-sp1-E3
 no switchport
 ip address 10.99.241.4/31
+mtu 9194
 no shutdown
 interface Ethernet2
 description to-99-sp2-E3
 no switchport
 ip address 10.99.242.4/31
+mtu 9194
 no shutdown
 interface Ethernet3
 description to-Linux3
+mtu 9194
 switchport mode access
 switchport access vlan 30
 no shutdown
 interface Ethernet4
+mtu 9194
 description to-Linux4
 switchport mode access
 switchport access vlan 30
@@ -145,16 +155,19 @@ interface Ethernet1
 description to-99-blf1-E1
 no switchport
 ip address 10.99.241.1/31
+mtu 9194
 no shutdown
 interface Ethernet2
 description to-99-blf2-E1
 no switchport
 ip address 10.99.241.3/31
+mtu 9194
 no shutdown
 interface Ethernet3
 description to-99-lf3-E1
 no switchport
 ip address 10.99.241.5/31
+mtu 9194
 no shutdown
 ```
 ### 99-sp2 (Spine 2)
@@ -163,16 +176,19 @@ configure terminal
 hostname 99-sp2
 interface Ethernet1
 description to-99-blf1-E2
+mtu 9194
 no switchport
 ip address 10.99.242.1/31
 no shutdown
 interface Ethernet2
 description to-99-blf2-E2
+mtu 9194
 no switchport
 ip address 10.99.242.3/31
 no shutdown
 interface Ethernet3
 description to-99-lf3-E2
+mtu 9194
 no switchport
 ip address 10.99.242.5/31
 no shutdown
