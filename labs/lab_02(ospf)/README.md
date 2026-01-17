@@ -75,9 +75,10 @@ interface Vlan10
  ip address 192.168.1.254/24
  no shutdown
 
-router ospf UNDERLAY
+router ospf 1
  router-id 10.99.243.1
  maximum-paths 4
+ bfd default
  network 10.99.243.1/32 area 0.0.0.0
  network 192.168.1.0/24 area 0.0.0.10
  passive-interface Vlan10
@@ -107,9 +108,10 @@ interface Vlan20
  ip address 192.168.2.254/24
  no shutdown
 
-router ospf UNDERLAY
+router ospf 1
  router-id 10.99.243.2
  maximum-paths 4
+ bfd default
  network 10.99.243.2/32 area 0.0.0.0
  network 192.168.2.0/24 area 0.0.0.10
  passive-interface Vlan20
@@ -137,9 +139,10 @@ interface Vlan30
  ip address 192.168.3.254/24
  no shutdown
 
-router ospf UNDERLAY
+router ospf 1
  router-id 10.99.243.3
  maximum-paths 4
+ bfd default
  network 10.99.243.3/32 area 0.0.0.0
  network 192.168.3.0/24 area 0.0.0.10
  passive-interface Vlan30
@@ -157,14 +160,15 @@ interface Ethernet2
  ### 99-sp1 (Spine 1)
  ```bash
  configure terminal
-interface Loopback0
+ interface Loopback0
  description OSPF Router-ID and Underlay Management
  ip address 10.99.243.11/32
  no shutdown
 
-router ospf UNDERLAY
+router ospf 1
  router-id 10.99.243.11
  maximum-paths 4
+ bfd default
  network 10.99.243.11/32 area 0.0.0.0
 
 interface Ethernet1
@@ -185,14 +189,15 @@ interface Ethernet3
  ### 99-sp2 (Spine 2)
  ```bash
  configure terminal
-interface Loopback0
+ interface Loopback0
  description OSPF Router-ID and Underlay Management
  ip address 10.99.243.22/32
  no shutdown
 
-router ospf UNDERLAY
+router ospf 1
  router-id 10.99.243.22
  maximum-paths 4
+ bfd default
  network 10.99.243.22/32 area 0.0.0.0
 
 interface Ethernet1
