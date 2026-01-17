@@ -3,7 +3,6 @@
 ## Задание
 1. Настроить OSPF в Underlay сети для обеспечения IP-связности между всеми сетевыми устройствами
 2. Задокументировать:
-   - План работы
    - Схему сети
    - Конфигурацию устройств
 3. Проверить IP-связность между устройствами в OSPF домене
@@ -324,3 +323,113 @@ interface Loopback0
    maximum-paths 4
 
  ```
+---
+
+## Проверка IP связности
+ ## 1. Проверка OSPF соседств
+```
+99-sp1#sh bfd peers
+VRF name: default
+-----------------
+DstAddr         MyDisc   YourDisc  Interface/Transport    Type          LastUp
+----------- ---------- ----------- -------------------- ------- ---------------
+10.99.241.0 1672013279  482287968        Ethernet1(22)  normal  01/17/26 21:32
+10.99.241.2 2790314007 3610619606        Ethernet2(20)  normal  01/17/26 20:27
+10.99.241.4  207972812 2313860642        Ethernet3(19)  normal  01/17/26 20:27
+
+   LastDown            LastDiag    State
+-------------- ------------------- -----
+         NA       No Diagnostic       Up
+         NA       No Diagnostic       Up
+         NA       No Diagnostic       Up
+
+99-sp1#
+99-sp1#sh ip ospf neighbor
+Neighbor ID     Instance VRF      Pri State                  Dead Time   Address         Interface
+10.99.243.1     1        default  0   FULL                   00:00:01    10.99.241.0     Ethernet1
+10.99.243.2     1        default  0   FULL                   00:00:01    10.99.241.2     Ethernet2
+10.99.243.3     1        default  0   FULL                   00:00:01    10.99.241.4     Ethernet3
+```
+## 2. Проверка OSPF маршрутов
+```
+99-sp1#show ip route ospf
+
+VRF: default
+
+ O        10.99.242.0/31 [110/20]
+           via 10.99.241.0, Ethernet1
+ O        10.99.242.2/31 [110/20]
+           via 10.99.241.2, Ethernet2
+ O        10.99.242.4/31 [110/20]
+           via 10.99.241.4, Ethernet3
+ O        10.99.243.1/32 [110/20]
+           via 10.99.241.0, Ethernet1
+ O        10.99.243.2/32 [110/20]
+           via 10.99.241.2, Ethernet2
+ O        10.99.243.3/32 [110/20]
+           via 10.99.241.4, Ethernet3
+ O        10.99.243.22/32 [110/30]
+           via 10.99.241.0, Ethernet1
+           via 10.99.241.2, Ethernet2
+           via 10.99.241.4, Ethernet3
+ O IA     192.168.1.0/24 [110/20]
+           via 10.99.241.0, Ethernet1
+ O IA     192.168.2.0/24 [110/20]
+           via 10.99.241.2, Ethernet2
+ O IA     192.168.3.0/24 [110/20]
+           via 10.99.241.4, Ethernet3
+```
+## 3. Проверка межсерверной связности
+ (linux_ping.jpg)
+
+## 4. Проверка связности между loopback адресами
+```
+99-blf1#ping 10.99.243.2 source 10.99.243.1
+PING 10.99.243.2 (10.99.243.2) from 10.99.243.1 : 72(100) bytes of data.
+80 bytes from 10.99.243.2: icmp_seq=1 ttl=63 time=5.52 ms
+80 bytes from 10.99.243.2: icmp_seq=2 ttl=63 time=2.95 ms
+80 bytes from 10.99.243.2: icmp_seq=3 ttl=63 time=2.95 ms
+80 bytes from 10.99.243.2: icmp_seq=4 ttl=63 time=2.58 ms
+80 bytes from 10.99.243.2: icmp_seq=5 ttl=63 time=2.71 ms
+
+--- 10.99.243.2 ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 22ms
+rtt min/avg/max/mdev = 2.583/3.342/5.522/1.098 ms, ipg/ewma 5.425/4.387 ms
+99-blf1#
+99-blf1#
+99-blf1#ping 10.99.243.3 source 10.99.243.1
+PING 10.99.243.3 (10.99.243.3) from 10.99.243.1 : 72(100) bytes of data.
+80 bytes from 10.99.243.3: icmp_seq=1 ttl=63 time=4.50 ms
+80 bytes from 10.99.243.3: icmp_seq=2 ttl=63 time=4.03 ms
+80 bytes from 10.99.243.3: icmp_seq=3 ttl=63 time=4.37 ms
+80 bytes from 10.99.243.3: icmp_seq=4 ttl=63 time=2.96 ms
+80 bytes from 10.99.243.3: icmp_seq=5 ttl=63 time=3.26 ms
+
+--- 10.99.243.3 ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 21ms
+rtt min/avg/max/mdev = 2.962/3.825/4.503/0.611 ms, ipg/ewma 5.172/4.126 ms
+99-blf1#
+99-blf1#ping 10.99.243.11 source 10.99.243.1
+PING 10.99.243.11 (10.99.243.11) from 10.99.243.1 : 72(100) bytes of data.
+80 bytes from 10.99.243.11: icmp_seq=1 ttl=64 time=4.38 ms
+80 bytes from 10.99.243.11: icmp_seq=2 ttl=64 time=1.44 ms
+80 bytes from 10.99.243.11: icmp_seq=3 ttl=64 time=1.27 ms
+80 bytes from 10.99.243.11: icmp_seq=4 ttl=64 time=1.23 ms
+80 bytes from 10.99.243.11: icmp_seq=5 ttl=64 time=1.29 ms
+
+--- 10.99.243.11 ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 17ms
+rtt min/avg/max/mdev = 1.234/1.921/4.379/1.230 ms, ipg/ewma 4.147/3.104 ms
+99-blf1#
+99-blf1#ping 10.99.243.22 source 10.99.243.1
+PING 10.99.243.22 (10.99.243.22) from 10.99.243.1 : 72(100) bytes of data.
+80 bytes from 10.99.243.22: icmp_seq=1 ttl=64 time=2.33 ms
+80 bytes from 10.99.243.22: icmp_seq=2 ttl=64 time=0.958 ms
+80 bytes from 10.99.243.22: icmp_seq=3 ttl=64 time=1.11 ms
+80 bytes from 10.99.243.22: icmp_seq=4 ttl=64 time=1.16 ms
+80 bytes from 10.99.243.22: icmp_seq=5 ttl=64 time=1.25 ms
+
+--- 10.99.243.22 ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 10ms
+rtt min/avg/max/mdev = 0.958/1.360/2.328/0.492 ms, ipg/ewma 2.507/1.833 ms
+```
