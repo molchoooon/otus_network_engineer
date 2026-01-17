@@ -65,6 +65,7 @@
 ### 99-blf1 (Border Leaf 1)
 ```bash
 configure terminal
+ip routing
 interface Loopback0
  description OSPF Router-ID and Underlay Management
  ip address 10.99.243.1/32
@@ -87,20 +88,27 @@ interface Ethernet1
  ip ospf network point-to-point
  ip ospf hello-interval 1
  ip ospf dead-interval 3
+ ip ospf area 0.0.0.0
+
  
 interface Ethernet2
  ip ospf network point-to-point
  ip ospf hello-interval 1
  ip ospf dead-interval 3
+ ip ospf area 0.0.0.0
+
  ```
 
  ### 99-blf2 (Border Leaf 2)
  ```bash
  configure terminal
+ip routing 
 
 interface Loopback0
  description OSPF Router-ID and Underlay Management
  ip address 10.99.243.2/32
+ 
+
  no shutdown
 
 interface Vlan20
@@ -120,15 +128,21 @@ interface Ethernet1
  ip ospf network point-to-point
  ip ospf hello-interval 1
  ip ospf dead-interval 3
+ ip ospf area 0.0.0.0
+
  
 interface Ethernet2
  ip ospf network point-to-point
  ip ospf hello-interval 1
  ip ospf dead-interval 3
+ ip ospf area 0.0.0.0
+
  ```
 ### 99-lf3 (Leaf 3)
 ```bash
 configure terminal
+ip routing 
+
 interface Loopback0
  description OSPF Router-ID and Underlay Management
  ip address 10.99.243.3/32
@@ -151,11 +165,15 @@ interface Ethernet1
  ip ospf network point-to-point
  ip ospf hello-interval 1
  ip ospf dead-interval 3
+ ip ospf area 0.0.0.0
+
  
 interface Ethernet2
  ip ospf network point-to-point
  ip ospf hello-interval 1
  ip ospf dead-interval 3
+ ip ospf area 0.0.0.0
+
  ```
  ### 99-sp1 (Spine 1)
  ```bash
@@ -175,16 +193,22 @@ interface Ethernet1
  ip ospf network point-to-point
  ip ospf hello-interval 1
  ip ospf dead-interval 3
+ ip ospf area 0.0.0.0
+
  
 interface Ethernet2
  ip ospf network point-to-point
  ip ospf hello-interval 1
  ip ospf dead-interval 3
+ ip ospf area 0.0.0.0
+
 
 interface Ethernet3
  ip ospf network point-to-point
  ip ospf hello-interval 1
  ip ospf dead-interval 3
+ ip ospf area 0.0.0.0
+
  ```
  ### 99-sp2 (Spine 2)
  ```bash
@@ -204,14 +228,20 @@ interface Ethernet1
  ip ospf network point-to-point
  ip ospf hello-interval 1
  ip ospf dead-interval 3
+ ip ospf area 0.0.0.0
+
  
 interface Ethernet2
  ip ospf network point-to-point
  ip ospf hello-interval 1
  ip ospf dead-interval 3
+ ip ospf area 0.0.0.0
+
 
 interface Ethernet3
  ip ospf network point-to-point
  ip ospf hello-interval 1
  ip ospf dead-interval 3
+ ip ospf area 0.0.0.0
+
  ```
