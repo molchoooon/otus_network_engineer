@@ -1,14 +1,16 @@
-# Лабораторная работа: Построение Underlay сети(OSPF)
-
-## Топология сети
-![Схема сети фабрики](fabric_scheme.jpg)
+# Лабораторная работа: Настройка Underlay сети с использованием OSPF
 
 ## Задание
-1. Разработать и задокументировать адресное пространство
-2. Настроить IP адреса на каждом активном порту
-3. Задокументировать все изменения
+1. Настроить OSPF в Underlay сети для обеспечения IP-связности между всеми сетевыми устройствами
+2. Задокументировать:
+   - План работы
+   - Схему сети
+   - Конфигурацию устройств
+3. Проверить IP-связность между устройствами в OSPF домене
 
 ---
+
+## Топология сети
 
 ## IP-план (Address Plan)
 
@@ -37,159 +39,56 @@
 |-------------|------------------|------|---------|-------------|
 | Linux1 | 192.168.1.2/24 | Eth0 | 192.168.1.254 | VM1 |
 | Linux2 | 192.168.2.2/24 | Eth0 | 192.168.2.254 | VM2 |
-| Linux3 | 192.168.3.2/24 | Eth0 | 192.168.3.254 | VM3 |
-| Linux4 | 192.168.3.3/24 | Eth0 | 192.168.3.254 | VM4 |
+| Linux3 | 192.168.1.1/24 | Eth0 | 192.168.1.254 | VM3 |
+| Linux4 | 192.168.2.1/24 | Eth0 | 192.168.2.254 | VM4 |
 
-### Сводная таблица сетей
-| Сеть | Диапазон | Маска | Назначение | VLAN | Gateway |
-|------|----------|-------|------------|------|---------|
-| 10.99.241.0/24 | 10.99.241.0 - 10.99.241.255 | /24 | Spine1 ↔ Leaf линки | - | - |
-| 10.99.242.0/24 | 10.99.242.0 - 10.99.242.255 | /24 | Spine2 ↔ Leaf линки | - | - |
-| 192.168.1.0/24 | 192.168.1.0 - 192.168.1.255 | /24 | Серверная сеть 1 | 10 | 192.168.1.254 |
-| 192.168.2.0/24 | 192.168.2.0 - 192.168.2.255 | /24 | Серверная сеть 2 | 20 | 192.168.2.254 |
-| 192.168.3.0/24 | 192.168.3.0 - 192.168.3.255 | /24 | Серверная сеть 3 | 30 | 192.168.3.254 |
+### Loopback адреса для OSPF (Сеть 10.99.243.0/24) - Area 0
+| Device Name | Loopback Address | Router-ID | Description |
+|-------------|------------------|-----------|-------------|
+| 99-blf1 | 10.99.243.1/32 | 10.99.243.1 | Border Leaf 1 Loopback |
+| 99-blf2 | 10.99.243.2/32 | 10.99.243.2 | Border Leaf 2 Loopback |
+| 99-lf3 | 10.99.243.3/32 | 10.99.243.3 | Leaf 3 Loopback |
+| 99-sp1 | 10.99.243.11/32 | 10.99.243.11 | Spine 1 Loopback |
+| 99-sp2 | 10.99.243.22/32 | 10.99.243.22 | Spine 2 Loopback |
 
-**Примечание:** Linux3 и Linux4 находятся в одной подсети 192.168.3.0/24 на одном VLAN 30
-
+### Серверные сети - Area 10
+| Device Name | Server Network | VLAN | Gateway | VM IP | Area |
+|-------------|----------------|------|---------|-------|------|
+| 99-blf1 | 192.168.1.0/24 | 10 | 192.168.1.254 | 192.168.1.2 | Area 10 |
+| 99-blf2 | 192.168.2.0/24 | 20 | 192.168.2.254 | 192.168.2.2 | Area 10 |
+| 99-lf3 | 192.168.3.0/24 | 30 | 192.168.3.254 | 192.168.3.1 | Area 10 |
+| 99-lf3 | 192.168.2.0/24 | 30 | 192.168.3.254 | 192.168.3.2 | Area 10 |
 ---
 
-## Конфигурация оборудования
+## Конфигурация OSPF
 
 ### 99-blf1 (Border Leaf 1)
-```
+```bash
 configure terminal
-hostname 99-blf1
-vlan 10
-name SERVER-NETWORK-1
-interface Ethernet1
-mtu 9194
-description to-99-sp1-E1
-no switchport
-ip address 10.99.241.0/31
-no shutdown
-interface Ethernet2
-mtu 9194
-description to-99-sp2-E1
-no switchport
-ip address 10.99.242.0/31
-no shutdown
-interface Ethernet3
-mtu 9194
-description to-Linux1
-switchport mode access
-switchport access vlan 10
-no shutdown
+interface Loopback0
+ description OSPF Router-ID and Underlay Management
+ ip address 10.99.243.1/32
+ no shutdown
+
 interface Vlan10
-description Server-Network-1
-ip address 192.168.1.254/24
-```
+ description Server-Network-1
+ ip address 192.168.1.254/24
+ no shutdown
 
-### 99-blf2 (Border Leaf 2)
-```
-configure terminal
-hostname 99-blf2
-vlan 20
-name SERVER-NETWORK-2
-interface Ethernet1
-mtu 9194
-description to-99-sp1-E2
-no switchport
-ip address 10.99.241.2/31
-no shutdown
-interface Ethernet2
-mtu 9194
-description to-99-sp2-E2
-no switchport
-ip address 10.99.242.2/31
-no shutdown
-interface Ethernet3
-mtu 9194
-description to-Linux2
-switchport mode access
-switchport access vlan 20
-no shutdown
-interface Vlan20
-description Server-Network-2
-ip address 192.168.2.254/24
-```
-### 99-lf3 (Leaf 3)
-```
-configure terminal
-hostname 99-lf3
-vlan 30
-name SERVER-NETWORK-3
-interface Ethernet1
-description to-99-sp1-E3
-no switchport
-ip address 10.99.241.4/31
-mtu 9194
-no shutdown
-interface Ethernet2
-description to-99-sp2-E3
-no switchport
-ip address 10.99.242.4/31
-mtu 9194
-no shutdown
-interface Ethernet3
-description to-Linux3
-mtu 9194
-switchport mode access
-switchport access vlan 30
-no shutdown
-interface Ethernet4
-mtu 9194
-description to-Linux4
-switchport mode access
-switchport access vlan 30
-no shutdown
-interface Vlan30
-description Server-Network-3
-ip address 192.168.3.254/24
-```
+router ospf UNDERLAY
+ router-id 10.99.243.1
+ maximum-paths 4
+ network 10.99.243.1/32 area 0.0.0.0
+ network 192.168.1.0/24 area 0.0.0.10
+ passive-interface Vlan10
 
-### 99-sp1 (Spine 1)
-```
-configure terminal
-hostname 99-sp1
 interface Ethernet1
-description to-99-blf1-E1
-no switchport
-ip address 10.99.241.1/31
-mtu 9194
-no shutdown
+ ip ospf network point-to-point
+ ip ospf hello-interval 1
+ ip ospf dead-interval 3
+ 
 interface Ethernet2
-description to-99-blf2-E1
-no switchport
-ip address 10.99.241.3/31
-mtu 9194
-no shutdown
-interface Ethernet3
-description to-99-lf3-E1
-no switchport
-ip address 10.99.241.5/31
-mtu 9194
-no shutdown
-```
-### 99-sp2 (Spine 2)
-```
-configure terminal
-hostname 99-sp2
-interface Ethernet1
-description to-99-blf1-E2
-mtu 9194
-no switchport
-ip address 10.99.242.1/31
-no shutdown
-interface Ethernet2
-description to-99-blf2-E2
-mtu 9194
-no switchport
-ip address 10.99.242.3/31
-no shutdown
-interface Ethernet3
-description to-99-lf3-E2
-mtu 9194
-no switchport
-ip address 10.99.242.5/31
-no shutdown
-```
+ ip ospf network point-to-point
+ ip ospf hello-interval 1
+ ip ospf dead-interval 3
+ ```
