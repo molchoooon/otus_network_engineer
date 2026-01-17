@@ -85,6 +85,7 @@ router ospf 1
  passive-interface Vlan10
 
 interface Ethernet1
+ mtu 9194
  ip ospf network point-to-point
  ip ospf hello-interval 1
  ip ospf dead-interval 3
@@ -92,6 +93,7 @@ interface Ethernet1
 
  
 interface Ethernet2
+ mtu 9194
  ip ospf network point-to-point
  ip ospf hello-interval 1
  ip ospf dead-interval 3
@@ -125,6 +127,7 @@ router ospf 1
  passive-interface Vlan20
 
 interface Ethernet1
+ mtu 9194
  ip ospf network point-to-point
  ip ospf hello-interval 1
  ip ospf dead-interval 3
@@ -132,6 +135,7 @@ interface Ethernet1
 
  
 interface Ethernet2
+ mtu 9194
  ip ospf network point-to-point
  ip ospf hello-interval 1
  ip ospf dead-interval 3
@@ -162,6 +166,7 @@ router ospf 1
  passive-interface Vlan30
 
 interface Ethernet1
+ mtu 9194
  ip ospf network point-to-point
  ip ospf hello-interval 1
  ip ospf dead-interval 3
@@ -169,6 +174,7 @@ interface Ethernet1
 
  
 interface Ethernet2
+ mtu 9194
  ip ospf network point-to-point
  ip ospf hello-interval 1
  ip ospf dead-interval 3
@@ -190,6 +196,7 @@ router ospf 1
  network 10.99.243.11/32 area 0.0.0.0
 
 interface Ethernet1
+ mtu 9194
  ip ospf network point-to-point
  ip ospf hello-interval 1
  ip ospf dead-interval 3
@@ -197,6 +204,7 @@ interface Ethernet1
 
  
 interface Ethernet2
+ mtu 9194
  ip ospf network point-to-point
  ip ospf hello-interval 1
  ip ospf dead-interval 3
@@ -204,6 +212,7 @@ interface Ethernet2
 
 
 interface Ethernet3
+ mtu 9194
  ip ospf network point-to-point
  ip ospf hello-interval 1
  ip ospf dead-interval 3
@@ -225,6 +234,7 @@ router ospf 1
  network 10.99.243.22/32 area 0.0.0.0
 
 interface Ethernet1
+ mtu 9194
  ip ospf network point-to-point
  ip ospf hello-interval 1
  ip ospf dead-interval 3
@@ -232,6 +242,7 @@ interface Ethernet1
 
  
 interface Ethernet2
+ mtu 9194
  ip ospf network point-to-point
  ip ospf hello-interval 1
  ip ospf dead-interval 3
@@ -239,6 +250,7 @@ interface Ethernet2
 
 
 interface Ethernet3
+ mtu 9194
  ip ospf network point-to-point
  ip ospf hello-interval 1
  ip ospf dead-interval 3
