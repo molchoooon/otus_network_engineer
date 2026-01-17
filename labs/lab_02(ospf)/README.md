@@ -92,3 +92,147 @@ interface Ethernet2
  ip ospf hello-interval 1
  ip ospf dead-interval 3
  ```
+
+ 99-blf2 (Border Leaf 2)
+ ```
+ configure terminal
+# Настройка Loopback интерфейса
+interface Loopback0
+ description OSPF Router-ID and Underlay Management
+ ip address 10.99.243.2/32
+ no shutdown
+
+# Настройка VLAN интерфейса
+interface Vlan20
+ description Server-Network-2
+ ip address 192.168.2.254/24
+ no shutdown
+
+# Настройка OSPF
+router ospf UNDERLAY
+ router-id 10.99.243.2
+ # Включаем ECMP
+ maximum-paths 4
+ # Loopback в Area 0
+ network 10.99.243.2/32 area 0.0.0.0
+ # Серверная сеть в Area 10
+ network 192.168.2.0/24 area 0.0.0.10
+ # VLAN интерфейс как passive
+ passive-interface Vlan20
+
+# Настройка P2P интерфейсов
+interface Ethernet1
+ ip ospf network point-to-point
+ ip ospf hello-interval 1
+ ip ospf dead-interval 3
+ 
+interface Ethernet2
+ ip ospf network point-to-point
+ ip ospf hello-interval 1
+ ip ospf dead-interval 3
+ ```
+99-lf3 (Leaf 3)
+```
+configure terminal
+# Настройка Loopback интерфейса
+interface Loopback0
+ description OSPF Router-ID and Underlay Management
+ ip address 10.99.243.3/32
+ no shutdown
+
+# Настройка VLAN интерфейса (одна подсеть для всех ВМ на Leaf3)
+interface Vlan30
+ description Server-Network-3
+ ip address 192.168.3.254/24
+ no shutdown
+
+# Настройка OSPF
+router ospf UNDERLAY
+ router-id 10.99.243.3
+ # Включаем ECMP
+ maximum-paths 4
+ # Loopback в Area 0
+ network 10.99.243.3/32 area 0.0.0.0
+ # Серверная сеть в Area 10
+ network 192.168.3.0/24 area 0.0.0.10
+ # VLAN интерфейс как passive
+ passive-interface Vlan30
+
+# Настройка P2P интерфейсов
+interface Ethernet1
+ ip ospf network point-to-point
+ ip ospf hello-interval 1
+ ip ospf dead-interval 3
+ 
+interface Ethernet2
+ ip ospf network point-to-point
+ ip ospf hello-interval 1
+ ip ospf dead-interval 3
+ ```
+ 99-sp1 (Spine 1)
+ ```
+ configure terminal
+# Настройка Loopback интерфейса
+interface Loopback0
+ description OSPF Router-ID and Underlay Management
+ ip address 10.99.243.11/32
+ no shutdown
+
+# Настройка OSPF
+router ospf UNDERLAY
+ router-id 10.99.243.11
+ # Включаем ECMP
+ maximum-paths 4
+ # Loopback в Area 0
+ network 10.99.243.11/32 area 0.0.0.0
+
+# Настройка P2P интерфейсов
+interface Ethernet1
+ ip ospf network point-to-point
+ ip ospf hello-interval 1
+ ip ospf dead-interval 3
+ 
+interface Ethernet2
+ ip ospf network point-to-point
+ ip ospf hello-interval 1
+ ip ospf dead-interval 3
+
+interface Ethernet3
+ ip ospf network point-to-point
+ ip ospf hello-interval 1
+ ip ospf dead-interval 3
+ ```
+ 99-sp2 (Spine 2)
+ ```
+ configure terminal
+# Настройка Loopback интерфейса
+interface Loopback0
+ description OSPF Router-ID and Underlay Management
+ ip address 10.99.243.22/32
+ no shutdown
+
+# Настройка OSPF
+router ospf UNDERLAY
+ router-id 10.99.243.22
+ # Включаем ECMP
+ maximum-paths 4
+ # Loopback в Area 0
+ network 10.99.243.22/32 area 0.0.0.0
+
+# Настройка P2P интерфейсов
+interface Ethernet1
+ ip ospf network point-to-point
+ ip ospf hello-interval 1
+ ip ospf dead-interval 3
+ 
+interface Ethernet2
+ ip ospf network point-to-point
+ ip ospf hello-interval 1
+ ip ospf dead-interval 3
+
+interface Ethernet3
+ ip ospf network point-to-point
+ ip ospf hello-interval 1
+ ip ospf dead-interval 3
+ ```
+ 
