@@ -65,195 +65,262 @@
 ### 99-blf1 (Border Leaf 1)
 ```bash
 configure terminal
-ip routing
-interface Loopback0
- description OSPF Router-ID and Underlay Management
- ip address 10.99.243.1/32
- no shutdown
-
-interface Vlan10
- description Server-Network-1
- ip address 192.168.1.254/24
- no shutdown
-
-router ospf 1
- router-id 10.99.243.1
- maximum-paths 4
- bfd default
- network 10.99.243.1/32 area 0.0.0.0
- network 192.168.1.0/24 area 0.0.0.10
- passive-interface Vlan10
+vlan 10
 
 interface Ethernet1
- mtu 9194
- ip ospf network point-to-point
- ip ospf hello-interval 1
- ip ospf dead-interval 3
- ip ospf area 0.0.0.0
+   description to-99-sp1-E1
+   mtu 9194
+   no switchport
+   ip address 10.99.241.0/31
+   ip ospf neighbor bfd
+   ip ospf dead-interval 3
+   ip ospf hello-interval 1
+   ip ospf network point-to-point
+   ip ospf area 0.0.0.0
 
- 
 interface Ethernet2
- mtu 9194
- ip ospf network point-to-point
- ip ospf hello-interval 1
- ip ospf dead-interval 3
- ip ospf area 0.0.0.0
+   description to-99-sp2-E1
+   mtu 9194
+   no switchport
+   ip address 10.99.242.0/31
+   ip ospf neighbor bfd
+   ip ospf dead-interval 3
+   ip ospf hello-interval 1
+   ip ospf network point-to-point
+   ip ospf area 0.0.0.0
 
+interface Ethernet3
+   description to-Linux1
+   mtu 9194
+   switchport access vlan 10
+
+interface Loopback0
+   description OSPF Router-ID and Underlay Management
+   ip address 10.99.243.1/32
+
+interface Vlan10
+   description Server-Network-1
+   ip address 192.168.1.254/24
+   ip ospf area 0.0.0.10
+
+ip routing
+
+router ospf 1
+   router-id 10.99.243.1
+   bfd default
+   passive-interface default
+   no passive-interface Ethernet1
+   no passive-interface Ethernet2
+   network 10.99.243.1/32 area 0.0.0.0
+   network 192.168.1.0/24 area 0.0.0.10
+   max-lsa 12000
+   maximum-paths 4
  ```
 
  ### 99-blf2 (Border Leaf 2)
  ```bash
  configure terminal
-ip routing 
-
-interface Loopback0
- description OSPF Router-ID and Underlay Management
- ip address 10.99.243.2/32
- 
-
- no shutdown
-
-interface Vlan20
- description Server-Network-2
- ip address 192.168.2.254/24
- no shutdown
-
-router ospf 1
- router-id 10.99.243.2
- maximum-paths 4
- bfd default
- network 10.99.243.2/32 area 0.0.0.0
- network 192.168.2.0/24 area 0.0.0.10
- passive-interface Vlan20
+vlan 20
+   name SERVER-NETWORK-2
 
 interface Ethernet1
- mtu 9194
- ip ospf network point-to-point
- ip ospf hello-interval 1
- ip ospf dead-interval 3
- ip ospf area 0.0.0.0
+   description to-99-sp1-E2
+   mtu 9194
+   no switchport
+   ip address 10.99.241.2/31
+   ip ospf dead-interval 3
+   ip ospf hello-interval 1
+   ip ospf network point-to-point
+   ip ospf area 0.0.0.0
 
- 
 interface Ethernet2
- mtu 9194
- ip ospf network point-to-point
- ip ospf hello-interval 1
- ip ospf dead-interval 3
- ip ospf area 0.0.0.0
+   description to-99-sp2-E2
+   mtu 9194
+   no switchport
+   ip address 10.99.242.2/31
+   ip ospf dead-interval 3
+   ip ospf hello-interval 1
+   ip ospf network point-to-point
+   ip ospf area 0.0.0.0
+
+interface Ethernet3
+   description to-Linux2
+   mtu 9100
+   switchport access vlan 20
+
+interface Loopback0
+   description OSPF Router-ID and Underlay Management
+   ip address 10.99.243.2/32
+
+interface Vlan20
+   description Server-Network-2
+   ip address 192.168.2.254/24
+
+ip routing
+
+router ospf 1
+   router-id 10.99.243.2
+   bfd default
+   passive-interface default
+   no passive-interface Ethernet1
+   no passive-interface Ethernet2
+   no passive-interface Ethernet3
+   passive-interface Vlan20
+   network 10.99.243.2/32 area 0.0.0.0
+   network 192.168.2.0/24 area 0.0.0.10
+   max-lsa 12000
+   maximum-paths 4
 
  ```
 ### 99-lf3 (Leaf 3)
 ```bash
-configure terminal
-ip routing 
-
-interface Loopback0
- description OSPF Router-ID and Underlay Management
- ip address 10.99.243.3/32
- no shutdown
-
-interface Vlan30
- description Server-Network-3
- ip address 192.168.3.254/24
- no shutdown
-
-router ospf 1
- router-id 10.99.243.3
- maximum-paths 4
- bfd default
- network 10.99.243.3/32 area 0.0.0.0
- network 192.168.3.0/24 area 0.0.0.10
- passive-interface Vlan30
+vlan 30
+   name SERVER-NETWORK-3
 
 interface Ethernet1
- mtu 9194
- ip ospf network point-to-point
- ip ospf hello-interval 1
- ip ospf dead-interval 3
- ip ospf area 0.0.0.0
+   description to-99-sp1-E3
+   mtu 9194
+   no switchport
+   ip address 10.99.241.4/31
+   ip ospf dead-interval 3
+   ip ospf hello-interval 1
+   ip ospf network point-to-point
+   ip ospf area 0.0.0.0
 
- 
 interface Ethernet2
- mtu 9194
- ip ospf network point-to-point
- ip ospf hello-interval 1
- ip ospf dead-interval 3
- ip ospf area 0.0.0.0
+   description to-99-sp2-E3
+   mtu 9194
+   no switchport
+   ip address 10.99.242.4/31
+   ip ospf dead-interval 3
+   ip ospf hello-interval 1
+   ip ospf network point-to-point
+   ip ospf area 0.0.0.0
+
+interface Ethernet3
+   description to-Linux3
+   mtu 9194
+   switchport access vlan 30
+
+interface Ethernet4
+   description to-Linux4
+   mtu 9194
+   switchport access vlan 30
+
+interface Loopback0
+   description OSPF Router-ID and Underlay Management
+   ip address 10.99.243.3/32
+
+interface Vlan30
+   description Server-Network-3
+   ip address 192.168.3.254/24
+
+ip routing
+
+router ospf 1
+   router-id 10.99.243.3
+   bfd default
+   passive-interface default
+   no passive-interface Ethernet1
+   no passive-interface Ethernet2
+   passive-interface Ethernet3
+   passive-interface Vlan30
+   network 10.99.243.3/32 area 0.0.0.0
+   network 192.168.3.0/24 area 0.0.0.10
+   max-lsa 12000
+   maximum-paths 4
 
  ```
  ### 99-sp1 (Spine 1)
  ```bash
  configure terminal
- interface Loopback0
- description OSPF Router-ID and Underlay Management
- ip address 10.99.243.11/32
- no shutdown
+ interface Ethernet1
+   description to-99-blf1-E1
+   mtu 9194
+   no switchport
+   ip address 10.99.241.1/31
+   ip ospf dead-interval 3
+   ip ospf hello-interval 1
+   ip ospf network point-to-point
+   ip ospf area 0.0.0.0
 
-router ospf 1
- router-id 10.99.243.11
- maximum-paths 4
- bfd default
- network 10.99.243.11/32 area 0.0.0.0
-
-interface Ethernet1
- mtu 9194
- ip ospf network point-to-point
- ip ospf hello-interval 1
- ip ospf dead-interval 3
- ip ospf area 0.0.0.0
-
- 
 interface Ethernet2
- mtu 9194
- ip ospf network point-to-point
- ip ospf hello-interval 1
- ip ospf dead-interval 3
- ip ospf area 0.0.0.0
-
+   description to-99-blf2-E1
+   mtu 9194
+   no switchport
+   ip address 10.99.241.3/31
+   ip ospf dead-interval 3
+   ip ospf hello-interval 1
+   ip ospf network point-to-point
+   ip ospf area 0.0.0.0
 
 interface Ethernet3
- mtu 9194
- ip ospf network point-to-point
- ip ospf hello-interval 1
- ip ospf dead-interval 3
- ip ospf area 0.0.0.0
+   description to-99-lf3-E1
+   mtu 9194
+   no switchport
+   ip address 10.99.241.5/31
+   ip ospf dead-interval 3
+   ip ospf hello-interval 1
+   ip ospf network point-to-point
+   ip ospf area 0.0.0.0
+
+interface Loopback0
+   description OSPF Router-ID and Underlay Management
+   ip address 10.99.243.11/32
+
+ip routing
+
+router ospf 1
+   router-id 10.99.243.11
+   bfd default
+   network 10.99.243.11/32 area 0.0.0.0
+   max-lsa 12000
+   maximum-paths 4
 
  ```
  ### 99-sp2 (Spine 2)
  ```bash
- configure terminal
- interface Loopback0
- description OSPF Router-ID and Underlay Management
- ip address 10.99.243.22/32
- no shutdown
+ interface Ethernet1
+   description to-99-blf1-E2
+   mtu 9194
+   no switchport
+   ip address 10.99.242.1/31
+   ip ospf dead-interval 3
+   ip ospf hello-interval 1
+   ip ospf network point-to-point
+   ip ospf area 0.0.0.0
 
-router ospf 1
- router-id 10.99.243.22
- maximum-paths 4
- bfd default
- network 10.99.243.22/32 area 0.0.0.0
+ interface Ethernet2
+   description to-99-blf2-E2
+   mtu 9194
+   no switchport
+   ip address 10.99.242.3/31
+   ip ospf dead-interval 3
+   ip ospf hello-interval 1
+   ip ospf network point-to-point
+   ip ospf area 0.0.0.0
 
-interface Ethernet1
- mtu 9194
- ip ospf network point-to-point
- ip ospf hello-interval 1
- ip ospf dead-interval 3
- ip ospf area 0.0.0.0
+ interface Ethernet3
+   description to-99-lf3-E2
+   mtu 9194
+   no switchport
+   ip address 10.99.242.5/31
+   ip ospf dead-interval 3
+   ip ospf hello-interval 1
+   ip ospf network point-to-point
+   ip ospf area 0.0.0.0
 
- 
-interface Ethernet2
- mtu 9194
- ip ospf network point-to-point
- ip ospf hello-interval 1
- ip ospf dead-interval 3
- ip ospf area 0.0.0.0
+interface Loopback0
+   description OSPF Router-ID and Underlay Management
+   ip address 10.99.243.22/32
 
+ ip routing
 
-interface Ethernet3
- mtu 9194
- ip ospf network point-to-point
- ip ospf hello-interval 1
- ip ospf dead-interval 3
- ip ospf area 0.0.0.0
+ router ospf 1
+   router-id 10.99.243.22
+   bfd default
+   network 10.99.243.22/32 area 0.0.0.0
+   max-lsa 12000
+   maximum-paths 4
 
  ```
