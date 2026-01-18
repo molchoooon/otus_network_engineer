@@ -10,7 +10,7 @@
 ---
 
 ## Топология сети
-![Схема сети фабрики](fabric_scheme.jpg)
+![Схема Сети ](fabric_scheme.jpg)
 ## IP-план (Address Plan)
 
 ### Underlay сеть (Fabric Links - Point-to-Point /31)
