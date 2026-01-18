@@ -83,7 +83,7 @@ router isis UNDERLAY
 
 interface Ethernet1
    description to-99-sp1-E1
-   mtu 9194
+   mtu 1500
    no switchport
    ip address 10.99.241.0/31
    isis enable UNDERLAY
@@ -94,7 +94,7 @@ interface Ethernet1
 
 interface Ethernet2
    description to-99-sp2-E1
-   mtu 9194
+   mtu 1500
    no switchport
    ip address 10.99.242.0/31
    isis enable UNDERLAY
@@ -105,7 +105,7 @@ interface Ethernet2
 
 interface Ethernet3
    description to-Linux1
-   mtu 9194
+   mtu 1500
    switchport access vlan 10
 
 interface Loopback0
@@ -142,7 +142,7 @@ vlan 20
 
 interface Ethernet1
    description to-99-sp1-E2
-   mtu 9194
+   mtu 1500
    no switchport
    ip address 10.99.241.2/31
    isis enable UNDERLAY
@@ -154,7 +154,7 @@ interface Ethernet1
 
 interface Ethernet2
    description to-99-sp2-E2
-   mtu 9194
+   mtu 1500
    no switchport
    ip address 10.99.242.2/31
    isis enable UNDERLAY
@@ -165,7 +165,7 @@ interface Ethernet2
 
 interface Ethernet3
    description to-Linux2
-   mtu 9194
+   mtu 1500
    switchport access vlan 20
 
 interface Loopback0
@@ -200,7 +200,7 @@ vlan 30
 
 interface Ethernet1
    description to-99-sp1-E3
-   mtu 9194
+   mtu 1500
    no switchport
    ip address 10.99.241.4/31
    isis enable UNDERLAY
@@ -211,7 +211,7 @@ interface Ethernet1
 
 interface Ethernet2
    description to-99-sp2-E3
-   mtu 9194
+   mtu 1500
    no switchport
    ip address 10.99.242.4/31
    isis enable UNDERLAY
@@ -222,12 +222,12 @@ interface Ethernet2
 
 interface Ethernet3
    description to-Linux3
-   mtu 9194
+   mtu 1500
    switchport access vlan 30
 
 interface Ethernet4
    description to-Linux4
-   mtu 9194
+   mtu 1500
    switchport access vlan 30
 
 interface Loopback0
@@ -260,7 +260,7 @@ interface Vlan30
 
  interface Ethernet1
    description to-99-blf1-E1
-   mtu 9194
+   mtu 1500
    no switchport
    ip address 10.99.241.1/31
    isis enable UNDERLAY
@@ -271,7 +271,7 @@ interface Vlan30
 
 interface Ethernet2
    description to-99-blf2-E1
-   mtu 9194
+   mtu 1500
    no switchport
    ip address 10.99.241.3/31
    isis enable UNDERLAY
@@ -282,7 +282,7 @@ interface Ethernet2
 
 interface Ethernet3
    description to-99-lf3-E1
-   mtu 9194
+   mtu 1500
    no switchport
    ip address 10.99.241.5/31
    isis enable UNDERLAY
@@ -313,7 +313,7 @@ interface Loopback0
    
  interface Ethernet1
    description to-99-blf1-E2
-   mtu 9194
+   mtu 1500
    no switchport
    ip address 10.99.242.1/31
    isis enable UNDERLAY
@@ -324,7 +324,7 @@ interface Loopback0
 
 interface Ethernet2
    description to-99-blf2-E2
-   mtu 9194
+   mtu 1500
    no switchport
    ip address 10.99.242.3/31
    isis enable UNDERLAY
@@ -335,7 +335,7 @@ interface Ethernet2
 
 interface Ethernet3
    description to-99-lf3-E2
-   mtu 9194
+   mtu 1500
    no switchport
    ip address 10.99.242.5/31
    isis enable UNDERLAY
