@@ -77,14 +77,9 @@ router isis UNDERLAY
     is-type level-1-2
     address-family ipv4 unicast
       maximum-paths 4
-      redistribute ipv4 connected level-1
-      redistribute ipv4 connected level-2
    bfd all-interfaces
    log-adjacency-changes
-   hello-interval level-1 3
-   hello-interval level-2 1
-   hello-multiplier level-1 3
-   hello-multiplier level-2 3
+
 
 interface Ethernet1
    description to-99-sp1-E1
@@ -93,7 +88,6 @@ interface Ethernet1
    ip address 10.99.241.0/31
    isis enable UNDERLAY
    isis circuit-type level-2-only
-   isis metric 10
    isis network point-to-point
    isis bfd
    no shutdown
@@ -105,7 +99,6 @@ interface Ethernet2
    ip address 10.99.242.0/31
    isis enable UNDERLAY
    isis circuit-type level-2-only
-   isis metric 10
    isis network point-to-point
    isis bfd
    no shutdown
@@ -115,6 +108,7 @@ interface Ethernet3
    mtu 9194
    switchport access vlan 10
 
+interface Loopback0
 description IS-IS Router-ID and Underlay Management
    ip address 10.99.243.1/32
    isis enable UNDERLAY
@@ -151,7 +145,7 @@ router isis UNDERLAY
    hello-interval level-2 1
    hello-multiplier level-1 3
    hello-multiplier level-2 3
-   
+
 vlan 20
    name SERVER-NETWORK-2
 
