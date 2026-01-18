@@ -427,6 +427,7 @@ PING 10.99.243.1 (10.99.243.1) from 10.99.243.3 : 72(100) bytes of data.
 --- 10.99.243.1 ping statistics ---
 5 packets transmitted, 5 received, 0% packet loss, time 13ms
 rtt min/avg/max/mdev = 1.795/2.081/3.162/0.540 ms, ipg/ewma 3.314/2.603 ms
+
 99-lf3#
 99-lf3#ping 10.99.243.2 source 10.99.243.3
 PING 10.99.243.2 (10.99.243.2) from 10.99.243.3 : 72(100) bytes of data.
