@@ -132,6 +132,26 @@ interface Vlan10
  ### 99-blf2 (Border Leaf 2)
  ```bash
  configure terminal
+
+ ip routing
+
+router isis UNDERLAY
+   net 49.0002.0100.9924.3002.00
+   is-type level-1-2
+   
+   address-family ipv4 unicast
+      maximum-paths 4
+      redistribute ipv4 connected level-1
+      redistribute ipv4 connected level-2
+   
+   bfd all-interfaces
+   log-adjacency-changes
+   metric-style wide
+   hello-interval level-1 3
+   hello-interval level-2 1
+   hello-multiplier level-1 3
+   hello-multiplier level-2 3
+   
 vlan 20
    name SERVER-NETWORK-2
 
@@ -140,20 +160,25 @@ interface Ethernet1
    mtu 9194
    no switchport
    ip address 10.99.241.2/31
-   ip ospf dead-interval 3
-   ip ospf hello-interval 1
-   ip ospf network point-to-point
-   ip ospf area 0.0.0.0
+   isis enable UNDERLAY
+   isis circuit-type level-2-only
+   isis metric 10
+   isis network point-to-point
+   isis bfd
+   no shutdown
+
 
 interface Ethernet2
    description to-99-sp2-E2
    mtu 9194
    no switchport
    ip address 10.99.242.2/31
-   ip ospf dead-interval 3
-   ip ospf hello-interval 1
-   ip ospf network point-to-point
-   ip ospf area 0.0.0.0
+   isis enable UNDERLAY
+   isis circuit-type level-2-only
+   isis metric 10
+   isis network point-to-point
+   isis bfd
+   no shutdown
 
 interface Ethernet3
    description to-Linux2
@@ -161,27 +186,17 @@ interface Ethernet3
    switchport access vlan 20
 
 interface Loopback0
-   description OSPF Router-ID and Underlay Management
+   description IS-IS Router-ID and Underlay Management
    ip address 10.99.243.2/32
+   isis enable UNDERLAY
+   isis passive
 
-interface Vlan20
+iinterface Vlan20
    description Server-Network-2
    ip address 192.168.2.254/24
-
-ip routing
-
-router ospf 1
-   router-id 10.99.243.2
-   bfd default
-   passive-interface default
-   no passive-interface Ethernet1
-   no passive-interface Ethernet2
-   no passive-interface Ethernet3
-   passive-interface Vlan20
-   network 10.99.243.2/32 area 0.0.0.0
-   network 192.168.2.0/24 area 0.0.0.10
-   max-lsa 12000
-   maximum-paths 4
+   isis enable UNDERLAY
+   isis circuit-type level-1
+   isis passive
 
  ```
 ### 99-lf3 (Leaf 3)
