@@ -87,7 +87,7 @@ interface Ethernet1
    no switchport
    ip address 10.99.241.0/31
    isis enable UNDERLAY
-   isis circuit-type level-2-only
+   isis circuit-type level-2
    isis network point-to-point
    isis bfd
    no shutdown
@@ -98,7 +98,7 @@ interface Ethernet2
    no switchport
    ip address 10.99.242.0/31
    isis enable UNDERLAY
-   isis circuit-type level-2-only
+   isis circuit-type level-2
    isis network point-to-point
    isis bfd
    no shutdown
@@ -132,19 +132,10 @@ interface Vlan10
 router isis UNDERLAY
    net 49.0002.0100.9924.3002.00
    is-type level-1-2
-   
    address-family ipv4 unicast
       maximum-paths 4
-      redistribute ipv4 connected level-1
-      redistribute ipv4 connected level-2
-   
    bfd all-interfaces
    log-adjacency-changes
-   metric-style wide
-   hello-interval level-1 3
-   hello-interval level-2 1
-   hello-multiplier level-1 3
-   hello-multiplier level-2 3
 
 vlan 20
    name SERVER-NETWORK-2
@@ -155,8 +146,7 @@ interface Ethernet1
    no switchport
    ip address 10.99.241.2/31
    isis enable UNDERLAY
-   isis circuit-type level-2-only
-   isis metric 10
+   isis circuit-type level-2
    isis network point-to-point
    isis bfd
    no shutdown
@@ -168,15 +158,14 @@ interface Ethernet2
    no switchport
    ip address 10.99.242.2/31
    isis enable UNDERLAY
-   isis circuit-type level-2-only
-   isis metric 10
+   isis circuit-type level-2
    isis network point-to-point
    isis bfd
    no shutdown
 
 interface Ethernet3
    description to-Linux2
-   mtu 9100
+   mtu 9194
    switchport access vlan 20
 
 interface Loopback0
@@ -185,7 +174,7 @@ interface Loopback0
    isis enable UNDERLAY
    isis passive
 
-iinterface Vlan20
+interface Vlan20
    description Server-Network-2
    ip address 192.168.2.254/24
    isis enable UNDERLAY
@@ -195,6 +184,17 @@ iinterface Vlan20
  ```
 ### 99-lf3 (Leaf 3)
 ```bash
+ip routing
+router isis UNDERLAY
+   net 49.0002.0100.9924.3003.00
+   is-type level-1-2
+   
+   address-family ipv4 unicast
+      maximum-paths 4
+   
+   bfd all-interfaces
+   log-adjacency-changes
+
 vlan 30
    name SERVER-NETWORK-3
 
@@ -203,20 +203,22 @@ interface Ethernet1
    mtu 9194
    no switchport
    ip address 10.99.241.4/31
-   ip ospf dead-interval 3
-   ip ospf hello-interval 1
-   ip ospf network point-to-point
-   ip ospf area 0.0.0.0
+   isis enable UNDERLAY
+   isis circuit-type level-2
+   isis network point-to-point
+   isis bfd
+   no shutdown
 
 interface Ethernet2
    description to-99-sp2-E3
    mtu 9194
    no switchport
    ip address 10.99.242.4/31
-   ip ospf dead-interval 3
-   ip ospf hello-interval 1
-   ip ospf network point-to-point
-   ip ospf area 0.0.0.0
+   isis enable UNDERLAY
+   isis circuit-type level-2
+   isis network point-to-point
+   isis bfd
+   no shutdown
 
 interface Ethernet3
    description to-Linux3
@@ -229,120 +231,124 @@ interface Ethernet4
    switchport access vlan 30
 
 interface Loopback0
-   description OSPF Router-ID and Underlay Management
+   description IS-IS Router-ID and Underlay Management
    ip address 10.99.243.3/32
+   isis enable UNDERLAY
+   isis passive
 
 interface Vlan30
    description Server-Network-3
    ip address 192.168.3.254/24
-
-ip routing
-
-router ospf 1
-   router-id 10.99.243.3
-   bfd default
-   passive-interface default
-   no passive-interface Ethernet1
-   no passive-interface Ethernet2
-   passive-interface Ethernet3
-   passive-interface Vlan30
-   network 10.99.243.3/32 area 0.0.0.0
-   network 192.168.3.0/24 area 0.0.0.10
-   max-lsa 12000
-   maximum-paths 4
+   isis enable UNDERLAY
+   isis circuit-type level-1
+   isis passive
 
  ```
  ### 99-sp1 (Spine 1)
  ```bash
+
  configure terminal
+ ip routing
+
+ router isis UNDERLAY
+   net 49.0001.0100.9924.3011.00
+   is-type level-2
+   address-family ipv4 unicast
+      maximum-paths 4
+   bfd all-interfaces
+   log-adjacency-changes
+
  interface Ethernet1
    description to-99-blf1-E1
    mtu 9194
    no switchport
    ip address 10.99.241.1/31
-   ip ospf dead-interval 3
-   ip ospf hello-interval 1
-   ip ospf network point-to-point
-   ip ospf area 0.0.0.0
+   isis enable UNDERLAY
+   isis circuit-type level-2
+   isis network point-to-point
+   isis bfd
+   no shutdown
 
 interface Ethernet2
    description to-99-blf2-E1
    mtu 9194
    no switchport
    ip address 10.99.241.3/31
-   ip ospf dead-interval 3
-   ip ospf hello-interval 1
-   ip ospf network point-to-point
-   ip ospf area 0.0.0.0
+   isis enable UNDERLAY
+   isis circuit-type level-2
+   isis network point-to-point
+   isis bfd
+   no shutdown
 
 interface Ethernet3
    description to-99-lf3-E1
    mtu 9194
    no switchport
    ip address 10.99.241.5/31
-   ip ospf dead-interval 3
-   ip ospf hello-interval 1
-   ip ospf network point-to-point
-   ip ospf area 0.0.0.0
+   isis enable UNDERLAY
+   isis circuit-type level-2
+   isis network point-to-point
+   isis bfd
+   no shutdown
 
 interface Loopback0
-   description OSPF Router-ID and Underlay Management
+   description IS-IS Router-ID and Underlay Management
    ip address 10.99.243.11/32
-
-ip routing
-
-router ospf 1
-   router-id 10.99.243.11
-   bfd default
-   network 10.99.243.11/32 area 0.0.0.0
-   max-lsa 12000
-   maximum-paths 4
-
+   isis enable UNDERLAY
+   isis passive
  ```
  ### 99-sp2 (Spine 2)
  ```bash
+
+ ip routing
+ router isis UNDERLAY
+   net 49.0002.0100.9924.3022.00
+   is-type level-2
+   
+   address-family ipv4 unicast
+      maximum-paths 4
+   
+   bfd all-interfaces
+   log-adjacency-changes
+   
  interface Ethernet1
    description to-99-blf1-E2
    mtu 9194
    no switchport
    ip address 10.99.242.1/31
-   ip ospf dead-interval 3
-   ip ospf hello-interval 1
-   ip ospf network point-to-point
-   ip ospf area 0.0.0.0
+   isis enable UNDERLAY
+   isis circuit-type level-2
+   isis network point-to-point
+   isis bfd
+   no shutdown
 
- interface Ethernet2
+interface Ethernet2
    description to-99-blf2-E2
    mtu 9194
    no switchport
    ip address 10.99.242.3/31
-   ip ospf dead-interval 3
-   ip ospf hello-interval 1
-   ip ospf network point-to-point
-   ip ospf area 0.0.0.0
+   isis enable UNDERLAY
+   isis circuit-type level-2
+   isis network point-to-point
+   isis bfd
+   no shutdown
 
- interface Ethernet3
+interface Ethernet3
    description to-99-lf3-E2
    mtu 9194
    no switchport
    ip address 10.99.242.5/31
-   ip ospf dead-interval 3
-   ip ospf hello-interval 1
-   ip ospf network point-to-point
-   ip ospf area 0.0.0.0
+   isis enable UNDERLAY
+   isis circuit-type level-2
+   isis network point-to-point
+   isis bfd
+   no shutdown
 
 interface Loopback0
-   description OSPF Router-ID and Underlay Management
+   description IS-IS Router-ID and Underlay Management
    ip address 10.99.243.22/32
-
- ip routing
-
- router ospf 1
-   router-id 10.99.243.22
-   bfd default
-   network 10.99.243.22/32 area 0.0.0.0
-   max-lsa 12000
-   maximum-paths 4
+   isis enable UNDERLAY
+   isis passive
 
  ```
 ---
