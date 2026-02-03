@@ -18,39 +18,42 @@
 |-------------|------------------|------|---------------|-------------|-------------|
 | 99-blf1 | 10.99.241.0/31 | Ethernet1 | 99-sp1 | Ethernet1 | to Spine1 |
 | 99-blf1 | 10.99.242.0/31 | Ethernet2 | 99-sp2 | Ethernet1 | to Spine2 |
-| 99-blf1 | 192.168.1.254/24 | Ethernet3 | Linux1 | Eth0 | Server Network1 |
+| 99-blf1 | 192.168.1.254/24 | Ethernet3 | esx1 | Eth0 | Server Network1 |
 | 99-blf2 | 10.99.241.2/31 | Ethernet1 | 99-sp1 | Ethernet2 | to Spine1 |
 | 99-blf2 | 10.99.242.2/31 | Ethernet2 | 99-sp2 | Ethernet2 | to Spine2 |
-| 99-blf2 | 192.168.2.254/24 | Ethernet3 | Linux2 | Eth0 | Server Network2 |
+| 99-blf2 | 192.168.2.254/24 | Ethernet3 | esx2 | Eth0 | Server Network2 |
 | 99-lf3 | 10.99.241.4/31 | Ethernet1 | 99-sp1 | Ethernet3 | to Spine1 |
 | 99-lf3 | 10.99.242.4/31 | Ethernet2 | 99-sp2 | Ethernet3 | to Spine2 |
-| 99-lf3 | 192.168.3.254/24 | Ethernet3 | Linux3 | Eth0 | Server Network3 |
-| 99-lf3 | 192.168.3.254/24 | Ethernet4 | Linux4 | Eth0 | Server Network3 |
+| 99-lf3 | 192.168.3.254/24 | Ethernet3 | esx3 | Eth0 | Server Network3 |
+| 99-lf4 | 10.99.241.6/31 | Ethernet1 | 99-sp1 | Ethernet4 | to Spine1 |
+| 99-lf4 | 10.99.242.6/31 | Ethernet2 | 99-sp2 | Ethernet4 | to Spine2 |
+| 99-lf4 | 192.168.4.254/24 | Ethernet4 | esx4 | Eth0 | Server Network4 |
 | 99-sp1 | 10.99.241.1/31 | Ethernet1 | 99-blf1 | Ethernet1 | to BorderLeaf1 |
 | 99-sp1 | 10.99.241.3/31 | Ethernet2 | 99-blf2 | Ethernet1 | to BorderLeaf2 |
 | 99-sp1 | 10.99.241.5/31 | Ethernet3 | 99-lf3 | Ethernet1 | to Leaf3 |
+| 99-sp1 | 10.99.241.7/31 | Ethernet4 | 99-lf4 | Ethernet1 | to Leaf4 |
 | 99-sp2 | 10.99.242.1/31 | Ethernet1 | 99-blf1 | Ethernet2 | to BorderLeaf1 |
 | 99-sp2 | 10.99.242.3/31 | Ethernet2 | 99-blf2 | Ethernet2 | to BorderLeaf2 |
 | 99-sp2 | 10.99.242.5/31 | Ethernet3 | 99-lf3 | Ethernet2 | to Leaf3 |
+| 99-sp2 | 10.99.242.7/31 | Ethernet4 | 99-lf4 | Ethernet2 | to Leaf4 |
 
 ### Серверные ВМ
 | Device Name | IP Address/Маска | Port | Gateway | Description |
 |-------------|------------------|------|---------|-------------|
-| Linux1 | 192.168.1.2/24 | Eth0 | 192.168.1.254 | VM1 |
-| Linux2 | 192.168.2.2/24 | Eth0 | 192.168.2.254 | VM2 |
-| Linux3 | 192.168.1.1/24 | Eth0 | 192.168.1.254 | VM3 |
-| Linux4 | 192.168.2.1/24 | Eth0 | 192.168.2.254 | VM4 |
+| esx1 | 192.168.1.2/24 | Eth0 | 192.168.1.254 | VM1 |
+| esx2 | 192.168.2.2/24 | Eth0 | 192.168.2.254 | VM2 |
+| esx3 | 192.168.3.1/24 | Eth0 | 192.168.3.254 | VM3 |
+| esx4 | 192.168.4.1/24 | Eth0 | 192.168.4.254 | VM4 |
 
-### Loopback адреса и NET адреса для IS-IS (Сеть 10.99.243.0/24)
-| Device Name |	Loopback Address |	NET Address |	System-ID |	Level |	Description |
-|-------------|--------------------|---------------|------------|-------|--------------|
-|99-blf1 | 10.99.243.1/32	| 49.0001.0100.9924.3001.00	| 0100.9924.3001	| L1-L2	| BLeaf1
-|99-blf2	| 10.99.243.2/32	| 49.0002.0100.9924.3002.00	| 0100.9924.3002	| L1-L2	| BLeaf2
-|99-lf3	| 10.99.243.3/32	| 49.0002.0100.9924.3003.00	| 0100.9924.3003	| L1-L2	| Leaf3
-|99-sp1	| 10.99.243.11/32	| 49.0001.0100.9924.3011.00	| 0100.9924.3011	| L2	| Spine1
-|99-sp2	| 10.99.243.22/32	| 49.0002.0100.9924.3022.00	| 0100.9924.3022	| L2	| Spine2
-
-
+### Loopback адреса и NET адреса для BGP (Сеть 10.99.243.0/24)
+| Device Name | Loopback Address |
+|-------------|------------------|
+| 99-blf1 | 10.99.243.1/32 |
+| 99-blf2 | 10.99.243.2/32 |
+| 99-lf3 | 10.99.243.3/32 |
+| 99-lf4 | 10.99.243.4/32 |
+| 99-sp1 | 10.99.243.11/32 |
+| 99-sp2 | 10.99.243.22/32 |
 
 ### Серверные сети 
 | Device Name | Server Network | VLAN | Gateway | VM IP |
@@ -58,7 +61,8 @@
 | 99-blf1 | 192.168.1.0/24 | 10 | 192.168.1.254 | 192.168.1.2 |
 | 99-blf2 | 192.168.2.0/24 | 20 | 192.168.2.254 | 192.168.2.2 |
 | 99-lf3 | 192.168.3.0/24 | 30 | 192.168.3.254 | 192.168.3.1 |
-| 99-lf3 | 192.168.2.0/24 | 30 | 192.168.3.254 | 192.168.3.2 |
+| 99-lf4 | 192.168.4.0/24 | 40 | 192.168.4.254 | 192.168.4.1 |
+
 ---
 
 ## Конфигурация IS-IS
@@ -66,289 +70,371 @@
 ### 99-blf1 (Border Leaf 1)
 ```bash
 configure terminal
-
-vlan 10
-name SERVER-NETWORK-1
+hostname 99-blf1
 
 ip routing
 
-router isis UNDERLAY
-   net 49.0001.0100.9924.3001.00
-    is-type level-1-2
-    address-family ipv4 unicast
-      maximum-paths 4
-   bfd all-interfaces
-   log-adjacency-changes
-
+vlan 10
+   name Server-Network-1
 
 interface Ethernet1
-   description to-99-sp1-E1
-   mtu 1500
+   description to-99-sp1-Eth1
    no switchport
+   mtu 9100
    ip address 10.99.241.0/31
-   isis enable UNDERLAY
-   isis circuit-type level-2
-   isis network point-to-point
-   isis bfd
-   no shutdown
+   bfd interval 300 min-rx 300 multiplier 3
 
 interface Ethernet2
-   description to-99-sp2-E1
-   mtu 1500
+   description to-99-sp2-Eth1
    no switchport
+   mtu 9100
    ip address 10.99.242.0/31
-   isis enable UNDERLAY
-   isis circuit-type level-2
-   isis network point-to-point
-   isis bfd
-   no shutdown
+   bfd interval 300 min-rx 300 multiplier 3
 
 interface Ethernet3
-   description to-Linux1
-   mtu 1500
+   description Server-Network1
    switchport access vlan 10
-
-interface Loopback0
-description IS-IS Router-ID and Underlay Management
-   ip address 10.99.243.1/32
-   isis enable UNDERLAY
-   isis passive
+   mtu 9100
+   no shutdown
 
 interface Vlan10
    description Server-Network-1
+   mtu 9100
    ip address 192.168.1.254/24
-   isis enable UNDERLAY
-   isis circuit-type level-1
-   isis passive
+
+interface Loopback0
+   description Router-ID
+   ip address 10.99.243.1/32
+
+route-map REDISTRIBUTE_CONNECTED permit 10
+   match interface Loopback0
+
+route-map REDISTRIBUTE_CONNECTED permit 20
+   match interface Vlan10
+
+router bgp 65099
+   router-id 10.99.243.1
+   no bgp default ipv4-unicast
+   timers bgp 3 9
+   maximum-paths 2 ecmp 2
+   neighbor SPINE peer group
+   neighbor SPINE remote-as 65099
+   neighbor SPINE timers 3 9
+   neighbor SPINE send-community
+   neighbor 10.99.241.1 peer group SPINE
+   neighbor 10.99.242.1 peer group SPINE
+   redistribute connected route-map REDISTRIBUTE_CONNECTED
+   
+   address-family ipv4
+      neighbor SPINE activate
 
  ```
 
  ### 99-blf2 (Border Leaf 2)
  ```bash
  configure terminal
+hostname 99-blf2
 
- ip routing
-
-router isis UNDERLAY
-   net 49.0002.0100.9924.3002.00
-   is-type level-1-2
-   address-family ipv4 unicast
-      maximum-paths 4
-   bfd all-interfaces
-   log-adjacency-changes
+ip routing
 
 vlan 20
-   name SERVER-NETWORK-2
+   name Server-Network-2
 
 interface Ethernet1
-   description to-99-sp1-E2
-   mtu 1500
+   description to-99-sp1-Eth2
    no switchport
+   mtu 9100
    ip address 10.99.241.2/31
-   isis enable UNDERLAY
-   isis circuit-type level-2
-   isis network point-to-point
-   isis bfd
-   no shutdown
-
+   bfd interval 300 min-rx 300 multiplier 3
 
 interface Ethernet2
-   description to-99-sp2-E2
-   mtu 1500
+   description to-99-sp2-Eth2
    no switchport
+   mtu 9100
    ip address 10.99.242.2/31
-   isis enable UNDERLAY
-   isis circuit-type level-2
-   isis network point-to-point
-   isis bfd
-   no shutdown
+   bfd interval 300 min-rx 300 multiplier 3
 
 interface Ethernet3
-   description to-Linux2
-   mtu 1500
+   description Server-Network2
    switchport access vlan 20
-
-interface Loopback0
-   description IS-IS Router-ID and Underlay Management
-   ip address 10.99.243.2/32
-   isis enable UNDERLAY
-   isis passive
+   mtu 9100
+   no shutdown
 
 interface Vlan20
    description Server-Network-2
+   mtu 9100
    ip address 192.168.2.254/24
-   isis enable UNDERLAY
-   isis circuit-type level-1
-   isis passive
+
+interface Loopback0
+   description Router-ID
+   ip address 10.99.243.2/32
+
+route-map REDISTRIBUTE_CONNECTED permit 10
+   match interface Loopback0
+
+route-map REDISTRIBUTE_CONNECTED permit 20
+   match interface Vlan20
+
+router bgp 65099
+   router-id 10.99.243.2
+   no bgp default ipv4-unicast
+   timers bgp 3 9
+   maximum-paths 2 ecmp 2
+   neighbor SPINE peer group
+   neighbor SPINE remote-as 65099
+   neighbor SPINE timers 3 9
+   neighbor SPINE send-community
+   neighbor 10.99.241.3 peer group SPINE
+   neighbor 10.99.242.3 peer group SPINE
+   redistribute connected route-map REDISTRIBUTE_CONNECTED
+   
+   address-family ipv4
+      neighbor SPINE activate
 
  ```
 ### 99-lf3 (Leaf 3)
 ```bash
+configure terminal
+hostname 99-lf3
+
 ip routing
-router isis UNDERLAY
-   net 49.0002.0100.9924.3003.00
-   is-type level-1-2
-   
-   address-family ipv4 unicast
-      maximum-paths 4
-   
-   bfd all-interfaces
-   log-adjacency-changes
 
 vlan 30
-   name SERVER-NETWORK-3
+   name Server-Network-3
 
 interface Ethernet1
-   description to-99-sp1-E3
-   mtu 1500
+   description to-99-sp1-Eth3
    no switchport
+   mtu 9100
    ip address 10.99.241.4/31
-   isis enable UNDERLAY
-   isis circuit-type level-2
-   isis network point-to-point
-   isis bfd
-   no shutdown
+   bfd interval 300 min-rx 300 multiplier 3
 
 interface Ethernet2
-   description to-99-sp2-E3
-   mtu 1500
+   description to-99-sp2-Eth3
    no switchport
+   mtu 9100
    ip address 10.99.242.4/31
-   isis enable UNDERLAY
-   isis circuit-type level-2
-   isis network point-to-point
-   isis bfd
-   no shutdown
+   bfd interval 300 min-rx 300 multiplier 3
 
 interface Ethernet3
-   description to-Linux3
-   mtu 1500
+   description Server-Network3
    switchport access vlan 30
-
-interface Ethernet4
-   description to-Linux4
-   mtu 1500
-   switchport access vlan 30
-
-interface Loopback0
-   description IS-IS Router-ID and Underlay Management
-   ip address 10.99.243.3/32
-   isis enable UNDERLAY
-   isis passive
+   mtu 9100
+   no shutdown
 
 interface Vlan30
    description Server-Network-3
+   mtu 9100
    ip address 192.168.3.254/24
-   isis enable UNDERLAY
-   isis circuit-type level-1
-   isis passive
 
+interface Loopback0
+   description Router-ID
+   ip address 10.99.243.3/32
+
+route-map REDISTRIBUTE_CONNECTED permit 10
+   match interface Loopback0
+
+route-map REDISTRIBUTE_CONNECTED permit 20
+   match interface Vlan30
+
+router bgp 65099
+   router-id 10.99.243.3
+   no bgp default ipv4-unicast
+   timers bgp 3 9
+   maximum-paths 2 ecmp 2
+   neighbor SPINE peer group
+   neighbor SPINE remote-as 65099
+   neighbor SPINE timers 3 9
+   neighbor SPINE send-community
+   neighbor 10.99.241.5 peer group SPINE
+   neighbor 10.99.242.5 peer group SPINE
+   redistribute connected route-map REDISTRIBUTE_CONNECTED
+   
+   address-family ipv4
+      neighbor SPINE activate
  ```
+ ### 99-lf4 (Leaf 4)
+```bash
+configure terminal
+hostname 99-lf4
+
+ip routing
+
+vlan 40
+   name Server-Network-4
+
+interface Ethernet1
+   description to-99-sp1-Eth4
+   no switchport
+   mtu 9100
+   ip address 10.99.241.6/31
+   bfd interval 300 min-rx 300 multiplier 3
+
+interface Ethernet2
+   description to-99-sp2-Eth4
+   no switchport
+   mtu 9100
+   ip address 10.99.242.6/31
+   bfd interval 300 min-rx 300 multiplier 3
+
+interface Ethernet3
+   description Server-Network4
+   switchport access vlan 40
+   mtu 9100
+   no shutdown
+
+interface Vlan40
+   description Server-Network-4
+   mtu 9100
+   ip address 192.168.4.254/24
+
+interface Loopback0
+   description Router-ID
+   ip address 10.99.243.4/32
+
+route-map REDISTRIBUTE_CONNECTED permit 10
+   match interface Loopback0
+
+route-map REDISTRIBUTE_CONNECTED permit 20
+   match interface Vlan40
+
+router bgp 65099
+   router-id 10.99.243.4
+   no bgp default ipv4-unicast
+   timers bgp 3 9
+   maximum-paths 2 ecmp 2
+   neighbor SPINE peer group
+   neighbor SPINE remote-as 65099
+   neighbor SPINE timers 3 9
+   neighbor SPINE send-community
+   neighbor 10.99.241.7 peer group SPINE
+   neighbor 10.99.242.7 peer group SPINE
+   redistribute connected route-map REDISTRIBUTE_CONNECTED
+   
+   address-family ipv4
+      neighbor SPINE activate
+ ```
+
  ### 99-sp1 (Spine 1)
  ```bash
+configure terminal
+hostname 99-sp1
 
- configure terminal
- ip routing
+! Настройка IP Routing
+ip routing
 
- router isis UNDERLAY
-   net 49.0001.0100.9924.3011.00
-   is-type level-2
-   address-family ipv4 unicast
-      maximum-paths 4
-   bfd all-interfaces
-   log-adjacency-changes
-
- interface Ethernet1
-   description to-99-blf1-E1
-   mtu 1500
+! Настройка интерфейсов
+interface Ethernet1
+   description to-99-blf1-Eth1
    no switchport
+   mtu 9100
    ip address 10.99.241.1/31
-   isis enable UNDERLAY
-   isis circuit-type level-2
-   isis network point-to-point
-   isis bfd
-   no shutdown
+   bfd interval 300 min-rx 300 multiplier 3
 
 interface Ethernet2
-   description to-99-blf2-E1
-   mtu 1500
+   description to-99-blf2-Eth1
    no switchport
+   mtu 9100
    ip address 10.99.241.3/31
-   isis enable UNDERLAY
-   isis circuit-type level-2
-   isis network point-to-point
-   isis bfd
-   no shutdown
+   bfd interval 300 min-rx 300 multiplier 3
 
 interface Ethernet3
-   description to-99-lf3-E1
-   mtu 1500
+   description to-99-lf3-Eth1
    no switchport
+   mtu 9100
    ip address 10.99.241.5/31
-   isis enable UNDERLAY
-   isis circuit-type level-2
-   isis network point-to-point
-   isis bfd
-   no shutdown
+   bfd interval 300 min-rx 300 multiplier 3
+
+interface Ethernet4
+   description to-99-lf4-Eth1
+   no switchport
+   mtu 9100
+   ip address 10.99.241.7/31
+   bfd interval 300 min-rx 300 multiplier 3
 
 interface Loopback0
-   description IS-IS Router-ID and Underlay Management
+   description Router-ID
    ip address 10.99.243.11/32
-   isis enable UNDERLAY
-   isis passive
+
+! Настройка BGP (Route Reflector Server)
+router bgp 65099
+   router-id 10.99.243.11
+   no bgp default ipv4-unicast
+   timers bgp 3 9
+   maximum-paths 2 ecmp 2
+   neighbor LEAF peer group
+   neighbor LEAF remote-as 65099
+   neighbor LEAF route-reflector-client
+   neighbor LEAF send-community
+   neighbor 10.99.241.0 peer group LEAF
+   neighbor 10.99.241.2 peer group LEAF
+   neighbor 10.99.241.4 peer group LEAF
+   neighbor 10.99.241.6 peer group LEAF
+   
+   address-family ipv4
+      neighbor LEAF activate
+      network 10.99.243.11/32
  ```
+
  ### 99-sp2 (Spine 2)
  ```bash
+configure terminal
+hostname 99-sp2
 
- ip routing
- router isis UNDERLAY
-   net 49.0002.0100.9924.3022.00
-   is-type level-2
-   
-   address-family ipv4 unicast
-      maximum-paths 4
-   
-   bfd all-interfaces
-   log-adjacency-changes
-   
- interface Ethernet1
-   description to-99-blf1-E2
-   mtu 1500
+! Настройка IP Routing
+ip routing
+
+! Настройка интерфейсов
+interface Ethernet1
+   description to-99-blf1-Eth2
    no switchport
+   mtu 9100
    ip address 10.99.242.1/31
-   isis enable UNDERLAY
-   isis circuit-type level-2
-   isis network point-to-point
-   isis bfd
-   no shutdown
+   bfd interval 300 min-rx 300 multiplier 3
 
 interface Ethernet2
-   description to-99-blf2-E2
-   mtu 1500
+   description to-99-blf2-Eth2
    no switchport
+   mtu 9100
    ip address 10.99.242.3/31
-   isis enable UNDERLAY
-   isis circuit-type level-2
-   isis network point-to-point
-   isis bfd
-   no shutdown
+   bfd interval 300 min-rx 300 multiplier 3
 
 interface Ethernet3
-   description to-99-lf3-E2
-   mtu 1500
+   description to-99-lf3-Eth2
    no switchport
+   mtu 9100
    ip address 10.99.242.5/31
-   isis enable UNDERLAY
-   isis circuit-type level-2
-   isis network point-to-point
-   isis bfd
-   no shutdown
+   bfd interval 300 min-rx 300 multiplier 3
+
+interface Ethernet4
+   description to-99-lf4-Eth2
+   no switchport
+   mtu 9100
+   ip address 10.99.242.7/31
+   bfd interval 300 min-rx 300 multiplier 3
 
 interface Loopback0
-   description IS-IS Router-ID and Underlay Management
+   description Router-ID
    ip address 10.99.243.22/32
-   isis enable UNDERLAY
-   isis passive
+
+! Настройка BGP (Route Reflector Server)
+router bgp 65099
+   router-id 10.99.243.22
+   no bgp default ipv4-unicast
+   timers bgp 3 9
+   maximum-paths 2 ecmp 2
+   neighbor LEAF peer group
+   neighbor LEAF remote-as 65099
+   neighbor LEAF route-reflector-client
+   neighbor LEAF send-community
+   neighbor 10.99.242.0 peer group LEAF
+   neighbor 10.99.242.2 peer group LEAF
+   neighbor 10.99.242.4 peer group LEAF
+   neighbor 10.99.242.6 peer group LEAF
+   
+   address-family ipv4
+      neighbor LEAF activate
+      network 10.99.243.22/32
 
  ```
 ---
