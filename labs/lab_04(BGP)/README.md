@@ -451,114 +451,213 @@ ip route 0.0.0.0/0 192.168.N.254
 ---
 
 ## Проверка IP связности
- ## 1. Проверка IS-IS соседств
+ ## 1. Проверка BGP соседств
 ```
-99-sp1#sh isis neighbors
+99-sp1#sh ip bgp summary
+BGP summary information for VRF default
+Router identifier 10.99.243.11, local AS number 65099
+Neighbor Status Codes: m - Under maintenance
+  Neighbor         V  AS           MsgRcvd   MsgSent  InQ OutQ  Up/Down State   PfxRcd PfxAcc
+  10.99.241.0      4  65099            823       829    0    0 00:24:52 Estab   4      4
+  10.99.241.2      4  65099             99       102    0    0 00:04:42 Estab   2      2
+  10.99.241.4      4  65099            995      1006    0    0 00:49:31 Estab   2      2
+  10.99.241.6      4  65099            998      1004    0    0 00:49:35 Estab   4      4
+  
 
-Instance  VRF      System Id        Type Interface          SNPA              State Hold time   Circuit Id
-UNDERLAY  default  99-blf1          L2   Ethernet1          P2P               UP    28          1A     
-UNDERLAY  default  99-blf2          L2   Ethernet2          P2P               UP    28          14     
-UNDERLAY  default  99-lf3           L2   Ethernet3          P2P               UP    22          1A     
+```
+## 2.  Проверка таблицы BGP  
+```
+99-sp1#sh ip bgp
+
+
+         Network                Next Hop            Metric  LocPref Weight  Path
+ * #     10.99.241.0/31         10.99.241.0           0       100     0       i
+ * #     10.99.241.6/31         10.99.241.6           0       100     0       i
+ * >     10.99.242.0/31         10.99.241.0           0       100     0       i
+ * >     10.99.242.6/31         10.99.241.6           0       100     0       i
+ * >     10.99.243.1/32         10.99.241.0           0       100     0       i
+ * >     10.99.243.2/32         10.99.241.2           0       100     0       i
+ * >     10.99.243.3/32         10.99.241.4           0       100     0       i
+ * >     10.99.243.4/32         10.99.241.6           0       100     0       i
+ * >     10.99.243.11/32        -                     0       0       -       i
+ * >     192.168.1.0/24         10.99.241.0           0       100     0       i
+ * >     192.168.2.0/24         10.99.241.2           0       100     0       i
+ * >     192.168.3.0/24         10.99.241.4           0       100     0       i
+ * >     192.168.4.0/24         10.99.241.6           0       100     0       i
 
 ```
-## 2.  Проверка IS-IS database 
 ```
-99-sp1#sh isis database
-Legend:
-H - hostname conflict
-U - node unreachable
+99-lf3#sh ip bgp
 
-IS-IS Instance: UNDERLAY VRF: default
-  IS-IS Level 2 Link State Database
-    LSPID                   Seq Num  Cksum  Life Length IS  Received LSPID        Flags
-    99-blf1.00-00                19  49448   976    133 L2  0100.9924.3001.00-00  <>
-    99-blf2.00-00                10   3287   727    133 L2  0100.9924.3002.00-00  <>
-    99-lf3.00-00                  4   9243   591    132 L2  0100.9924.3003.00-00  <>
-    99-sp1.00-00                 15   8500   976    146 L2  0100.9924.3011.00-00  <>
-    99-sp2.00-00                  7   2840   907    146 L2  0100.9924.3022.00-00  <>
+
+         Network                Next Hop            Metric  LocPref Weight  Path
+ * >     10.99.241.0/31         10.99.242.5           0       100     0       i Or-ID: 10.99.243.1 C-LST: 10.99.243.22
+ * >     10.99.241.6/31         10.99.242.5           0       100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.22
+ * >     10.99.242.0/31         10.99.241.5           0       100     0       i Or-ID: 10.99.243.1 C-LST: 10.99.243.11
+ * >     10.99.242.6/31         10.99.241.5           0       100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.11
+ * >Ec   10.99.243.1/32         10.99.241.5           0       100     0       i Or-ID: 10.99.243.1 C-LST: 10.99.243.11
+ *  ec   10.99.243.1/32         10.99.242.5           0       100     0       i Or-ID: 10.99.243.1 C-LST: 10.99.243.22
+ * >Ec   10.99.243.2/32         10.99.241.5           0       100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.11
+ *  ec   10.99.243.2/32         10.99.242.5           0       100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.22
+ * >     10.99.243.3/32         -                     0       0       -       i
+ * >Ec   10.99.243.4/32         10.99.241.5           0       100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.11
+ *  ec   10.99.243.4/32         10.99.242.5           0       100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.22
+ * >     10.99.243.11/32        10.99.241.5           0       100     0       i
+ * >     10.99.243.22/32        10.99.242.5           0       100     0       i
+ * >Ec   192.168.1.0/24         10.99.241.5           0       100     0       i Or-ID: 10.99.243.1 C-LST: 10.99.243.11
+ *  ec   192.168.1.0/24         10.99.242.5           0       100     0       i Or-ID: 10.99.243.1 C-LST: 10.99.243.22
+ * >Ec   192.168.2.0/24         10.99.241.5           0       100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.11
+ *  ec   192.168.2.0/24         10.99.242.5           0       100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.22
+ * >     192.168.3.0/24         -                     1       0       -       i
+ * >Ec   192.168.4.0/24         10.99.241.5           0       100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.11
+ *  ec   192.168.4.0/24         10.99.242.5           0       100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.22
 ```
 
-## 2. Проверка IS-IS маршрутов
+## 2. Проверка таблицы маршрутов
 ```
-99-sp1#sh ip route isis
+99-lf3#sh ip route
 
 VRF: default
+Codes: C - connected, S - static, K - kernel,
+       O - OSPF, IA - OSPF inter area, E1 - OSPF external type 1,
+       E2 - OSPF external type 2, N1 - OSPF NSSA external type 1,
+       N2 - OSPF NSSA external type2, B - Other BGP Routes,
+       B I - iBGP, B E - eBGP, R - RIP, I L1 - IS-IS level 1,
+       I L2 - IS-IS level 2, O3 - OSPFv3, A B - BGP Aggregate,
+       A O - OSPF Summary, NG - Nexthop Group Static Route,
+       V - VXLAN Control Service, M - Martian,
+       DH - DHCP client installed default route,
+       DP - Dynamic Policy Route, L - VRF Leaked,
+       G  - gRIBI, RC - Route Cache Route
 
- I L2     10.99.242.0/31 [115/20]
-           via 10.99.241.0, Ethernet1
- I L2     10.99.242.2/31 [115/20]
-           via 10.99.241.2, Ethernet2
- I L2     10.99.242.4/31 [115/20]
-           via 10.99.241.4, Ethernet3
- I L2     10.99.243.1/32 [115/20]
-           via 10.99.241.0, Ethernet1
- I L2     10.99.243.2/32 [115/20]
-           via 10.99.241.2, Ethernet2
- I L2     10.99.243.3/32 [115/20]
-           via 10.99.241.4, Ethernet3
- I L2     10.99.243.22/32 [115/30]
-           via 10.99.241.0, Ethernet1
-           via 10.99.241.2, Ethernet2
-           via 10.99.241.4, Ethernet3
- I L2     192.168.1.0/24 [115/20]
-           via 10.99.241.0, Ethernet1
- I L2     192.168.2.0/24 [115/20]
-           via 10.99.241.2, Ethernet2
- I L2     192.168.3.0/24 [115/20]
-           via 10.99.241.4, Ethernet3
+Gateway of last resort is not set
+
+ B I      10.99.241.0/31 [200/0] via 10.99.242.5, Ethernet2
+ C        10.99.241.4/31 is directly connected, Ethernet1
+ B I      10.99.241.6/31 [200/0] via 10.99.242.5, Ethernet2
+ B I      10.99.242.0/31 [200/0] via 10.99.241.5, Ethernet1
+ C        10.99.242.4/31 is directly connected, Ethernet2
+ B I      10.99.242.6/31 [200/0] via 10.99.241.5, Ethernet1
+ B I      10.99.243.1/32 [200/0] via 10.99.241.5, Ethernet1
+                                 via 10.99.242.5, Ethernet2
+ B I      10.99.243.2/32 [200/0] via 10.99.241.5, Ethernet1
+                                 via 10.99.242.5, Ethernet2
+ C        10.99.243.3/32 is directly connected, Loopback0
+ B I      10.99.243.4/32 [200/0] via 10.99.241.5, Ethernet1
+                                 via 10.99.242.5, Ethernet2
+ B I      10.99.243.11/32 [200/0] via 10.99.241.5, Ethernet1
+ B I      10.99.243.22/32 [200/0] via 10.99.242.5, Ethernet2
+ B I      192.168.1.0/24 [200/0] via 10.99.241.5, Ethernet1
+                                 via 10.99.242.5, Ethernet2
+ B I      192.168.2.0/24 [200/0] via 10.99.241.5, Ethernet1
+                                 via 10.99.242.5, Ethernet2
+ C        192.168.3.0/24 is directly connected, Vlan30
+ B I      192.168.4.0/24 [200/0] via 10.99.241.5, Ethernet1
+                                 via 10.99.242.5, Ethernet2
+
+
 
 ```
 ## 3. Проверка межсерверной связности между VM 
- ![Проверка пингом между ВМ](linux_ping.jpg)
+```
+99-esx4#ping 192.168.2.1
+PING 192.168.2.1 (192.168.2.1) 72(100) bytes of data.
+80 bytes from 192.168.2.1: icmp_seq=1 ttl=61 time=33.4 ms
+80 bytes from 192.168.2.1: icmp_seq=2 ttl=61 time=25.1 ms
+80 bytes from 192.168.2.1: icmp_seq=3 ttl=61 time=23.6 ms
+80 bytes from 192.168.2.1: icmp_seq=4 ttl=61 time=21.7 ms
+80 bytes from 192.168.2.1: icmp_seq=5 ttl=61 time=23.3 ms
+
+--- 192.168.2.1 ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 84ms
+rtt min/avg/max/mdev = 21.760/25.475/33.424/4.122 ms, pipe 3, ipg/ewma 21.088/29.265 ms
+99-esx4#
+99-esx4#ping 192.168.3.1
+PING 192.168.3.1 (192.168.3.1) 72(100) bytes of data.
+80 bytes from 192.168.3.1: icmp_seq=1 ttl=61 time=54.4 ms
+80 bytes from 192.168.3.1: icmp_seq=2 ttl=61 time=44.8 ms
+80 bytes from 192.168.3.1: icmp_seq=3 ttl=61 time=36.0 ms
+80 bytes from 192.168.3.1: icmp_seq=4 ttl=61 time=28.7 ms
+80 bytes from 192.168.3.1: icmp_seq=5 ttl=61 time=21.5 ms
+
+--- 192.168.3.1 ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 44ms
+rtt min/avg/max/mdev = 21.521/37.121/54.461/11.624 ms, pipe 5, ipg/ewma 11.094/44.962 ms
+99-esx4#
+99-esx4#ping 192.168.1.1
+PING 192.168.1.1 (192.168.1.1) 72(100) bytes of data.
+80 bytes from 192.168.1.1: icmp_seq=1 ttl=61 time=56.6 ms
+80 bytes from 192.168.1.1: icmp_seq=2 ttl=61 time=47.1 ms
+80 bytes from 192.168.1.1: icmp_seq=3 ttl=61 time=39.0 ms
+80 bytes from 192.168.1.1: icmp_seq=4 ttl=61 time=31.5 ms
+80 bytes from 192.168.1.1: icmp_seq=5 ttl=61 time=24.6 ms
+
+--- 192.168.1.1 ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 43ms
+rtt min/avg/max/mdev = 24.659/39.796/56.616/11.273 ms, pipe 5, ipg/ewma 10.959/47.401 ms
+```
 
 ## 4. Проверка связности между loopback адресами
 ```
-99-lf3#ping 10.99.243.1 source 10.99.243.3
-PING 10.99.243.1 (10.99.243.1) from 10.99.243.3 : 72(100) bytes of data.
-80 bytes from 10.99.243.1: icmp_seq=1 ttl=63 time=3.16 ms
-80 bytes from 10.99.243.1: icmp_seq=2 ttl=63 time=1.82 ms
-80 bytes from 10.99.243.1: icmp_seq=3 ttl=63 time=1.81 ms
-80 bytes from 10.99.243.1: icmp_seq=4 ttl=63 time=1.80 ms
-80 bytes from 10.99.243.1: icmp_seq=5 ttl=63 time=1.82 ms
+99-lf4#ping 10.99.243.1
+PING 10.99.243.1 (10.99.243.1) 72(100) bytes of data.
+80 bytes from 10.99.243.1: icmp_seq=1 ttl=63 time=16.0 ms
+80 bytes from 10.99.243.1: icmp_seq=2 ttl=63 time=9.79 ms
+80 bytes from 10.99.243.1: icmp_seq=3 ttl=63 time=8.53 ms
+80 bytes from 10.99.243.1: icmp_seq=4 ttl=63 time=7.39 ms
+80 bytes from 10.99.243.1: icmp_seq=5 ttl=63 time=9.31 ms
 
 --- 10.99.243.1 ping statistics ---
-5 packets transmitted, 5 received, 0% packet loss, time 13ms
-rtt min/avg/max/mdev = 1.795/2.081/3.162/0.540 ms, ipg/ewma 3.314/2.603 ms
-
-99-lf3#
-99-lf3#ping 10.99.243.2 source 10.99.243.3
-PING 10.99.243.2 (10.99.243.2) from 10.99.243.3 : 72(100) bytes of data.
-80 bytes from 10.99.243.2: icmp_seq=1 ttl=63 time=4.24 ms
-80 bytes from 10.99.243.2: icmp_seq=2 ttl=63 time=2.71 ms
-80 bytes from 10.99.243.2: icmp_seq=3 ttl=63 time=2.47 ms
-80 bytes from 10.99.243.2: icmp_seq=4 ttl=63 time=2.36 ms
-80 bytes from 10.99.243.2: icmp_seq=5 ttl=63 time=2.27 ms
+5 packets transmitted, 5 received, 0% packet loss, time 55ms
+rtt min/avg/max/mdev = 7.395/10.206/16.002/3.011 ms, pipe 2, ipg/ewma 13.761/12.989 ms
+99-lf4#
+99-lf4#ping 10.99.243.2
+PING 10.99.243.2 (10.99.243.2) 72(100) bytes of data.
+80 bytes from 10.99.243.2: icmp_seq=1 ttl=63 time=11.0 ms
+80 bytes from 10.99.243.2: icmp_seq=2 ttl=63 time=10.9 ms
+80 bytes from 10.99.243.2: icmp_seq=3 ttl=63 time=9.15 ms
+80 bytes from 10.99.243.2: icmp_seq=4 ttl=63 time=9.42 ms
+80 bytes from 10.99.243.2: icmp_seq=5 ttl=63 time=10.3 ms
 
 --- 10.99.243.2 ping statistics ---
-5 packets transmitted, 5 received, 0% packet loss, time 17ms
-rtt min/avg/max/mdev = 2.271/2.809/4.240/0.730 ms, ipg/ewma 4.361/3.490 ms
+5 packets transmitted, 5 received, 0% packet loss, time 49ms
+rtt min/avg/max/mdev = 9.152/10.182/11.027/0.782 ms, ipg/ewma 12.442/10.580 ms
+99-lf4#
+99-lf4#ping 10.99.243.3
+PING 10.99.243.3 (10.99.243.3) 72(100) bytes of data.
+80 bytes from 10.99.243.3: icmp_seq=1 ttl=63 time=16.6 ms
+80 bytes from 10.99.243.3: icmp_seq=2 ttl=63 time=9.10 ms
+80 bytes from 10.99.243.3: icmp_seq=3 ttl=63 time=15.4 ms
+80 bytes from 10.99.243.3: icmp_seq=4 ttl=63 time=8.76 ms
+80 bytes from 10.99.243.3: icmp_seq=5 ttl=63 time=11.6 ms
 
-99-lf3#ping 10.99.243.11 source 10.99.243.3
-PING 10.99.243.11 (10.99.243.11) from 10.99.243.3 : 72(100) bytes of data.
-80 bytes from 10.99.243.11: icmp_seq=1 ttl=64 time=1.90 ms
-80 bytes from 10.99.243.11: icmp_seq=2 ttl=64 time=0.871 ms
-80 bytes from 10.99.243.11: icmp_seq=3 ttl=64 time=0.838 ms
-80 bytes from 10.99.243.11: icmp_seq=4 ttl=64 time=0.768 ms
-80 bytes from 10.99.243.11: icmp_seq=5 ttl=64 time=0.881 ms
+--- 10.99.243.3 ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 61ms
+rtt min/avg/max/mdev = 8.763/12.323/16.650/3.224 ms, pipe 2, ipg/ewma 15.431/14.415 ms
+99-lf4#
+99-lf4#ping 10.99.243.11
+PING 10.99.243.11 (10.99.243.11) 72(100) bytes of data.
+80 bytes from 10.99.243.11: icmp_seq=1 ttl=64 time=9.04 ms
+80 bytes from 10.99.243.11: icmp_seq=2 ttl=64 time=5.63 ms
+80 bytes from 10.99.243.11: icmp_seq=3 ttl=64 time=3.73 ms
+80 bytes from 10.99.243.11: icmp_seq=4 ttl=64 time=2.75 ms
+80 bytes from 10.99.243.11: icmp_seq=5 ttl=64 time=2.95 ms
 
 --- 10.99.243.11 ping statistics ---
-5 packets transmitted, 5 received, 0% packet loss, time 10ms
-rtt min/avg/max/mdev = 0.768/1.050/1.895/0.424 ms, ipg/ewma 2.490/1.458 ms
-99-lf3#
-99-lf3#ping 10.99.243.22 source 10.99.243.3
-PING 10.99.243.22 (10.99.243.22) from 10.99.243.3 : 72(100) bytes of data.
-80 bytes from 10.99.243.22: icmp_seq=1 ttl=64 time=3.17 ms
-80 bytes from 10.99.243.22: icmp_seq=2 ttl=64 time=1.94 ms
-80 bytes from 10.99.243.22: icmp_seq=3 ttl=64 time=1.96 ms
-80 bytes from 10.99.243.22: icmp_seq=4 ttl=64 time=1.85 ms
-80 bytes from 10.99.243.22: icmp_seq=5 ttl=64 time=0.833 ms
+5 packets transmitted, 5 received, 0% packet loss, time 35ms
+rtt min/avg/max/mdev = 2.759/4.825/9.044/2.342 ms, ipg/ewma 8.788/6.801 ms
+99-lf4#
+99-lf4#ping 10.99.243.22
+PING 10.99.243.22 (10.99.243.22) 72(100) bytes of data.
+80 bytes from 10.99.243.22: icmp_seq=1 ttl=64 time=5.98 ms
+80 bytes from 10.99.243.22: icmp_seq=2 ttl=64 time=3.06 ms
+80 bytes from 10.99.243.22: icmp_seq=3 ttl=64 time=3.45 ms
+80 bytes from 10.99.243.22: icmp_seq=4 ttl=64 time=2.77 ms
+80 bytes from 10.99.243.22: icmp_seq=5 ttl=64 time=2.96 ms
 
 --- 10.99.243.22 ping statistics ---
-5 packets transmitted, 5 received, 0% packet loss, time 14ms
-rtt min/avg/max/mdev = 0.833/1.949/3.166/0.739 ms, ipg/ewma 3.409/2.512 ms
+5 packets transmitted, 5 received, 0% packet loss, time 24ms
+rtt min/avg/max/mdev = 2.776/3.649/5.984/1.189 ms, ipg/ewma 6.054/4.769 ms
+99-lf4#
+
 ```
