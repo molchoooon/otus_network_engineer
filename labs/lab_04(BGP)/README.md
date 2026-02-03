@@ -320,10 +320,8 @@ router bgp 65099
 configure terminal
 hostname 99-sp1
 
-! Настройка IP Routing
 ip routing
 
-! Настройка интерфейсов
 interface Ethernet1
    description to-99-blf1-Eth1
    no switchport
@@ -356,7 +354,6 @@ interface Loopback0
    description Router-ID
    ip address 10.99.243.11/32
 
-! Настройка BGP (Route Reflector Server)
 router bgp 65099
    router-id 10.99.243.11
    no bgp default ipv4-unicast
@@ -381,10 +378,8 @@ router bgp 65099
 configure terminal
 hostname 99-sp2
 
-! Настройка IP Routing
 ip routing
 
-! Настройка интерфейсов
 interface Ethernet1
    description to-99-blf1-Eth2
    no switchport
@@ -417,7 +412,6 @@ interface Loopback0
    description Router-ID
    ip address 10.99.243.22/32
 
-! Настройка BGP (Route Reflector Server)
 router bgp 65099
    router-id 10.99.243.22
    no bgp default ipv4-unicast
