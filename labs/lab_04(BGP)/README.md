@@ -363,12 +363,9 @@ router bgp 65099
    neighbor LEAF remote-as 65099
    neighbor LEAF route-reflector-client
    neighbor LEAF send-community
+   bgp listen range 10.99.241.0/24 peer-group LEAF remote-as 65099
    neighbor LEAF next-hop-self
-   neighbor 10.99.241.0 peer group LEAF
-   neighbor 10.99.241.2 peer group LEAF
-   neighbor 10.99.241.4 peer group LEAF
-   neighbor 10.99.241.6 peer group LEAF
-   
+     
    address-family ipv4
       neighbor LEAF activate
       network 10.99.243.11/32
