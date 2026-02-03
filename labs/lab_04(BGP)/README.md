@@ -443,6 +443,7 @@ interface Ethernet1
    switchport access vlan N0
 interface VlanN0
    ip address 192.168.N.1/24
+   mtu 9100
 ip routing
 ip route 0.0.0.0/0 192.168.N.254
 
@@ -583,17 +584,18 @@ PING 192.168.3.1 (192.168.3.1) 72(100) bytes of data.
 5 packets transmitted, 5 received, 0% packet loss, time 44ms
 rtt min/avg/max/mdev = 21.521/37.121/54.461/11.624 ms, pipe 5, ipg/ewma 11.094/44.962 ms
 99-esx4#
-99-esx4#ping 192.168.1.1
-PING 192.168.1.1 (192.168.1.1) 72(100) bytes of data.
-80 bytes from 192.168.1.1: icmp_seq=1 ttl=61 time=56.6 ms
-80 bytes from 192.168.1.1: icmp_seq=2 ttl=61 time=47.1 ms
-80 bytes from 192.168.1.1: icmp_seq=3 ttl=61 time=39.0 ms
-80 bytes from 192.168.1.1: icmp_seq=4 ttl=61 time=31.5 ms
-80 bytes from 192.168.1.1: icmp_seq=5 ttl=61 time=24.6 ms
+99-esx4#ping 192.168.1.1 size 9000 df-bit
+PING 192.168.1.1 (192.168.1.1) 8972(9000) bytes of data.
+8980 bytes from 192.168.1.1: icmp_seq=1 ttl=61 time=40.0 ms
+8980 bytes from 192.168.1.1: icmp_seq=2 ttl=61 time=30.5 ms
+8980 bytes from 192.168.1.1: icmp_seq=3 ttl=61 time=32.5 ms
+8980 bytes from 192.168.1.1: icmp_seq=4 ttl=61 time=26.2 ms
+8980 bytes from 192.168.1.1: icmp_seq=5 ttl=61 time=26.9 ms
 
 --- 192.168.1.1 ping statistics ---
-5 packets transmitted, 5 received, 0% packet loss, time 43ms
-rtt min/avg/max/mdev = 24.659/39.796/56.616/11.273 ms, pipe 5, ipg/ewma 10.959/47.401 ms
+5 packets transmitted, 5 received, 0% packet loss, time 71ms
+rtt min/avg/max/mdev = 26.221/31.265/40.066/4.982 ms, pipe 4, ipg/ewma 17.804/35.393 ms
+
 ```
 
 ## 4. Проверка связности между loopback адресами
