@@ -363,6 +363,7 @@ router bgp 65099
    neighbor LEAF remote-as 65099
    neighbor LEAF route-reflector-client
    neighbor LEAF send-community
+   neighbor LEAF next-hop-self
    neighbor 10.99.241.0 peer group LEAF
    neighbor 10.99.241.2 peer group LEAF
    neighbor 10.99.241.4 peer group LEAF
@@ -421,6 +422,7 @@ router bgp 65099
    neighbor LEAF remote-as 65099
    neighbor LEAF route-reflector-client
    neighbor LEAF send-community
+   neighbor LEAF next-hop-self
    neighbor 10.99.242.0 peer group LEAF
    neighbor 10.99.242.2 peer group LEAF
    neighbor 10.99.242.4 peer group LEAF
@@ -429,6 +431,21 @@ router bgp 65099
    address-family ipv4
       neighbor LEAF activate
       network 10.99.243.22/32
+
+ ```
+  ### 99-esxN (ESX N)
+ ```bash
+configure terminal
+hostname 99-esxN
+spanning-tree mode rstp
+vlan N0
+interface Ethernet1
+   mtu 9100
+   switchport access vlan N0
+interface VlanN0
+   ip address 192.168.N.1/24
+ip routing
+ip route 0.0.0.0/0 192.168.N.254
 
  ```
 ---
