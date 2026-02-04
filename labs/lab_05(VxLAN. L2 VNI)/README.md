@@ -84,15 +84,12 @@ configure terminal
 hostname 99-blf1
 
 ip routing
-ip virtual-router mac-address 0000.0000.00aa
 
 vlan 10
    name VLAN10
-   vn-segment 10010
 
 vlan 20
    name VLAN20
-   vn-segment 10020
 
 interface Ethernet1
    description to-99-sp1-Eth1
@@ -113,7 +110,7 @@ interface Ethernet3
    switchport mode trunk
    switchport trunk allowed vlan 10,20
    mtu 9100
-   spanning-tree portfast trunk
+   spanning-tree edge-port bpduguard default
    spanning-tree bpduguard enable
    no shutdown
 
@@ -122,7 +119,7 @@ interface Ethernet4
    switchport mode trunk
    switchport trunk allowed vlan 10,20
    mtu 9100
-   spanning-tree portfast trunk
+   spanning-tree edge-port bpduguard default
    spanning-tree bpduguard enable
    no shutdown
 
@@ -144,37 +141,47 @@ interface Loopback1
    description VTEP-Source
    ip address 10.99.244.1/32
 
-interface nve1
+interface Vxlan1
    description VXLAN-Tunnel-Endpoint
    no shutdown
-   source-interface Loopback1
+   vxlan source-interface Loopback1
+   vxlan vlan 10 vni 10010
+   vxlan vlan 20 vni 10020
    host-reachability protocol bgp
    member vni 10010
       ingress-replication protocol bgp
    member vni 10020
       ingress-replication protocol bgp
 
-route-map REDISTRIBUTE_CONNECTED permit 10
-   match interface Loopback0
-
-route-map REDISTRIBUTE_CONNECTED permit 20
-   match interface Vlan10
 
 router bgp 65099
    router-id 10.99.243.1
    no bgp default ipv4-unicast
    timers bgp 3 9
-   maximum-paths 2 ecmp 2
-   neighbor SPINE peer group
-   neighbor SPINE remote-as 65099
-   neighbor SPINE timers 3 9
-   neighbor SPINE send-community
-   neighbor 10.99.241.1 peer group SPINE
-   neighbor 10.99.242.1 peer group SPINE
-   redistribute connected route-map REDISTRIBUTE_CONNECTED
+   maximum-paths 10 ecmp 10
+
+   neighbor SPINE-UNDERLAY peer group
+   neighbor SPINE-UNDERLAY remote-as 65099
+   neighbor SPINE-UNDERLAY timers 3 9
+   neighbor SPINE-UNDERLAY send-community
+   neighbor 10.99.241.1 peer group SPINE-UNDERLAY
+   neighbor 10.99.242.1 peer group SPINE-UNDERLAY
+
+   neighbor SPINE-EVPN peer group
+   neighbor SPINE-EVPN remote-as 65099
+   neighbor SPINE-EVPN update-source Loopback0
+   neighbor SPINE-EVPN ebgp-multihop 2
+   neighbor SPINE-EVPN send-community extended
+   neighbor 10.99.243.11 peer group SPINE-EVPN
+   neighbor 10.99.243.22 peer group SPINE-EVPN
    
    address-family ipv4
-      neighbor SPINE activate
+      neighbor SPINE-UNDERLAY activate
+      redistribute connected
+   
+   address-family evpn
+      neighbor SPINE-EVPN activate
+
 
  ```
 
