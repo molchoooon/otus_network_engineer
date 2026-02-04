@@ -84,9 +84,15 @@ configure terminal
 hostname 99-blf1
 
 ip routing
+ip virtual-router mac-address 0000.0000.00aa
 
 vlan 10
-   name Server-Network-1
+   name VLAN10
+   vn-segment 10010
+
+vlan 20
+   name VLAN20
+   vn-segment 10020
 
 interface Ethernet1
    description to-99-sp1-Eth1
@@ -103,19 +109,50 @@ interface Ethernet2
    bfd interval 300 min-rx 300 multiplier 3
 
 interface Ethernet3
-   description Server-Network1
-   switchport access vlan 10
+   description to-99-esx1-Eth1
+   switchport mode trunk
+   switchport trunk allowed vlan 10,20
    mtu 9100
+   spanning-tree portfast trunk
+   spanning-tree bpduguard enable
+   no shutdown
+
+interface Ethernet4
+   description to-99-esx2-Eth2
+   switchport mode trunk
+   switchport trunk allowed vlan 10,20
+   mtu 9100
+   spanning-tree portfast trunk
+   spanning-tree bpduguard enable
    no shutdown
 
 interface Vlan10
-   description Server-Network-1
+   description Vlan10
    mtu 9100
-   ip address 192.168.1.254/24
+   ip address 192.168.1.251/24
+
+interface Vlan20
+   description Vlan20
+   mtu 9100
+   ip address 192.168.2.251/24
 
 interface Loopback0
    description Router-ID
    ip address 10.99.243.1/32
+
+interface Loopback1
+   description VTEP-Source
+   ip address 10.99.244.1/32
+
+interface nve1
+   description VXLAN-Tunnel-Endpoint
+   no shutdown
+   source-interface Loopback1
+   host-reachability protocol bgp
+   member vni 10010
+      ingress-replication protocol bgp
+   member vni 10020
+      ingress-replication protocol bgp
 
 route-map REDISTRIBUTE_CONNECTED permit 10
    match interface Loopback0
@@ -449,7 +486,8 @@ configure terminal
 hostname 99-esxN
 
 ip routing
-
+vlan 10
+vlan 20
 interface Ethernet1
    description to-99-lf4-Eth3
    switchport mode trunk
@@ -458,7 +496,7 @@ interface Ethernet1
    no shutdown
 
 interface Ethernet2
-   description to-99-blf1-Eth4
+   description to-99-lf3-Eth4
    switchport mode trunk
    switchport trunk allowed vlan 10,20
    mtu 9100
