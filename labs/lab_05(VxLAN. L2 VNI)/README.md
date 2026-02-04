@@ -113,13 +113,6 @@ interface Ethernet3
    spanning-tree bpduguard enable
    no shutdown
 
-interface Ethernet4
-   description to-99-esx2-Eth2
-   switchport mode trunk
-   switchport trunk allowed vlan 10,20
-   mtu 9100
-   spanning-tree bpduguard enable
-   no shutdown
 
 interface Vlan10
    description Vlan10
@@ -221,13 +214,6 @@ interface Ethernet3
    spanning-tree bpduguard enable
    no shutdown
 
-interface Ethernet4
-   description to-99-esx1-Eth2
-   switchport mode trunk
-   switchport trunk allowed vlan 10,20
-   mtu 9100
-   spanning-tree bpduguard enable
-   no shutdown
 
 interface Vlan10
    description Vlan10
@@ -328,13 +314,6 @@ interface Ethernet3
    spanning-tree bpduguard enable
    no shutdown
 
-interface Ethernet4
-   description to-99-esx4-Eth2
-   switchport mode trunk
-   switchport trunk allowed vlan 10,20
-   mtu 9100
-   spanning-tree bpduguard enable
-   no shutdown
 
 interface Vlan10
    description Vlan10
@@ -434,14 +413,6 @@ interface Ethernet3
    spanning-tree bpduguard enable
    no shutdown
 
-interface Ethernet4
-   description to-99-esx3-Eth2
-   switchport mode trunk
-   switchport trunk allowed vlan 10,20
-   mtu 9100
-   spanning-tree bpduguard enable
-   no shutdown
-spanning-tree bpduguard enable
 interface Vlan10
    description Vlan10
    mtu 9100
