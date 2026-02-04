@@ -557,17 +557,31 @@ router bgp 65099
    router-id 10.99.243.11
    no bgp default ipv4-unicast
    timers bgp 3 9
-   maximum-paths 2 ecmp 2
-   neighbor LEAF peer group
-   neighbor LEAF remote-as 65099
-   neighbor LEAF route-reflector-client
-   neighbor LEAF send-community
-   bgp listen range 10.99.241.0/24 peer-group LEAF remote-as 65099
-   neighbor LEAF next-hop-self
-     
+   maximum-paths 10 ecmp 10
+   
+   neighbor LEAF-UNDERLAY peer group
+   neighbor LEAF-UNDERLAY remote-as 65099
+   neighbor LEAF-UNDERLAY route-reflector-client
+   neighbor LEAF-UNDERLAY send-community
+   neighbor LEAF-UNDERLAY next-hop-self
+   bgp listen range 10.99.241.0/24 peer-group LEAF-UNDERLAY remote-as 65099
+   
+   neighbor LEAF-EVPN peer group
+   neighbor LEAF-EVPN remote-as 65099
+   neighbor LEAF-EVPN update-source Loopback0
+   neighbor LEAF-EVPN route-reflector-client
+   neighbor LEAF-EVPN send-community extended
+   neighbor 10.99.243.1 peer group LEAF-EVPN
+   neighbor 10.99.243.2 peer group LEAF-EVPN
+   neighbor 10.99.243.3 peer group LEAF-EVPN
+   neighbor 10.99.243.4 peer group LEAF-EVPN
+   
    address-family ipv4
-      neighbor LEAF activate
+      neighbor LEAF-UNDERLAY activate
       network 10.99.243.11/32
+   
+   address-family evpn
+      neighbor LEAF-EVPN activate
  ```
 
  ### 99-sp2 (Spine 2)
@@ -613,20 +627,31 @@ router bgp 65099
    router-id 10.99.243.22
    no bgp default ipv4-unicast
    timers bgp 3 9
-   maximum-paths 2 ecmp 2
-   neighbor LEAF peer group
-   neighbor LEAF remote-as 65099
-   neighbor LEAF route-reflector-client
-   neighbor LEAF send-community
-   neighbor LEAF next-hop-self
-   neighbor 10.99.242.0 peer group LEAF
-   neighbor 10.99.242.2 peer group LEAF
-   neighbor 10.99.242.4 peer group LEAF
-   neighbor 10.99.242.6 peer group LEAF
+   maximum-paths 10 ecmp 10
+   
+   neighbor LEAF-UNDERLAY peer group
+   neighbor LEAF-UNDERLAY remote-as 65099
+   neighbor LEAF-UNDERLAY route-reflector-client
+   neighbor LEAF-UNDERLAY send-community
+   neighbor LEAF-UNDERLAY next-hop-self
+   bgp listen range 10.99.241.0/24 peer-group LEAF-UNDERLAY remote-as 65099
+   
+   neighbor LEAF-EVPN peer group
+   neighbor LEAF-EVPN remote-as 65099
+   neighbor LEAF-EVPN update-source Loopback0
+   neighbor LEAF-EVPN route-reflector-client
+   neighbor LEAF-EVPN send-community extended
+   neighbor 10.99.243.1 peer group LEAF-EVPN
+   neighbor 10.99.243.2 peer group LEAF-EVPN
+   neighbor 10.99.243.3 peer group LEAF-EVPN
+   neighbor 10.99.243.4 peer group LEAF-EVPN
    
    address-family ipv4
-      neighbor LEAF activate
+      neighbor LEAF-UNDERLAY activate
       network 10.99.243.22/32
+   
+   address-family evpn
+      neighbor LEAF-EVPN activate
 
  ```
  !!Сделал разный конфиг соседей на спайнах чтоб проверить оба варианта добавления.
