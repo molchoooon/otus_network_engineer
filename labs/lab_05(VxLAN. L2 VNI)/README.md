@@ -148,12 +148,7 @@ interface Vxlan1
    vxlan vlan 10 vni 10010
    vxlan vlan 20 vni 10020
    host-reachability protocol bgp
-   member vni 10010
-      ingress-replication protocol bgp
-   member vni 10020
-      ingress-replication protocol bgp
-
-
+  
 router bgp 65099
    router-id 10.99.243.1
    no bgp default ipv4-unicast
@@ -174,6 +169,14 @@ router bgp 65099
    neighbor SPINE-EVPN send-community extended
    neighbor 10.99.243.11 peer group SPINE-EVPN
    neighbor 10.99.243.22 peer group SPINE-EVPN
+   vlan 10 
+   rd auto 
+   route-target both 65099:10010
+   redistribute learned
+   vlan 20 
+   rd auto 
+   route-target both 65099:10020
+   redistribute learned
    
    address-family ipv4
       neighbor SPINE-UNDERLAY activate
@@ -192,8 +195,11 @@ hostname 99-blf2
 
 ip routing
 
+vlan 10
+   name VLAN10
+
 vlan 20
-   name Server-Network-2
+   name VLAN20
 
 interface Ethernet1
    description to-99-sp1-Eth2
@@ -210,41 +216,85 @@ interface Ethernet2
    bfd interval 300 min-rx 300 multiplier 3
 
 interface Ethernet3
-   description Server-Network2
-   switchport access vlan 20
+   description to-99-esx2-Eth1
+   switchport mode trunk
+   switchport trunk allowed vlan 10,20
    mtu 9100
+   spanning-tree edge-port bpduguard default
+   spanning-tree bpduguard enable
    no shutdown
 
-interface Vlan20
-   description Server-Network-2
+interface Ethernet4
+   description to-99-esx1-Eth2
+   switchport mode trunk
+   switchport trunk allowed vlan 10,20
    mtu 9100
-   ip address 192.168.2.254/24
+   spanning-tree edge-port bpduguard default
+   spanning-tree bpduguard enable
+   no shutdown
+
+interface Vlan10
+   description Vlan10
+   mtu 9100
+   ip address 192.168.1.252/24
+
+interface Vlan20
+   description Vlan20
+   mtu 9100
+   ip address 192.168.2.252/24
 
 interface Loopback0
    description Router-ID
    ip address 10.99.243.2/32
 
-route-map REDISTRIBUTE_CONNECTED permit 10
-   match interface Loopback0
+interface Loopback1
+   description VTEP-Source
+   ip address 10.99.244.2/32
 
-route-map REDISTRIBUTE_CONNECTED permit 20
-   match interface Vlan20
-
+interface Vxlan1
+   description VXLAN-Tunnel-Endpoint
+   no shutdown
+   vxlan source-interface Loopback1
+   vxlan vlan 10 vni 10010
+   vxlan vlan 20 vni 10020
+  
 router bgp 65099
    router-id 10.99.243.2
    no bgp default ipv4-unicast
    timers bgp 3 9
-   maximum-paths 2 ecmp 2
-   neighbor SPINE peer group
-   neighbor SPINE remote-as 65099
-   neighbor SPINE timers 3 9
-   neighbor SPINE send-community
-   neighbor 10.99.241.3 peer group SPINE
-   neighbor 10.99.242.3 peer group SPINE
-   redistribute connected route-map REDISTRIBUTE_CONNECTED
+   maximum-paths 10 ecmp 10
+
+   neighbor SPINE-UNDERLAY peer group
+   neighbor SPINE-UNDERLAY remote-as 65099
+   neighbor SPINE-UNDERLAY timers 3 9
+   neighbor SPINE-UNDERLAY send-community
+   neighbor 10.99.241.3 peer group SPINE-UNDERLAY
+   neighbor 10.99.242.3 peer group SPINE-UNDERLAY
+
+   neighbor SPINE-EVPN peer group
+   neighbor SPINE-EVPN remote-as 65099
+   neighbor SPINE-EVPN update-source Loopback0
+   neighbor SPINE-EVPN ebgp-multihop 2
+   neighbor SPINE-EVPN send-community extended
+   neighbor 10.99.243.11 peer group SPINE-EVPN
+   neighbor 10.99.243.22 peer group SPINE-EVPN
+   
+   vlan 10 
+   rd auto 
+   route-target both 65099:10010
+   redistribute learned
+   
+   vlan 20 
+   rd auto 
+   route-target both 65099:10020
+   redistribute learned
    
    address-family ipv4
-      neighbor SPINE activate
+      neighbor SPINE-UNDERLAY activate
+      redistribute connected
+   
+   address-family evpn
+      neighbor SPINE-EVPN activate
 
  ```
 ### 99-lf3 (Leaf 3)
@@ -254,8 +304,11 @@ hostname 99-lf3
 
 ip routing
 
-vlan 30
-   name Server-Network-3
+vlan 10
+   name VLAN10
+
+vlan 20
+   name VLAN20
 
 interface Ethernet1
    description to-99-sp1-Eth3
@@ -272,41 +325,85 @@ interface Ethernet2
    bfd interval 300 min-rx 300 multiplier 3
 
 interface Ethernet3
-   description Server-Network3
-   switchport access vlan 30
+   description to-99-esx3-Eth1
+   switchport mode trunk
+   switchport trunk allowed vlan 10,20
    mtu 9100
+   spanning-tree edge-port bpduguard default
+   spanning-tree bpduguard enable
    no shutdown
 
-interface Vlan30
-   description Server-Network-3
+interface Ethernet4
+   description to-99-esx4-Eth2
+   switchport mode trunk
+   switchport trunk allowed vlan 10,20
    mtu 9100
-   ip address 192.168.3.254/24
+   spanning-tree edge-port bpduguard default
+   spanning-tree bpduguard enable
+   no shutdown
+
+interface Vlan10
+   description Vlan10
+   mtu 9100
+   ip address 192.168.1.253/24
+
+interface Vlan20
+   description Vlan20
+   mtu 9100
+   ip address 192.168.2.253/24
 
 interface Loopback0
    description Router-ID
    ip address 10.99.243.3/32
 
-route-map REDISTRIBUTE_CONNECTED permit 10
-   match interface Loopback0
+interface Loopback1
+   description VTEP-Source
+   ip address 10.99.244.3/32
 
-route-map REDISTRIBUTE_CONNECTED permit 20
-   match interface Vlan30
-
+interface Vxlan1
+   description VXLAN-Tunnel-Endpoint
+   no shutdown
+   vxlan source-interface Loopback1
+   vxlan vlan 10 vni 10010
+   vxlan vlan 20 vni 10020
+  
 router bgp 65099
    router-id 10.99.243.3
    no bgp default ipv4-unicast
    timers bgp 3 9
-   maximum-paths 2 ecmp 2
-   neighbor SPINE peer group
-   neighbor SPINE remote-as 65099
-   neighbor SPINE timers 3 9
-   neighbor SPINE send-community
-   neighbor 10.99.241.5 peer group SPINE
-   neighbor 10.99.242.5 peer group SPINE
-   redistribute connected route-map REDISTRIBUTE_CONNECTED
+   maximum-paths 10 ecmp 10
+
+   neighbor SPINE-UNDERLAY peer group
+   neighbor SPINE-UNDERLAY remote-as 65099
+   neighbor SPINE-UNDERLAY timers 3 9
+   neighbor SPINE-UNDERLAY send-community
+   neighbor 10.99.241.5 peer group SPINE-UNDERLAY
+   neighbor 10.99.242.5 peer group SPINE-UNDERLAY
+
+   neighbor SPINE-EVPN peer group
+   neighbor SPINE-EVPN remote-as 65099
+   neighbor SPINE-EVPN update-source Loopback0
+   neighbor SPINE-EVPN ebgp-multihop 2
+   neighbor SPINE-EVPN send-community extended
+   neighbor 10.99.243.11 peer group SPINE-EVPN
+   neighbor 10.99.243.22 peer group SPINE-EVPN
+   
+   vlan 10 
+   rd auto 
+   route-target both 65099:10010
+   redistribute learned
+   
+   vlan 20 
+   rd auto 
+   route-target both 65099:10020
+   redistribute learned
    
    address-family ipv4
-      neighbor SPINE activate
+      neighbor SPINE-UNDERLAY activate
+      redistribute connected
+   
+   address-family evpn
+      neighbor SPINE-EVPN activate
  ```
  ### 99-lf4 (Leaf 4)
 ```bash
@@ -315,8 +412,11 @@ hostname 99-lf4
 
 ip routing
 
-vlan 40
-   name Server-Network-4
+vlan 10
+   name VLAN10
+
+vlan 20
+   name VLAN20
 
 interface Ethernet1
    description to-99-sp1-Eth4
@@ -333,41 +433,85 @@ interface Ethernet2
    bfd interval 300 min-rx 300 multiplier 3
 
 interface Ethernet3
-   description Server-Network4
-   switchport access vlan 40
+   description to-99-esx4-Eth1
+   switchport mode trunk
+   switchport trunk allowed vlan 10,20
    mtu 9100
+   spanning-tree edge-port bpduguard default
+   spanning-tree bpduguard enable
    no shutdown
 
-interface Vlan40
-   description Server-Network-4
+interface Ethernet4
+   description to-99-esx3-Eth2
+   switchport mode trunk
+   switchport trunk allowed vlan 10,20
    mtu 9100
-   ip address 192.168.4.254/24
+   spanning-tree edge-port bpduguard default
+   spanning-tree bpduguard enable
+   no shutdown
+
+interface Vlan10
+   description Vlan10
+   mtu 9100
+   ip address 192.168.1.254/24
+
+interface Vlan20
+   description Vlan20
+   mtu 9100
+   ip address 192.168.2.254/24
 
 interface Loopback0
    description Router-ID
    ip address 10.99.243.4/32
 
-route-map REDISTRIBUTE_CONNECTED permit 10
-   match interface Loopback0
+interface Loopback1
+   description VTEP-Source
+   ip address 10.99.244.4/32
 
-route-map REDISTRIBUTE_CONNECTED permit 20
-   match interface Vlan40
-
+interface Vxlan1
+   description VXLAN-Tunnel-Endpoint
+   no shutdown
+   vxlan source-interface Loopback1
+   vxlan vlan 10 vni 10010
+   vxlan vlan 20 vni 10020
+   
 router bgp 65099
    router-id 10.99.243.4
    no bgp default ipv4-unicast
    timers bgp 3 9
-   maximum-paths 2 ecmp 2
-   neighbor SPINE peer group
-   neighbor SPINE remote-as 65099
-   neighbor SPINE timers 3 9
-   neighbor SPINE send-community
-   neighbor 10.99.241.7 peer group SPINE
-   neighbor 10.99.242.7 peer group SPINE
-   redistribute connected route-map REDISTRIBUTE_CONNECTED
+   maximum-paths 10 ecmp 10
+
+   neighbor SPINE-UNDERLAY peer group
+   neighbor SPINE-UNDERLAY remote-as 65099
+   neighbor SPINE-UNDERLAY timers 3 9
+   neighbor SPINE-UNDERLAY send-community
+   neighbor 10.99.241.7 peer group SPINE-UNDERLAY
+   neighbor 10.99.242.7 peer group SPINE-UNDERLAY
+
+   neighbor SPINE-EVPN peer group
+   neighbor SPINE-EVPN remote-as 65099
+   neighbor SPINE-EVPN update-source Loopback0
+   neighbor SPINE-EVPN ebgp-multihop 2
+   neighbor SPINE-EVPN send-community extended
+   neighbor 10.99.243.11 peer group SPINE-EVPN
+   neighbor 10.99.243.22 peer group SPINE-EVPN
+   
+   vlan 10 
+   rd auto 
+   route-target both 65099:10010
+   redistribute learned
+   
+   vlan 20 
+   rd auto 
+   route-target both 65099:10020
+   redistribute learned
    
    address-family ipv4
-      neighbor SPINE activate
+      neighbor SPINE-UNDERLAY activate
+      redistribute connected
+   
+   address-family evpn
+      neighbor SPINE-EVPN activate
  ```
 
  ### 99-sp1 (Spine 1)
