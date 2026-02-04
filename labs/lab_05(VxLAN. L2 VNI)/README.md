@@ -19,43 +19,22 @@
 |-------------|------------------|-----------|---------------|-------------|---------------------|
 | 99-blf1     | 10.99.241.0/31   | Ethernet1 | 99-sp1        | Ethernet1   | to Spine1           |
 | 99-blf1     | 10.99.242.0/31   | Ethernet2 | 99-sp2        | Ethernet1   | to Spine2           |
-| 99-blf1     | -                | Ethernet3 | 99-esx1       | Eth1        | Server Trunk        |
-| 99-blf1     | -                | Ethernet4 | 99-esx4       | Eth2        | Server Trunk        |
+| 99-blf1     | -                | Ethernet3 | 99-esx1       | Ethernet1   | Server Trunk        |
+| 99-blf1     | -                | Ethernet4 | 99-esx4       | Ethernet2   | Server Trunk        |
 | 99-blf2     | 10.99.241.2/31   | Ethernet1 | 99-sp1        | Ethernet2   | to Spine1           |
 | 99-blf2     | 10.99.242.2/31   | Ethernet2 | 99-sp2        | Ethernet2   | to Spine2           |
-| 99-blf2     | -                | Ethernet3 | 99-esx2       | Eth1        | Server Trunk        |
-| 99-blf2     | -                | Ethernet4 | 99-esx3       | Eth2        | Server Trunk        |
+| 99-blf2     | -                | Ethernet3 | 99-esx2       | Ethernet1   | Server Trunk        |
+| 99-blf2     | -                | Ethernet4 | 99-esx3       | Ethernet2   | Server Trunk        |
 | 99-lf3      | 10.99.241.4/31   | Ethernet1 | 99-sp1        | Ethernet3   | to Spine1           |
 | 99-lf3      | 10.99.242.4/31   | Ethernet2 | 99-sp2        | Ethernet3   | to Spine2           |
-| 99-lf3      | -                | Ethernet3 | 99-esx3       | Eth1        | Server Trunk        |
-| 99-lf3      | -                | Ethernet4 | 99-esx2       | Eth2        | Server Trunk        |
+| 99-lf3      | -                | Ethernet3 | 99-esx3       | Ethernet1   | Server Trunk        |
+| 99-lf3      | -                | Ethernet4 | 99-esx2       | Ethernet2   | Server Trunk        |
 | 99-lf4      | 10.99.241.6/31   | Ethernet1 | 99-sp1        | Ethernet4   | to Spine1           |
 | 99-lf4      | 10.99.242.6/31   | Ethernet2 | 99-sp2        | Ethernet4   | to Spine2           |
-| 99-lf4      | -                | Ethernet3 | 99-esx4       | Eth1        | Server Trunk        |
-| 99-lf4      | -                | Ethernet4 | 99-esx1       | Eth2        | Server Trunk        |
-| 99-sp1      | 10.99.241.1/31   | Ethernet1 | 99-blf1       | Ethernet1   | to BorderLeaf1      |
-| 99-sp1      | 10.99.241.3/31   | Ethernet2 | 99-blf2       | Ethernet1   | to BorderLeaf2      |
-| 99-sp1      | 10.99.241.5/31   | Ethernet3 | 99-lf3        | Ethernet1   | to Leaf3            |
-| 99-sp1      | 10.99.241.7/31   | Ethernet4 | 99-lf4        | Ethernet1   | to Leaf4            |
-| 99-sp2      | 10.99.242.1/31   | Ethernet1 | 99-blf1       | Ethernet2   | to BorderLeaf1      |
-| 99-sp2      | 10.99.242.3/31   | Ethernet2 | 99-blf2       | Ethernet2   | to BorderLeaf2      |
-| 99-sp2      | 10.99.242.5/31   | Ethernet3 | 99-lf3        | Ethernet2   | to Leaf3            |
-| 99-sp2      | 10.99.242.7/31   | Ethernet4 | 99-lf4        | Ethernet2   | to Leaf4            |
+| 99-lf4      | -                | Ethernet3 | 99-esx4       | Ethernet1   | Server Trunk        |
+| 99-lf4      | -                | Ethernet4 | 99-esx1       | Ethernet2   | Server Trunk        |
 
-### Серверные ВМ (Multihomed ESXi Hosts)
-
-| Host Name | Interface | IP Address/Маска | VLAN | Anycast Gateway | Connected To (Leaf) | Connected Port | Description |
-|-----------|-----------|------------------|------|-----------------|---------------------|----------------|-------------|
-| 99-esx1   | Eth1      | 192.168.1.1/24   | 10   | 192.168.1.254   | 99-blf1             | Ethernet3      | Primary VLAN10 |
-| 99-esx1   | Eth2      | 192.168.2.1/24   | 20   | 192.168.2.254   | 99-lf4              | Ethernet4      | Secondary VLAN20 |
-| 99-esx2   | Eth1      | 192.168.1.2/24   | 10   | 192.168.1.254   | 99-blf2             | Ethernet3      | Primary VLAN10 |
-| 99-esx2   | Eth2      | 192.168.2.2/24   | 20   | 192.168.2.254   | 99-lf3              | Ethernet4      | Secondary VLAN20 |
-| 99-esx3   | Eth1      | 192.168.1.3/24   | 10   | 192.168.1.254   | 99-lf3              | Ethernet3      | Primary VLAN10 |
-| 99-esx3   | Eth2      | 192.168.2.3/24   | 20   | 192.168.2.254   | 99-blf2             | Ethernet4      | Secondary VLAN20 |
-| 99-esx4   | Eth1      | 192.168.1.4/24   | 10   | 192.168.1.254   | 99-lf4              | Ethernet3      | Primary VLAN10 |
-| 99-esx4   | Eth2      | 192.168.2.4/24   | 20   | 192.168.2.254   | 99-blf1             | Ethernet4      | Secondary VLAN20 |
-
-### Loopback адреса для BGP Underlay Router ID (Сеть 10.99.243.0/24)
+### Loopback адреса для BGP Underlay (Сеть 10.99.243.0/24)
 
 | Device Name | Loopback0 Address | Description          |
 |-------------|-------------------|----------------------|
@@ -81,6 +60,20 @@
 |------|-------------------|--------|-------------------|------------------------|
 | 10   | Tenant_A_VLAN10   | 10010  | 192.168.1.254/24  | 99-blf1, 99-blf2, 99-lf3, 99-lf4 |
 | 20   | Tenant_A_VLAN20   | 10020  | 192.168.2.254/24  | 99-blf1, 99-blf2, 99-lf3, 99-lf4 |
+
+### Конфигурация "ESXi" устройств (Arista эмуляция)
+
+| ESXi Device | Физические порты (Trunk) | Виртуальные интерфейсы (SVI)                     | IP Address/Маска   | Gateway         |
+|-------------|--------------------------|------------------------------------------------|-------------------|-----------------|
+| 99-esx1     | Eth1 → 99-blf1 Eth3      | Vlan10 (SVI для VLAN10)                        | 192.168.1.1/24    | 192.168.1.254   |
+|             | Eth2 → 99-lf4 Eth4       | Vlan20 (SVI для VLAN20)                        | 192.168.2.1/24    | 192.168.2.254   |
+| 99-esx2     | Eth1 → 99-blf2 Eth3      | Vlan10 (SVI для VLAN10)                        | 192.168.1.2/24    | 192.168.1.254   |
+|             | Eth2 → 99-lf3 Eth4       | Vlan20 (SVI для VLAN20)                        | 192.168.2.2/24    | 192.168.2.254   |
+| 99-esx3     | Eth1 → 99-lf3 Eth3       | Vlan10 (SVI для VLAN10)                        | 192.168.1.3/24    | 192.168.1.254   |
+|             | Eth2 → 99-blf2 Eth4      | Vlan20 (SVI для VLAN20)                        | 192.168.2.3/24    | 192.168.2.254   |
+| 99-esx4     | Eth1 → 99-lf4 Eth3       | Vlan10 (SVI для VLAN10)                        | 192.168.1.4/24    | 192.168.1.254   |
+|             | Eth2 → 99-blf1 Eth4      | Vlan20 (SVI для VLAN20)                        | 192.168.2.4/24    | 192.168.2.254   |
+
 ---
 
 ## Конфигурация BGP
