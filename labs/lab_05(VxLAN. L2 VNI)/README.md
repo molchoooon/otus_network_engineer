@@ -447,16 +447,37 @@ router bgp 65099
  ```bash
 configure terminal
 hostname 99-esxN
-spanning-tree mode rstp
-vlan N0
-interface Ethernet1
-   mtu 9100
-   switchport access vlan N0
-interface VlanN0
-   ip address 192.168.N.1/24
-   mtu 9100
+
 ip routing
-ip route 0.0.0.0/0 192.168.N.254
+
+interface Ethernet1
+   description to-99-lf4-Eth3
+   switchport mode trunk
+   switchport trunk allowed vlan 10,20
+   mtu 9100
+   no shutdown
+
+interface Ethernet2
+   description to-99-blf1-Eth4
+   switchport mode trunk
+   switchport trunk allowed vlan 10,20
+   mtu 9100
+   no shutdown
+
+interface Vlan10
+   description VMKernel-VLAN10
+   ip address 192.168.1.N/24
+   mtu 9100
+   no shutdown
+
+interface Vlan20
+   description VMKernel-VLAN20
+   ip address 192.168.2.N/24
+   mtu 9100
+   no shutdown
+
+ip route 0.0.0.0/0 192.168.1.254
+ip route 0.0.0.0/0 192.168.2.254 10
 
  ```
 ---
