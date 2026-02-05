@@ -664,114 +664,114 @@ ip route 0.0.0.0/0 192.168.2.254 10
 ---
 
 ## Проверка IP связности
- ## 1. Проверка BGP соседств
+ ## 1. Проверка VXLAN соседств
 ```
-99-sp1#sh ip bgp summary
-BGP summary information for VRF default
-Router identifier 10.99.243.11, local AS number 65099
-Neighbor Status Codes: m - Under maintenance
-  Neighbor         V  AS           MsgRcvd   MsgSent  InQ OutQ  Up/Down State   PfxRcd PfxAcc
-  10.99.241.0      4  65099            823       829    0    0 00:24:52 Estab   4      4
-  10.99.241.2      4  65099             99       102    0    0 00:04:42 Estab   2      2
-  10.99.241.4      4  65099            995      1006    0    0 00:49:31 Estab   2      2
-  10.99.241.6      4  65099            998      1004    0    0 00:49:35 Estab   4      4
-  
+99-lf4#sh vxlan vtep
+Remote VTEPS for Vxlan1:
 
-```
-## 2.  Проверка таблицы BGP  
-```
-99-sp1#sh ip bgp
+VTEP              Tunnel Type(s)
+----------------- --------------
+10.99.244.1       flood
+10.99.244.2       flood
+10.99.244.3       flood
 
-
-         Network                Next Hop            Metric  LocPref Weight  Path
- * #     10.99.241.0/31         10.99.241.0           0       100     0       i
- * #     10.99.241.6/31         10.99.241.6           0       100     0       i
- * >     10.99.242.0/31         10.99.241.0           0       100     0       i
- * >     10.99.242.6/31         10.99.241.6           0       100     0       i
- * >     10.99.243.1/32         10.99.241.0           0       100     0       i
- * >     10.99.243.2/32         10.99.241.2           0       100     0       i
- * >     10.99.243.3/32         10.99.241.4           0       100     0       i
- * >     10.99.243.4/32         10.99.241.6           0       100     0       i
- * >     10.99.243.11/32        -                     0       0       -       i
- * >     192.168.1.0/24         10.99.241.0           0       100     0       i
- * >     192.168.2.0/24         10.99.241.2           0       100     0       i
- * >     192.168.3.0/24         10.99.241.4           0       100     0       i
- * >     192.168.4.0/24         10.99.241.6           0       100     0       i
+Total number of remote VTEPS:  3
 
 ```
+## 2.  Проверка таблицы роутов evpn  
 ```
-99-lf3#sh ip bgp
+99-lf4#sh bgp evpn
+BGP routing table information for VRF default
+Router identifier 10.99.243.4, local AS number 65099
+Route status codes: * - valid, > - active, S - Stale, E - ECMP head, e - ECMP
+                    c - Contributing to ECMP, % - Pending BGP convergence
+Origin codes: i - IGP, e - EGP, ? - incomplete
+AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Link Local Nexthop
 
-
-         Network                Next Hop            Metric  LocPref Weight  Path
- * >     10.99.241.0/31         10.99.242.5           0       100     0       i Or-ID: 10.99.243.1 C-LST: 10.99.243.22
- * >     10.99.241.6/31         10.99.242.5           0       100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.22
- * >     10.99.242.0/31         10.99.241.5           0       100     0       i Or-ID: 10.99.243.1 C-LST: 10.99.243.11
- * >     10.99.242.6/31         10.99.241.5           0       100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.11
- * >Ec   10.99.243.1/32         10.99.241.5           0       100     0       i Or-ID: 10.99.243.1 C-LST: 10.99.243.11
- *  ec   10.99.243.1/32         10.99.242.5           0       100     0       i Or-ID: 10.99.243.1 C-LST: 10.99.243.22
- * >Ec   10.99.243.2/32         10.99.241.5           0       100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.11
- *  ec   10.99.243.2/32         10.99.242.5           0       100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.22
- * >     10.99.243.3/32         -                     0       0       -       i
- * >Ec   10.99.243.4/32         10.99.241.5           0       100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.11
- *  ec   10.99.243.4/32         10.99.242.5           0       100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.22
- * >     10.99.243.11/32        10.99.241.5           0       100     0       i
- * >     10.99.243.22/32        10.99.242.5           0       100     0       i
- * >Ec   192.168.1.0/24         10.99.241.5           0       100     0       i Or-ID: 10.99.243.1 C-LST: 10.99.243.11
- *  ec   192.168.1.0/24         10.99.242.5           0       100     0       i Or-ID: 10.99.243.1 C-LST: 10.99.243.22
- * >Ec   192.168.2.0/24         10.99.241.5           0       100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.11
- *  ec   192.168.2.0/24         10.99.242.5           0       100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.22
- * >     192.168.3.0/24         -                     1       0       -       i
- * >Ec   192.168.4.0/24         10.99.241.5           0       100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.11
- *  ec   192.168.4.0/24         10.99.242.5           0       100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.22
-```
-
-## 2. Проверка таблицы маршрутов
-```
-99-lf3#sh ip route
-
-VRF: default
-Codes: C - connected, S - static, K - kernel,
-       O - OSPF, IA - OSPF inter area, E1 - OSPF external type 1,
-       E2 - OSPF external type 2, N1 - OSPF NSSA external type 1,
-       N2 - OSPF NSSA external type2, B - Other BGP Routes,
-       B I - iBGP, B E - eBGP, R - RIP, I L1 - IS-IS level 1,
-       I L2 - IS-IS level 2, O3 - OSPFv3, A B - BGP Aggregate,
-       A O - OSPF Summary, NG - Nexthop Group Static Route,
-       V - VXLAN Control Service, M - Martian,
-       DH - DHCP client installed default route,
-       DP - Dynamic Policy Route, L - VRF Leaked,
-       G  - gRIBI, RC - Route Cache Route
-
-Gateway of last resort is not set
-
- B I      10.99.241.0/31 [200/0] via 10.99.242.5, Ethernet2
- C        10.99.241.4/31 is directly connected, Ethernet1
- B I      10.99.241.6/31 [200/0] via 10.99.242.5, Ethernet2
- B I      10.99.242.0/31 [200/0] via 10.99.241.5, Ethernet1
- C        10.99.242.4/31 is directly connected, Ethernet2
- B I      10.99.242.6/31 [200/0] via 10.99.241.5, Ethernet1
- B I      10.99.243.1/32 [200/0] via 10.99.241.5, Ethernet1
-                                 via 10.99.242.5, Ethernet2
- B I      10.99.243.2/32 [200/0] via 10.99.241.5, Ethernet1
-                                 via 10.99.242.5, Ethernet2
- C        10.99.243.3/32 is directly connected, Loopback0
- B I      10.99.243.4/32 [200/0] via 10.99.241.5, Ethernet1
-                                 via 10.99.242.5, Ethernet2
- B I      10.99.243.11/32 [200/0] via 10.99.241.5, Ethernet1
- B I      10.99.243.22/32 [200/0] via 10.99.242.5, Ethernet2
- B I      192.168.1.0/24 [200/0] via 10.99.241.5, Ethernet1
-                                 via 10.99.242.5, Ethernet2
- B I      192.168.2.0/24 [200/0] via 10.99.241.5, Ethernet1
-                                 via 10.99.242.5, Ethernet2
- C        192.168.3.0/24 is directly connected, Vlan30
- B I      192.168.4.0/24 [200/0] via 10.99.241.5, Ethernet1
-                                 via 10.99.242.5, Ethernet2
-
-
+          Network                Next Hop              Metric  LocPref Weight  Path
+ * >Ec    RD: 10.99.243.1:10 imet 10.99.244.1
+                                 10.99.244.1           -       100     0       i Or-ID: 10.99.243.1 C-LST: 10.99.243.22
+ *  ec    RD: 10.99.243.1:10 imet 10.99.244.1
+                                 10.99.244.1           -       100     0       i Or-ID: 10.99.243.1 C-LST: 10.99.243.11
+ * >Ec    RD: 10.99.243.1:20 imet 10.99.244.1
+                                 10.99.244.1           -       100     0       i Or-ID: 10.99.243.1 C-LST: 10.99.243.22
+ *  ec    RD: 10.99.243.1:20 imet 10.99.244.1
+                                 10.99.244.1           -       100     0       i Or-ID: 10.99.243.1 C-LST: 10.99.243.11
+ * >Ec    RD: 10.99.243.2:10 imet 10.99.244.2
+                                 10.99.244.2           -       100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.11
+ *  ec    RD: 10.99.243.2:10 imet 10.99.244.2
+                                 10.99.244.2           -       100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.22
+ * >Ec    RD: 10.99.243.2:20 imet 10.99.244.2
+                                 10.99.244.2           -       100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.11
+ *  ec    RD: 10.99.243.2:20 imet 10.99.244.2
+                                 10.99.244.2           -       100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.22
+ * >Ec    RD: 10.99.243.3:10 imet 10.99.244.3
+                                 10.99.244.3           -       100     0       i Or-ID: 10.99.243.3 C-LST: 10.99.243.22
+ *  ec    RD: 10.99.243.3:10 imet 10.99.244.3
+                                 10.99.244.3           -       100     0       i Or-ID: 10.99.243.3 C-LST: 10.99.243.11
+ * >Ec    RD: 10.99.243.3:20 imet 10.99.244.3
+                                 10.99.244.3           -       100     0       i Or-ID: 10.99.243.3 C-LST: 10.99.243.22
+ *  ec    RD: 10.99.243.3:20 imet 10.99.244.3
+                                 10.99.244.3           -       100     0       i Or-ID: 10.99.243.3 C-LST: 10.99.243.11
+ * >      RD: 10.99.243.4:10 imet 10.99.244.4
+                                 -                     -       -       0       i
+ * >      RD: 10.99.243.4:20 imet 10.99.244.4
+                                 -                     -       -       0       i
 
 ```
-## 3. Проверка межсерверной связности между VM 
+Видим только маршруты тайп 3 
+Пингуем с esx1 все айпи в сети 192.168.1.0/24
+
+Видим что приехали маршруты тайп 2
+
+```
+99-lf4#sh bgp evpn vni 10010
+BGP routing table information for VRF default
+Router identifier 10.99.243.4, local AS number 65099
+Route status codes: * - valid, > - active, S - Stale, E - ECMP head, e - ECMP
+                    c - Contributing to ECMP, % - Pending BGP convergence
+Origin codes: i - IGP, e - EGP, ? - incomplete
+AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Link Local Nexthop
+
+          Network                Next Hop              Metric  LocPref Weight  Path
+ * >      RD: 10.99.243.4:10 mac-ip 5000.0003.3766
+                                 -                     -       -       0       i
+ * >      RD: 10.99.243.4:10 mac-ip 5000.0003.3766 192.168.1.4
+                                 -                     -       -       0       i
+ * >Ec    RD: 10.99.243.3:10 mac-ip 5000.001b.5e8d
+                                 10.99.244.3           -       100     0       i Or-ID: 10.99.243.3 C-LST: 10.99.243.11
+ *  ec    RD: 10.99.243.3:10 mac-ip 5000.001b.5e8d
+                                 10.99.244.3           -       100     0       i Or-ID: 10.99.243.3 C-LST: 10.99.243.22
+ * >Ec    RD: 10.99.243.2:10 mac-ip 5000.006b.2e70
+                                 10.99.244.2           -       100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.11
+ *  ec    RD: 10.99.243.2:10 mac-ip 5000.006b.2e70
+                                 10.99.244.2           -       100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.22
+ * >Ec    RD: 10.99.243.1:10 mac-ip 5000.00d5.5dc0
+                                 10.99.244.1           -       100     0       i Or-ID: 10.99.243.1 C-LST: 10.99.243.22
+ *  ec    RD: 10.99.243.1:10 mac-ip 5000.00d5.5dc0
+                                 10.99.244.1           -       100     0       i Or-ID: 10.99.243.1 C-LST: 10.99.243.11
+ * >Ec    RD: 10.99.243.1:10 mac-ip 5000.00d5.5dc0 192.168.1.1
+                                 10.99.244.1           -       100     0       i Or-ID: 10.99.243.1 C-LST: 10.99.243.22
+ *  ec    RD: 10.99.243.1:10 mac-ip 5000.00d5.5dc0 192.168.1.1
+                                 10.99.244.1           -       100     0       i Or-ID: 10.99.243.1 C-LST: 10.99.243.11
+ * >Ec    RD: 10.99.243.1:10 imet 10.99.244.1
+                                 10.99.244.1           -       100     0       i Or-ID: 10.99.243.1 C-LST: 10.99.243.22
+ *  ec    RD: 10.99.243.1:10 imet 10.99.244.1
+                                 10.99.244.1           -       100     0       i Or-ID: 10.99.243.1 C-LST: 10.99.243.11
+ * >Ec    RD: 10.99.243.2:10 imet 10.99.244.2
+                                 10.99.244.2           -       100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.11
+ *  ec    RD: 10.99.243.2:10 imet 10.99.244.2
+                                 10.99.244.2           -       100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.22
+ * >Ec    RD: 10.99.243.3:10 imet 10.99.244.3
+                                 10.99.244.3           -       100     0       i Or-ID: 10.99.243.3 C-LST: 10.99.243.22
+ *  ec    RD: 10.99.243.3:10 imet 10.99.244.3
+                                 10.99.244.3           -       100     0       i Or-ID: 10.99.243.3 C-LST: 10.99.243.11
+ * >      RD: 10.99.243.4:10 imet 10.99.244.4
+
+```
+
+
+## 2. Проверка межсерверной связности между VM 
 ```
 99-esx4#ping 192.168.1.253 size 8800 df-bit
 PING 192.168.1.253 (192.168.1.253) 8772(8800) bytes of data.
@@ -798,70 +798,6 @@ Address         Age (sec)  Hardware Addr   Interface
 192.168.2.3       0:01:27  5000.001b.5e8d  Vlan20, Ethernet1
 192.168.2.254     2:26:23  5000.00af.d3f6  Vlan20, not learned
 
-
 ```
 
-## 4. Проверка связности между loopback адресами
-```
-99-lf4#ping 10.99.243.1
-PING 10.99.243.1 (10.99.243.1) 72(100) bytes of data.
-80 bytes from 10.99.243.1: icmp_seq=1 ttl=63 time=16.0 ms
-80 bytes from 10.99.243.1: icmp_seq=2 ttl=63 time=9.79 ms
-80 bytes from 10.99.243.1: icmp_seq=3 ttl=63 time=8.53 ms
-80 bytes from 10.99.243.1: icmp_seq=4 ttl=63 time=7.39 ms
-80 bytes from 10.99.243.1: icmp_seq=5 ttl=63 time=9.31 ms
 
---- 10.99.243.1 ping statistics ---
-5 packets transmitted, 5 received, 0% packet loss, time 55ms
-rtt min/avg/max/mdev = 7.395/10.206/16.002/3.011 ms, pipe 2, ipg/ewma 13.761/12.989 ms
-99-lf4#
-99-lf4#ping 10.99.243.2
-PING 10.99.243.2 (10.99.243.2) 72(100) bytes of data.
-80 bytes from 10.99.243.2: icmp_seq=1 ttl=63 time=11.0 ms
-80 bytes from 10.99.243.2: icmp_seq=2 ttl=63 time=10.9 ms
-80 bytes from 10.99.243.2: icmp_seq=3 ttl=63 time=9.15 ms
-80 bytes from 10.99.243.2: icmp_seq=4 ttl=63 time=9.42 ms
-80 bytes from 10.99.243.2: icmp_seq=5 ttl=63 time=10.3 ms
-
---- 10.99.243.2 ping statistics ---
-5 packets transmitted, 5 received, 0% packet loss, time 49ms
-rtt min/avg/max/mdev = 9.152/10.182/11.027/0.782 ms, ipg/ewma 12.442/10.580 ms
-99-lf4#
-99-lf4#ping 10.99.243.3
-PING 10.99.243.3 (10.99.243.3) 72(100) bytes of data.
-80 bytes from 10.99.243.3: icmp_seq=1 ttl=63 time=16.6 ms
-80 bytes from 10.99.243.3: icmp_seq=2 ttl=63 time=9.10 ms
-80 bytes from 10.99.243.3: icmp_seq=3 ttl=63 time=15.4 ms
-80 bytes from 10.99.243.3: icmp_seq=4 ttl=63 time=8.76 ms
-80 bytes from 10.99.243.3: icmp_seq=5 ttl=63 time=11.6 ms
-
---- 10.99.243.3 ping statistics ---
-5 packets transmitted, 5 received, 0% packet loss, time 61ms
-rtt min/avg/max/mdev = 8.763/12.323/16.650/3.224 ms, pipe 2, ipg/ewma 15.431/14.415 ms
-99-lf4#
-99-lf4#ping 10.99.243.11
-PING 10.99.243.11 (10.99.243.11) 72(100) bytes of data.
-80 bytes from 10.99.243.11: icmp_seq=1 ttl=64 time=9.04 ms
-80 bytes from 10.99.243.11: icmp_seq=2 ttl=64 time=5.63 ms
-80 bytes from 10.99.243.11: icmp_seq=3 ttl=64 time=3.73 ms
-80 bytes from 10.99.243.11: icmp_seq=4 ttl=64 time=2.75 ms
-80 bytes from 10.99.243.11: icmp_seq=5 ttl=64 time=2.95 ms
-
---- 10.99.243.11 ping statistics ---
-5 packets transmitted, 5 received, 0% packet loss, time 35ms
-rtt min/avg/max/mdev = 2.759/4.825/9.044/2.342 ms, ipg/ewma 8.788/6.801 ms
-99-lf4#
-99-lf4#ping 10.99.243.22
-PING 10.99.243.22 (10.99.243.22) 72(100) bytes of data.
-80 bytes from 10.99.243.22: icmp_seq=1 ttl=64 time=5.98 ms
-80 bytes from 10.99.243.22: icmp_seq=2 ttl=64 time=3.06 ms
-80 bytes from 10.99.243.22: icmp_seq=3 ttl=64 time=3.45 ms
-80 bytes from 10.99.243.22: icmp_seq=4 ttl=64 time=2.77 ms
-80 bytes from 10.99.243.22: icmp_seq=5 ttl=64 time=2.96 ms
-
---- 10.99.243.22 ping statistics ---
-5 packets transmitted, 5 received, 0% packet loss, time 24ms
-rtt min/avg/max/mdev = 2.776/3.649/5.984/1.189 ms, ipg/ewma 6.054/4.769 ms
-99-lf4#
-
-```
