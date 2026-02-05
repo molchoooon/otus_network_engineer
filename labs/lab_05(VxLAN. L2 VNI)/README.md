@@ -170,7 +170,9 @@ router bgp 65099
    
    address-family ipv4
       neighbor SPINE-UNDERLAY activate
-      redistribute connected
+      network 10.99.243.1/32
+      network 10.99.244.1/32
+
    
    address-family evpn
       neighbor SPINE-EVPN activate
@@ -271,7 +273,9 @@ router bgp 65099
    
    address-family ipv4
       neighbor SPINE-UNDERLAY activate
-      redistribute connected
+      network 10.99.243.2/32
+      network 10.99.244.2/32
+
    
    address-family evpn
       neighbor SPINE-EVPN activate
@@ -370,7 +374,9 @@ router bgp 65099
    
    address-family ipv4
       neighbor SPINE-UNDERLAY activate
-      redistribute connected
+      network 10.99.243.3/32
+      network 10.99.244.3/32
+
    
    address-family evpn
       neighbor SPINE-EVPN activate
@@ -467,7 +473,9 @@ router bgp 65099
    
    address-family ipv4
       neighbor SPINE-UNDERLAY activate
-      redistribute connected
+      network 10.99.243.4/32
+      network 10.99.244.4/32
+
    
    address-family evpn
       neighbor SPINE-EVPN activate
@@ -765,44 +773,33 @@ Gateway of last resort is not set
 ```
 ## 3. Проверка межсерверной связности между VM 
 ```
-99-esx4#ping 192.168.2.1
-PING 192.168.2.1 (192.168.2.1) 72(100) bytes of data.
-80 bytes from 192.168.2.1: icmp_seq=1 ttl=61 time=33.4 ms
-80 bytes from 192.168.2.1: icmp_seq=2 ttl=61 time=25.1 ms
-80 bytes from 192.168.2.1: icmp_seq=3 ttl=61 time=23.6 ms
-80 bytes from 192.168.2.1: icmp_seq=4 ttl=61 time=21.7 ms
-80 bytes from 192.168.2.1: icmp_seq=5 ttl=61 time=23.3 ms
+99-esx4#ping 192.168.1.253 size 8800 df-bit
+PING 192.168.1.253 (192.168.1.253) 8772(8800) bytes of data.
+8780 bytes from 192.168.1.253: icmp_seq=1 ttl=64 time=56.6 ms
+8780 bytes from 192.168.1.253: icmp_seq=2 ttl=64 time=46.4 ms
+8780 bytes from 192.168.1.253: icmp_seq=3 ttl=64 time=40.0 ms
+8780 bytes from 192.168.1.253: icmp_seq=4 ttl=64 time=34.1 ms
+8780 bytes from 192.168.1.253: icmp_seq=5 ttl=64 time=27.2 ms
 
---- 192.168.2.1 ping statistics ---
-5 packets transmitted, 5 received, 0% packet loss, time 84ms
-rtt min/avg/max/mdev = 21.760/25.475/33.424/4.122 ms, pipe 3, ipg/ewma 21.088/29.265 ms
-99-esx4#
-99-esx4#ping 192.168.3.1
-PING 192.168.3.1 (192.168.3.1) 72(100) bytes of data.
-80 bytes from 192.168.3.1: icmp_seq=1 ttl=61 time=54.4 ms
-80 bytes from 192.168.3.1: icmp_seq=2 ttl=61 time=44.8 ms
-80 bytes from 192.168.3.1: icmp_seq=3 ttl=61 time=36.0 ms
-80 bytes from 192.168.3.1: icmp_seq=4 ttl=61 time=28.7 ms
-80 bytes from 192.168.3.1: icmp_seq=5 ttl=61 time=21.5 ms
-
---- 192.168.3.1 ping statistics ---
+--- 192.168.1.253 ping statistics ---
 5 packets transmitted, 5 received, 0% packet loss, time 44ms
-rtt min/avg/max/mdev = 21.521/37.121/54.461/11.624 ms, pipe 5, ipg/ewma 11.094/44.962 ms
+rtt min/avg/max/mdev = 27.225/40.905/56.628/10.116 ms, pipe 5, ipg/ewma 11.220/48.057 ms
 99-esx4#
-99-esx4#ping 192.168.1.1 size 9000 df-bit
-PING 192.168.1.1 (192.168.1.1) 8972(9000) bytes of data.
-8980 bytes from 192.168.1.1: icmp_seq=1 ttl=61 time=40.0 ms
-8980 bytes from 192.168.1.1: icmp_seq=2 ttl=61 time=30.5 ms
-8980 bytes from 192.168.1.1: icmp_seq=3 ttl=61 time=32.5 ms
-8980 bytes from 192.168.1.1: icmp_seq=4 ttl=61 time=26.2 ms
-8980 bytes from 192.168.1.1: icmp_seq=5 ttl=61 time=26.9 ms
+99-esx4#sh ip arp
+Address         Age (sec)  Hardware Addr   Interface
+192.168.1.1       1:47:59  5000.00d5.5dc0  Vlan10, Ethernet1
+192.168.1.3       0:01:24  5000.001b.5e8d  Vlan10, Ethernet1
+192.168.1.251     1:57:35  5000.00d7.ee0b  Vlan10, Ethernet1
+192.168.1.252     0:00:59  5000.00cb.38c2  Vlan10, Ethernet1
+192.168.1.253     0:00:57  5000.00f6.ad37  Vlan10, Ethernet1
+192.168.1.254     2:55:12  5000.00af.d3f6  Vlan10, not learned
+192.168.2.1       1:43:11  5000.00d5.5dc0  Vlan20, Ethernet1
+192.168.2.2       0:01:31  5000.006b.2e70  Vlan20, Ethernet1
+192.168.2.3       0:01:27  5000.001b.5e8d  Vlan20, Ethernet1
+192.168.2.254     2:26:23  5000.00af.d3f6  Vlan20, not learned
 
---- 192.168.1.1 ping statistics ---
-5 packets transmitted, 5 received, 0% packet loss, time 71ms
-rtt min/avg/max/mdev = 26.221/31.265/40.066/4.982 ms, pipe 4, ipg/ewma 17.804/35.393 ms
 
 ```
-Пакеты 9K байт проходят, в предыдущей лабе проблема была в версии образа Аристы.
 
 ## 4. Проверка связности между loopback адресами
 ```
