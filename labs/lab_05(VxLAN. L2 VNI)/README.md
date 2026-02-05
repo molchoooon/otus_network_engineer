@@ -771,7 +771,7 @@ AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Li
 ```
 
 
-## 2. Проверка межсерверной связности между VM 
+## 3. Проверка межсерверной связности между VM 
 ```
 99-esx4#ping 192.168.1.253 size 8800 df-bit
 PING 192.168.1.253 (192.168.1.253) 8772(8800) bytes of data.
