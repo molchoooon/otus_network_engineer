@@ -657,8 +657,7 @@ interface Vlan20
    mtu 9100
    no shutdown
 
-ip route 0.0.0.0/0 192.168.1.254
-ip route 0.0.0.0/0 192.168.2.254 10
+
 
  ```
 ---
@@ -799,5 +798,6 @@ Address         Age (sec)  Hardware Addr   Interface
 192.168.2.254     2:26:23  5000.00af.d3f6  Vlan20, not learned
 
 ```
+
 
 
