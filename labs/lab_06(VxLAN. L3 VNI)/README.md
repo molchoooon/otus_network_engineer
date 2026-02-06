@@ -134,6 +134,7 @@ interface Vxlan1
    description VXLAN-Tunnel-Endpoint
    no shutdown
    vxlan source-interface Loopback1
+   vxlan learn-restrict any
    vxlan vlan 10 vni 10010
    vxlan vlan 20 vni 10020
    
@@ -238,6 +239,7 @@ interface Vxlan1
    description VXLAN-Tunnel-Endpoint
    no shutdown
    vxlan source-interface Loopback1
+   vxlan learn-restrict any
    vxlan vlan 10 vni 10010
    vxlan vlan 20 vni 10020
   
@@ -340,6 +342,7 @@ interface Vxlan1
    description VXLAN-Tunnel-Endpoint
    no shutdown
    vxlan source-interface Loopback1
+   vxlan learn-restrict any
    vxlan vlan 10 vni 10010
    vxlan vlan 20 vni 10020
   
@@ -441,6 +444,7 @@ interface Vxlan1
    description VXLAN-Tunnel-Endpoint
    no shutdown
    vxlan source-interface Loopback1
+   vxlan learn-restrict any
    vxlan vlan 10 vni 10010
    vxlan vlan 20 vni 10020
    
