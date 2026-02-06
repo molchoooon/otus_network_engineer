@@ -84,6 +84,7 @@ configure terminal
 hostname 99-blf1
 
 ip routing
+service routing protocols model multi-agent
 
 vlan 10
    name VLAN10
@@ -186,6 +187,7 @@ router bgp 65099
 hostname 99-blf2
 
 ip routing
+service routing protocols model multi-agent
 
 vlan 10
    name VLAN10
@@ -287,6 +289,7 @@ configure terminal
 hostname 99-lf3
 
 ip routing
+service routing protocols model multi-agent
 
 vlan 10
    name VLAN10
@@ -387,6 +390,7 @@ configure terminal
 hostname 99-lf4
 
 ip routing
+service routing protocols model multi-agent
 
 vlan 10
    name VLAN10
@@ -487,6 +491,7 @@ configure terminal
 hostname 99-sp1
 
 ip routing
+service routing protocols model multi-agent
 
 interface Ethernet1
    description to-99-blf1-Eth1
@@ -557,6 +562,7 @@ configure terminal
 hostname 99-sp2
 
 ip routing
+service routing protocols model multi-agent
 
 interface Ethernet1
    description to-99-blf1-Eth2
