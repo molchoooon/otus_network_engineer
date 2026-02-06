@@ -11,7 +11,7 @@
 
 ## Топология сети
 ![Схема Сети ](fabric_scheme.jpg)
-## IP-план (Address Plan)
+## IP-план (Address Plan) 
 
 ### Underlay сеть (Fabric Links - Point-to-Point /31)
 
