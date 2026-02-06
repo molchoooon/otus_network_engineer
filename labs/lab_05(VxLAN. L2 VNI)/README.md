@@ -97,14 +97,14 @@ interface Ethernet1
    no switchport
    mtu 9100
    ip address 10.99.241.0/31
-   bfd interval 300 min-rx 300 multiplier 3
+   
 
 interface Ethernet2
    description to-99-sp2-Eth1
    no switchport
    mtu 9100
    ip address 10.99.242.0/31
-   bfd interval 300 min-rx 300 multiplier 3
+   
 
 interface Ethernet3
    description to-99-esx1-Eth1
@@ -150,7 +150,7 @@ router bgp 65099
    neighbor SPINE-UNDERLAY remote-as 65099
    neighbor SPINE-UNDERLAY timers 3 9
    neighbor SPINE-UNDERLAY send-community
-   neighbor SPINE-UNDERLAY bfd
+   neighbor SPINE-UNDERLAY bfd interval 300 min-rx 300 multiplier 3
    neighbor 10.99.241.1 peer group SPINE-UNDERLAY
    neighbor 10.99.242.1 peer group SPINE-UNDERLAY
 
@@ -201,14 +201,14 @@ interface Ethernet1
    no switchport
    mtu 9100
    ip address 10.99.241.2/31
-   bfd interval 300 min-rx 300 multiplier 3
+   
 
 interface Ethernet2
    description to-99-sp2-Eth2
    no switchport
    mtu 9100
    ip address 10.99.242.2/31
-   bfd interval 300 min-rx 300 multiplier 3
+   
 
 interface Ethernet3
    description to-99-esx2-Eth1
@@ -253,7 +253,7 @@ router bgp 65099
    neighbor SPINE-UNDERLAY remote-as 65099
    neighbor SPINE-UNDERLAY timers 3 9
    neighbor SPINE-UNDERLAY send-community
-   neighbor SPINE-UNDERLAY bfd
+   neighbor SPINE-UNDERLAY bfd interval 300 min-rx 300 multiplier 3
    neighbor 10.99.241.3 peer group SPINE-UNDERLAY
    neighbor 10.99.242.3 peer group SPINE-UNDERLAY
 
@@ -304,14 +304,13 @@ interface Ethernet1
    no switchport
    mtu 9100
    ip address 10.99.241.4/31
-   bfd interval 300 min-rx 300 multiplier 3
+   
 
 interface Ethernet2
    description to-99-sp2-Eth3
    no switchport
    mtu 9100
-   ip address 10.99.242.4/31
-   bfd interval 300 min-rx 300 multiplier 3
+   
 
 interface Ethernet3
    description to-99-esx3-Eth1
@@ -356,7 +355,7 @@ router bgp 65099
    neighbor SPINE-UNDERLAY remote-as 65099
    neighbor SPINE-UNDERLAY timers 3 9
    neighbor SPINE-UNDERLAY send-community
-   neighbor SPINE-UNDERLAY bfd
+   neighbor SPINE-UNDERLAY interval 300 min-rx 300 multiplier 3
    neighbor 10.99.241.5 peer group SPINE-UNDERLAY
    neighbor 10.99.242.5 peer group SPINE-UNDERLAY
 
@@ -406,14 +405,14 @@ interface Ethernet1
    no switchport
    mtu 9100
    ip address 10.99.241.6/31
-   bfd interval 300 min-rx 300 multiplier 3
+   
 
 interface Ethernet2
    description to-99-sp2-Eth4
    no switchport
    mtu 9100
    ip address 10.99.242.6/31
-   bfd interval 300 min-rx 300 multiplier 3
+   
 
 interface Ethernet3
    description to-99-esx4-Eth1
@@ -457,7 +456,7 @@ router bgp 65099
    neighbor SPINE-UNDERLAY remote-as 65099
    neighbor SPINE-UNDERLAY timers 3 9
    neighbor SPINE-UNDERLAY send-community
-   neighbor SPINE-UNDERLAY bfd
+   neighbor SPINE-UNDERLAY bfd interval 300 min-rx 300 multiplier 3
    neighbor 10.99.241.7 peer group SPINE-UNDERLAY
    neighbor 10.99.242.7 peer group SPINE-UNDERLAY
 
@@ -502,28 +501,28 @@ interface Ethernet1
    no switchport
    mtu 9100
    ip address 10.99.241.1/31
-   bfd interval 300 min-rx 300 multiplier 3
+   
 
 interface Ethernet2
    description to-99-blf2-Eth1
    no switchport
    mtu 9100
    ip address 10.99.241.3/31
-   bfd interval 300 min-rx 300 multiplier 3
+   
 
 interface Ethernet3
    description to-99-lf3-Eth1
    no switchport
    mtu 9100
    ip address 10.99.241.5/31
-   bfd interval 300 min-rx 300 multiplier 3
+   
 
 interface Ethernet4
    description to-99-lf4-Eth1
    no switchport
    mtu 9100
    ip address 10.99.241.7/31
-   bfd interval 300 min-rx 300 multiplier 3
+   
 
 interface Loopback0
    description Router-ID
@@ -540,6 +539,7 @@ router bgp 65099
    neighbor LEAF-UNDERLAY route-reflector-client
    neighbor LEAF-UNDERLAY send-community
    neighbor LEAF-UNDERLAY next-hop-self
+   neighbor LEAF-UNDERLAY interval 300 min-rx 300 multiplier 3
    bgp listen range 10.99.241.0/24 peer-group LEAF-UNDERLAY remote-as 65099
    
    neighbor LEAF-EVPN peer group
@@ -573,28 +573,28 @@ interface Ethernet1
    no switchport
    mtu 9100
    ip address 10.99.242.1/31
-   bfd interval 300 min-rx 300 multiplier 3
+   
 
 interface Ethernet2
    description to-99-blf2-Eth2
    no switchport
    mtu 9100
    ip address 10.99.242.3/31
-   bfd interval 300 min-rx 300 multiplier 3
+   
 
 interface Ethernet3
    description to-99-lf3-Eth2
    no switchport
    mtu 9100
    ip address 10.99.242.5/31
-   bfd interval 300 min-rx 300 multiplier 3
+   
 
 interface Ethernet4
    description to-99-lf4-Eth2
    no switchport
    mtu 9100
    ip address 10.99.242.7/31
-   bfd interval 300 min-rx 300 multiplier 3
+   
 
 interface Loopback0
    description Router-ID
@@ -611,7 +611,7 @@ router bgp 65099
    neighbor LEAF-UNDERLAY route-reflector-client
    neighbor LEAF-UNDERLAY send-community
    neighbor LEAF-UNDERLAY next-hop-self
-   neighbor LEAF-UNDERLAY bfd
+   neighbor LEAF-UNDERLAY bfd interval 300 min-rx 300 multiplier 3
    bgp listen range 10.99.241.0/24 peer-group LEAF-UNDERLAY remote-as 65099
    
    neighbor LEAF-EVPN peer group
