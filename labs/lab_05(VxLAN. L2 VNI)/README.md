@@ -815,7 +815,7 @@ AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Li
 ```
 
 
-## 3. Проверка межсерверной связности между VM 
+## 3. Проверка межсерверной связности между VM и подсетями 192.168.1.0/24 и 192.158.2.0/24 
 ```
 99-esx4#ping 192.168.1.253 size 8800 df-bit
 PING 192.168.1.253 (192.168.1.253) 8772(8800) bytes of data.
@@ -841,6 +841,19 @@ Address         Age (sec)  Hardware Addr   Interface
 192.168.2.2       0:01:31  5000.006b.2e70  Vlan20, Ethernet1
 192.168.2.3       0:01:27  5000.001b.5e8d  Vlan20, Ethernet1
 192.168.2.254     2:26:23  5000.00af.d3f6  Vlan20, not learned
+
+
+99-esx1#ping 192.168.1.4
+PING 192.168.1.4 (192.168.1.4) 72(100) bytes of data.
+80 bytes from 192.168.1.4: icmp_seq=1 ttl=64 time=63.1 ms
+80 bytes from 192.168.1.4: icmp_seq=2 ttl=64 time=52.9 ms
+80 bytes from 192.168.1.4: icmp_seq=3 ttl=64 time=48.6 ms
+80 bytes from 192.168.1.4: icmp_seq=5 ttl=64 time=32.9 ms
+
+--- 192.168.1.4 ping statistics ---
+5 packets transmitted, 4 received, 20% packet loss, time 43ms
+rtt min/avg/max/mdev = 32.927/49.445/63.171/10.890 ms, pipe 5, ipg/ewma 10.956/56.832 ms
+99-esx1#
 
 ```
 
