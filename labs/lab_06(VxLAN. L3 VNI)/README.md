@@ -607,7 +607,6 @@ router bgp 65099
    neighbor LEAF-UNDERLAY route-reflector-client
    neighbor LEAF-UNDERLAY send-community
    neighbor LEAF-UNDERLAY next-hop-self
-   neighbor LEAF-UNDERLAY bfd
    bgp listen range 10.99.241.0/24 peer-group LEAF-UNDERLAY remote-as 65099
    
    neighbor LEAF-EVPN peer group
