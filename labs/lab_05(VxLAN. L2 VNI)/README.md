@@ -720,6 +720,22 @@ VNI         VLAN       Source       Interface       802.1Q Tag
                                     Vxlan1          20
 
 ```
+```
+99-sp2(config-router-bgp)#sh bgp summary
+BGP summary information for VRF default
+Router identifier 10.99.243.22, local AS number 65099
+Neighbor             AS Session State AFI/SAFI                AFI/SAFI State   NLRI Rcd   NLRI Acc
+----------- ----------- ------------- ----------------------- -------------- ---------- ----------
+10.99.242.0       65099 Established   IPv4 Unicast            Negotiated              2          2
+10.99.242.2       65099 Established   IPv4 Unicast            Negotiated              2          2
+10.99.242.4       65099 Established   IPv4 Unicast            Negotiated              2          2
+10.99.242.6       65099 Established   IPv4 Unicast            Negotiated              2          2
+10.99.243.1       65099 Established   L2VPN EVPN              Negotiated              2          2
+10.99.243.2       65099 Established   L2VPN EVPN              Negotiated              2          2
+10.99.243.3       65099 Established   L2VPN EVPN              Negotiated              2          2
+10.99.243.4       65099 Established   L2VPN EVPN              Negotiated              2          2
+
+```
 
 ## 2.  Проверка таблицы роутов evpn  
 ```
