@@ -63,21 +63,20 @@
 
 ### Конфигурация "ESXi" устройств 
 
-| ESXi Device | Физические порты (Trunk) | Виртуальные интерфейсы (SVI)                     | IP Address/Маска   | Gateway         |
+| ESXi Device | Физические порты (Trunk) | Виртуальные интерфейсы (SVI)                     | IP Address/Маска   |
 |-------------|--------------------------|------------------------------------------------|-------------------|-----------------|
-| 99-esx1     | Eth1 → 99-blf1 Eth3      | Vlan10 (SVI для VLAN10) Vlan20 (SVI для VLAN20)                       | 192.168.1.1/24    |
-|             | Eth2 → 99-lf4 Eth4       | Vlan20 (SVI для VLAN20)                        | 192.168.2.1/24    |
+| 99-esx1     | Eth1 → 99-blf1 Eth3      | Vlan10 (SVI для VLAN10)                        | 192.168.1.1/24    |
+|             | Eth1 → 99-blf1 Eth3       | Vlan20 (SVI для VLAN20)                        | 192.168.2.1/24    |
 | 99-esx2     | Eth1 → 99-blf2 Eth3      | Vlan10 (SVI для VLAN10)                        | 192.168.1.2/24    |
-|             | Eth2 → 99-lf3 Eth4       | Vlan20 (SVI для VLAN20)                        | 192.168.2.2/24    |
+|             | Eth1 → 99-blf2 Eth3      | Vlan20 (SVI для VLAN20)                        | 192.168.2.2/24    |
 | 99-esx3     | Eth1 → 99-lf3 Eth3       | Vlan10 (SVI для VLAN10)                        | 192.168.1.3/24    |
-|             | Eth2 → 99-blf2 Eth4      | Vlan20 (SVI для VLAN20)                        | 192.168.2.3/24    |
+|             | Eth1 → 99-lf3 Eth3      | Vlan20 (SVI для VLAN20)                        | 192.168.2.3/24    |
 | 99-esx4     | Eth1 → 99-lf4 Eth3       | Vlan10 (SVI для VLAN10)                        | 192.168.1.4/24    |
-|             | Eth2 → 99-blf1 Eth4      | Vlan20 (SVI для VLAN20)                        | 192.168.2.4/24    |
+|             | Eth1 → 99-lf4 Eth3     | Vlan20 (SVI для VLAN20)                        | 192.168.2.4/24    | 
 
 ---
 
-## Конфигурация BGP
-
+## Конфигурация BGP1
 ### 99-blf1 (Border Leaf 1)
 ```bash
 configure terminal
