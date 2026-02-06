@@ -150,6 +150,7 @@ router bgp 65099
    neighbor SPINE-UNDERLAY remote-as 65099
    neighbor SPINE-UNDERLAY timers 3 9
    neighbor SPINE-UNDERLAY send-community
+   neighbor SPINE-UNDERLAY bfd
    neighbor 10.99.241.1 peer group SPINE-UNDERLAY
    neighbor 10.99.242.1 peer group SPINE-UNDERLAY
 
@@ -252,6 +253,7 @@ router bgp 65099
    neighbor SPINE-UNDERLAY remote-as 65099
    neighbor SPINE-UNDERLAY timers 3 9
    neighbor SPINE-UNDERLAY send-community
+   neighbor SPINE-UNDERLAY bfd
    neighbor 10.99.241.3 peer group SPINE-UNDERLAY
    neighbor 10.99.242.3 peer group SPINE-UNDERLAY
 
@@ -354,6 +356,7 @@ router bgp 65099
    neighbor SPINE-UNDERLAY remote-as 65099
    neighbor SPINE-UNDERLAY timers 3 9
    neighbor SPINE-UNDERLAY send-community
+   neighbor SPINE-UNDERLAY bfd
    neighbor 10.99.241.5 peer group SPINE-UNDERLAY
    neighbor 10.99.242.5 peer group SPINE-UNDERLAY
 
@@ -454,6 +457,7 @@ router bgp 65099
    neighbor SPINE-UNDERLAY remote-as 65099
    neighbor SPINE-UNDERLAY timers 3 9
    neighbor SPINE-UNDERLAY send-community
+   neighbor SPINE-UNDERLAY bfd
    neighbor 10.99.241.7 peer group SPINE-UNDERLAY
    neighbor 10.99.242.7 peer group SPINE-UNDERLAY
 
