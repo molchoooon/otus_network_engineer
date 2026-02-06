@@ -69,8 +69,8 @@
 |-------------|--------------------------|------------------------------------------------|-------------------|-----------------|
 | 99-esx1     | Eth1 → 99-blf1 Eth3      | Vlan10 (SVI для VLAN10)                        | 192.168.1.1/24    | 192.168.1.254   |
 | 99-esx2     | Eth1 → 99-blf2 Eth3      | Vlan10 (SVI для VLAN10)                        | 192.168.1.2/24    | 192.168.1.254   |
-| 99-esx3     | Eth1 → 99-lf3 Eth3       | Vlan30 (SVI для VLAN10)                        | 192.168.3.1/24    | 192.168.3.254   |
-| 99-esx4     | Eth1 → 99-lf4 Eth3       | Vlan40 (SVI для VLAN10)                        | 192.168.4.1/24    | 192.168.4.254   |
+| 99-esx3     | Eth1 → 99-lf3 Eth3       | Vlan30 (SVI для VLAN30)                        | 192.168.3.1/24    | 192.168.3.254   |
+| 99-esx4     | Eth1 → 99-lf4 Eth3       | Vlan40 (SVI для VLAN40)                        | 192.168.4.1/24    | 192.168.4.254   |
 
 ---
 
@@ -353,7 +353,7 @@ router bgp 65099
    neighbor SPINE-UNDERLAY remote-as 65099
    neighbor SPINE-UNDERLAY timers 3 9
    neighbor SPINE-UNDERLAY send-community
-   neighbor SPINE-UNDERLAY interval 300 min-rx 300 multiplier 3
+   neighbor SPINE-UNDERLAY bfd interval 300 min-rx 300 multiplier 3
    neighbor 10.99.241.5 peer group SPINE-UNDERLAY
    neighbor 10.99.242.5 peer group SPINE-UNDERLAY
 
