@@ -677,6 +677,40 @@ VTEP              Tunnel Type(s)
 Total number of remote VTEPS:  3
 
 ```
+```
+99-lf4#sh int vxlan 1
+Vxlan1 is up, line protocol is up (connected)
+  Hardware is Vxlan
+  Description: VXLAN-Tunnel-Endpoint
+  Source interface is Loopback1 and is active with 10.99.244.4
+  Listening on UDP port 4789
+  Replication/Flood Mode is headend with Flood List Source: EVPN
+  Remote MAC learning via EVPN
+  VNI mapping to VLANs
+  Static VLAN to VNI mapping is
+    [10, 10010]       [20, 10020]
+  Note: All Dynamic VLANs used by VCS are internal VLANs.
+        Use 'show vxlan vni' for details.
+  Static VRF to VNI mapping is not configured
+  Headend replication flood vtep list is:
+    10 10.99.244.3     10.99.244.1     10.99.244.2
+    20 10.99.244.3     10.99.244.1     10.99.244.2
+  Shared Router MAC is 0000.0000.0000
+```
+```
+99-lf4#sh vxlan vni
+VNI to VLAN Mapping for Vxlan1
+VNI         VLAN       Source       Interface       802.1Q Tag
+----------- ---------- ------------ --------------- ----------
+10010       10         static       Ethernet3       10
+                                    Ethernet4       10
+                                    Vxlan1          10
+10020       20         static       Ethernet3       20
+                                    Ethernet4       20
+                                    Vxlan1          20
+
+```
+
 ## 2.  Проверка таблицы роутов evpn  
 ```
 99-lf4#sh bgp evpn
