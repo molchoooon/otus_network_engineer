@@ -854,7 +854,7 @@ PING 192.168.1.4 (192.168.1.4) 72(100) bytes of data.
 5 packets transmitted, 4 received, 20% packet loss, time 43ms
 rtt min/avg/max/mdev = 32.927/49.445/63.171/10.890 ms, pipe 5, ipg/ewma 10.956/56.832 ms
 99-esx1#
-
+ 
 ```
 
 
