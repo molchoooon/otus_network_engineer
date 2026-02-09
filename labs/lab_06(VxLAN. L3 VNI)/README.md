@@ -684,8 +684,8 @@ configure terminal
 hostname 99-esxN
 
 ip routing
-vlan 10
-vlan 20
+vlan N0
+
 interface Ethernet1
    description to-99-lf4-Eth3
    switchport mode trunk
@@ -693,12 +693,6 @@ interface Ethernet1
    mtu 9100
    no shutdown
 
-interface Ethernet2
-   description to-99-lf3-Eth4
-   switchport mode trunk
-   switchport trunk allowed vlan 10,20
-   mtu 9100
-   no shutdown
 
 interface Vlan10
    description VMKernel-VLAN10
@@ -706,15 +700,50 @@ interface Vlan10
    mtu 9100
    no shutdown
 
-interface Vlan20
-   description VMKernel-VLAN20
-   ip address 192.168.2.N/24
-   mtu 9100
-   no shutdown
 
-
+ip route 0.0.0.0/0 192.168.1.254
 
  ```
+### 99-esx2 (ESX 2)
+```
+ hostname 99-esx2
+ spanning-tree mode rstp
+ vlan 10,20
+ vrf instance VRF_CORE_1
+ vrf instance VRF_CORE_2
+
+interface Ethernet1
+   description to-99-blf2-Eth3
+   mtu 9100
+   switchport trunk allowed vlan 10,20
+   switchport mode trunk
+
+interface Ethernet2
+   description to-99-lf3-Eth4
+   mtu 9100
+   switchport trunk allowed vlan 10,20
+   switchport mode trunk
+
+
+interface Vlan10
+   description VMKernel-VLAN10
+   mtu 9100
+   vrf VRF_CORE_1
+   ip address 192.168.1.2/24
+
+interface Vlan20
+   description VMKernel-VLAN20
+   mtu 9100
+   vrf VRF_CORE_2
+   ip address 192.168.2.1/24
+
+ip routing
+ip routing vrf VRF_CORE_1
+ip routing vrf VRF_CORE_2
+
+ip route vrf VRF_CORE_1 0.0.0.0/0 192.168.1.254
+ip route vrf VRF_CORE_2 0.0.0.0/0 192.168.2.254
+```
 ---
 
 ## Проверка IP связности
