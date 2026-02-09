@@ -900,6 +900,6 @@ From 192.168.4.254 icmp_seq=1 Destination Net Unreachable
 --- 192.168.3.1 ping statistics ---
 5 packets transmitted, 0 received, +1 errors, 100% packet loss, time 37ms
 ```
-Пинг отсутствует по скольку VRF изолированы друг от друга и esx-2 не выступает в виде router on stick 
+Пинг отсутствует по скольку VRF изолированы друг от друга и esx-2 не выступает в виде Роутера объединяющего VRF  
 
 
