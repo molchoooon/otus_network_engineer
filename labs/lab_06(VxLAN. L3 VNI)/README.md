@@ -59,6 +59,7 @@
 | VLAN | Описание          | L2 VNI | Anycast Gateway   | Leaf с настроенным VNI |
 |------|-------------------|--------|-------------------|------------------------|
 | 10   | VLAN10   | 10010  | 192.168.1.254/24  | 99-blf1, 99-blf2 |
+| 20   | VLAN20   | 10020  | 192.168.2.254/24  | 99-blf2 |
 | 30   | VLAN30   | 10030  | 192.168.3.254/24  |  99-lf3 |
 | 40   | VLAN40   | 10040  | 192.168.4.254/24  |  99-lf4 |
 
@@ -69,6 +70,7 @@
 |-------------|--------------------------|------------------------------------------------|-------------------|-----------------|
 | 99-esx1     | Eth1 → 99-blf1 Eth3      | Vlan10 (SVI для VLAN10)                        | 192.168.1.1/24    | 192.168.1.254   |
 | 99-esx2     | Eth1 → 99-blf2 Eth3      | Vlan10 (SVI для VLAN10)                        | 192.168.1.2/24    | 192.168.1.254   |
+| 99-esx2     | Eth1 → 99-blf2 Eth3      | Vlan20 (SVI для VLAN10)                        | 192.168.2.1/24    | 192.168.2.254   |
 | 99-esx3     | Eth1 → 99-lf3 Eth3       | Vlan30 (SVI для VLAN30)                        | 192.168.3.1/24    | 192.168.3.254   |
 | 99-esx4     | Eth1 → 99-lf4 Eth3       | Vlan40 (SVI для VLAN40)                        | 192.168.4.1/24    | 192.168.4.254   |
 
@@ -83,12 +85,17 @@ hostname 99-blf1
 
 ip routing
 service routing protocols model multi-agent
+ip virtual-router mac-address 0000.0000.0001
+
+vrf instance VRF_CORE_1
+vrf instance VRF_CORE_2
+
+ip routing
+ip routing VRF_CORE_1
+ip routing VRF_CORE_2
 
 vlan 10
    name VLAN10
-
-vlan 20
-   name VLAN20
 
 interface Ethernet1
    description to-99-sp1-Eth1
@@ -107,7 +114,7 @@ interface Ethernet2
 interface Ethernet3
    description to-99-esx1-Eth1
    switchport mode trunk
-   switchport trunk allowed vlan 10,20
+   switchport trunk allowed vlan 10
    mtu 9100
    no shutdown
 
@@ -115,12 +122,9 @@ interface Ethernet3
 interface Vlan10
    description Vlan10
    mtu 9100
-   ip address 192.168.1.251/24
+   vrf VRF_CORE_1
+   ip address virtual 192.168.1.254/24
 
-interface Vlan20
-   description Vlan20
-   mtu 9100
-   ip address 192.168.2.251/24
 
 interface Loopback0
    description Router-ID
@@ -136,8 +140,8 @@ interface Vxlan1
    vxlan source-interface Loopback1
    vxlan learn-restrict any
    vxlan vlan 10 vni 10010
-   vxlan vlan 20 vni 10020
-   
+   vxlan vrf VRF_CORE_1 vni 10001
+   vxlan vrf VRF_CORE_2 vni 10002   
   
 router bgp 65099
    router-id 10.99.243.1
@@ -160,15 +164,12 @@ router bgp 65099
    neighbor SPINE-EVPN send-community extended
    neighbor 10.99.243.11 peer group SPINE-EVPN
    neighbor 10.99.243.22 peer group SPINE-EVPN
+
    vlan 10 
    rd auto 
    route-target both 65099:10010
    redistribute learned
-   vlan 20 
-   rd auto 
-   route-target both 65099:10020
-   redistribute learned
-   
+      
    address-family ipv4
       neighbor SPINE-UNDERLAY activate
       network 10.99.243.1/32
@@ -177,6 +178,23 @@ router bgp 65099
    
    address-family evpn
       neighbor SPINE-EVPN activate
+   
+
+vrf VRF_CORE_1
+      
+      rd 65099:101
+      route-target import evpn 65099:101
+      route-target export evpn 65099:101
+      address-family ipv4
+      redistribute connected
+
+ vrf VRF_CORE_2
+      rd 65099:102
+      route-target import evpn 65099:102
+      route-target export evpn 65099:102
+      address-family ipv4
+      redistribute connected
+
 
 
  ```
@@ -188,6 +206,13 @@ hostname 99-blf2
 
 ip routing
 service routing protocols model multi-agent
+ip virtual-router mac-address 0000.0000.0001
+
+vrf instance VRF_CORE_1
+vrf instance VRF_CORE_2
+
+ip routing vrf VRF_CORE_1
+ip routing vrf VRF_CORE_2
 
 vlan 10
    name VLAN10
@@ -200,14 +225,12 @@ interface Ethernet1
    no switchport
    mtu 9100
    ip address 10.99.241.2/31
-   
 
 interface Ethernet2
    description to-99-sp2-Eth2
    no switchport
    mtu 9100
    ip address 10.99.242.2/31
-   
 
 interface Ethernet3
    description to-99-esx2-Eth1
@@ -216,16 +239,17 @@ interface Ethernet3
    mtu 9100
    no shutdown
 
-
 interface Vlan10
    description Vlan10
    mtu 9100
-   ip address 192.168.1.252/24
+   vrf VRF_CORE_1
+   ip address virtual 192.168.1.254/24
 
 interface Vlan20
    description Vlan20
    mtu 9100
-   ip address 192.168.2.252/24
+   vrf VRF_CORE_2
+   ip address virtual 192.168.2.254/24
 
 interface Loopback0
    description Router-ID
@@ -242,7 +266,9 @@ interface Vxlan1
    vxlan learn-restrict any
    vxlan vlan 10 vni 10010
    vxlan vlan 20 vni 10020
-  
+   vxlan vrf VRF_CORE_1 vni 10001
+   vxlan vrf VRF_CORE_2 vni 10002
+
 router bgp 65099
    router-id 10.99.243.2
    no bgp default ipv4-unicast
@@ -264,26 +290,40 @@ router bgp 65099
    neighbor SPINE-EVPN send-community extended
    neighbor 10.99.243.11 peer group SPINE-EVPN
    neighbor 10.99.243.22 peer group SPINE-EVPN
-   
-   vlan 10 
-   rd auto 
-   route-target both 65099:10010
-   redistribute learned
-   
-   vlan 20 
-   rd auto 
-   route-target both 65099:10020
-   redistribute learned
-   
+
+   vlan 10
+      rd auto
+      route-target both 65099:10010
+      redistribute learned
+
+   vlan 20
+      rd auto
+      route-target both 65099:10020
+      redistribute learned
+
    address-family ipv4
       neighbor SPINE-UNDERLAY activate
       network 10.99.243.2/32
       network 10.99.244.2/32
 
-   
    address-family evpn
       neighbor SPINE-EVPN activate
 
+vrf VRF_CORE_1
+   rd 65099:101
+   route-target import evpn 65099:101
+   route-target export evpn 65099:101
+   
+   address-family ipv4
+      redistribute connected
+
+vrf VRF_CORE_2
+   rd 65099:102
+   route-target import evpn 65099:102
+   route-target export evpn 65099:102
+   
+   address-family ipv4
+      redistribute connected
  ```
 ### 99-lf3 (Leaf 3)
 ```bash
@@ -292,43 +332,41 @@ hostname 99-lf3
 
 ip routing
 service routing protocols model multi-agent
+ip virtual-router mac-address 0000.0000.0001
 
-vlan 10
-   name VLAN10
+vrf instance VRF_CORE_1
+vrf instance VRF_CORE_2
 
-vlan 20
-   name VLAN20
+ip routing vrf VRF_CORE_1
+ip routing vrf VRF_CORE_2
+
+vlan 30
+   name VLAN30
 
 interface Ethernet1
    description to-99-sp1-Eth3
    no switchport
    mtu 9100
    ip address 10.99.241.4/31
-   
 
 interface Ethernet2
    description to-99-sp2-Eth3
    no switchport
    mtu 9100
-   
+   ip address 10.99.242.4/31
 
 interface Ethernet3
    description to-99-esx3-Eth1
    switchport mode trunk
-   switchport trunk allowed vlan 10,20
+   switchport trunk allowed vlan 30
    mtu 9100
    no shutdown
 
-
-interface Vlan10
-   description Vlan10
+interface Vlan30
+   description Vlan30
    mtu 9100
-   ip address 192.168.1.253/24
-
-interface Vlan20
-   description Vlan20
-   mtu 9100
-   ip address 192.168.2.253/24
+   vrf VRF_CORE_2
+   ip address virtual 192.168.3.254/24
 
 interface Loopback0
    description Router-ID
@@ -343,9 +381,10 @@ interface Vxlan1
    no shutdown
    vxlan source-interface Loopback1
    vxlan learn-restrict any
-   vxlan vlan 10 vni 10010
-   vxlan vlan 20 vni 10020
-  
+   vxlan vlan 30 vni 10030
+   vxlan vrf VRF_CORE_1 vni 10001
+   vxlan vrf VRF_CORE_2 vni 10002
+
 router bgp 65099
    router-id 10.99.243.3
    no bgp default ipv4-unicast
@@ -367,26 +406,37 @@ router bgp 65099
    neighbor SPINE-EVPN send-community extended
    neighbor 10.99.243.11 peer group SPINE-EVPN
    neighbor 10.99.243.22 peer group SPINE-EVPN
-   
-   vlan 10 
-   rd auto 
-   route-target both 65099:10010
-   redistribute learned
-   
-   vlan 20 
-   rd auto 
-   route-target both 65099:10020
-   redistribute learned
-   
+
+   vlan 30
+      rd auto
+      route-target both 65099:10030
+      redistribute learned
+
    address-family ipv4
       neighbor SPINE-UNDERLAY activate
       network 10.99.243.3/32
       network 10.99.244.3/32
 
-   
    address-family evpn
       neighbor SPINE-EVPN activate
+
+vrf VRF_CORE_1
+   rd 65099:101
+   route-target import evpn 65099:101
+   route-target export evpn 65099:101
+   
+   address-family ipv4
+      redistribute connected
+
+vrf VRF_CORE_2
+   rd 65099:102
+   route-target import evpn 65099:102
+   route-target export evpn 65099:102
+   
+   address-family ipv4
+      redistribute connected
  ```
+
  ### 99-lf4 (Leaf 4)
 ```bash
 configure terminal
@@ -394,43 +444,41 @@ hostname 99-lf4
 
 ip routing
 service routing protocols model multi-agent
+ip virtual-router mac-address 0000.0000.0001
 
-vlan 10
-   name VLAN10
+vrf instance VRF_CORE_1
+vrf instance VRF_CORE_2
 
-vlan 20
-   name VLAN20
+ip routing vrf VRF_CORE_1
+ip routing vrf VRF_CORE_2
+
+vlan 40
+   name VLAN40
 
 interface Ethernet1
    description to-99-sp1-Eth4
    no switchport
    mtu 9100
    ip address 10.99.241.6/31
-   
 
 interface Ethernet2
    description to-99-sp2-Eth4
    no switchport
    mtu 9100
    ip address 10.99.242.6/31
-   
 
 interface Ethernet3
    description to-99-esx4-Eth1
    switchport mode trunk
-   switchport trunk allowed vlan 10,20
+   switchport trunk allowed vlan 40
    mtu 9100
    no shutdown
 
-interface Vlan10
-   description Vlan10
+interface Vlan40
+   description Vlan40
    mtu 9100
-   ip address 192.168.1.254/24
-
-interface Vlan20
-   description Vlan20
-   mtu 9100
-   ip address 192.168.2.254/24
+   vrf VRF_CORE_1
+   ip address virtual 192.168.4.254/24
 
 interface Loopback0
    description Router-ID
@@ -445,9 +493,10 @@ interface Vxlan1
    no shutdown
    vxlan source-interface Loopback1
    vxlan learn-restrict any
-   vxlan vlan 10 vni 10010
-   vxlan vlan 20 vni 10020
-   
+   vxlan vlan 40 vni 10040
+   vxlan vrf VRF_CORE_1 vni 10001
+   vxlan vrf VRF_CORE_2 vni 10002
+
 router bgp 65099
    router-id 10.99.243.4
    no bgp default ipv4-unicast
@@ -469,25 +518,36 @@ router bgp 65099
    neighbor SPINE-EVPN send-community extended
    neighbor 10.99.243.11 peer group SPINE-EVPN
    neighbor 10.99.243.22 peer group SPINE-EVPN
-   
-   vlan 10 
-   rd auto 
-   route-target both 65099:10010
-   redistribute learned
-   
-   vlan 20 
-   rd auto 
-   route-target both 65099:10020
-   redistribute learned
-   
+
+   vlan 40
+      rd auto
+      route-target both 65099:10040
+      redistribute learned
+
    address-family ipv4
       neighbor SPINE-UNDERLAY activate
       network 10.99.243.4/32
       network 10.99.244.4/32
 
-   
    address-family evpn
       neighbor SPINE-EVPN activate
+
+vrf VRF_CORE_1
+   rd 65099:101
+   route-target import evpn 65099:101
+   route-target export evpn 65099:101
+   
+   address-family ipv4
+      redistribute connected
+
+vrf VRF_CORE_2
+   rd 65099:102
+   route-target import evpn 65099:102
+   route-target export evpn 65099:102
+   
+   address-family ipv4
+      redistribute connected
+
  ```
 
  ### 99-sp1 (Spine 1)
