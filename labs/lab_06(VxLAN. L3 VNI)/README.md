@@ -165,7 +165,11 @@ router bgp 65099
    neighbor 10.99.243.11 peer group SPINE-EVPN
    neighbor 10.99.243.22 peer group SPINE-EVPN
 
-      
+   vlan 10
+     rd auto
+     route-target both 65099:10010
+     redistribute learned
+
    address-family ipv4
       neighbor SPINE-UNDERLAY activate
       network 10.99.243.1/32
@@ -287,7 +291,10 @@ router bgp 65099
    neighbor 10.99.243.11 peer group SPINE-EVPN
    neighbor 10.99.243.22 peer group SPINE-EVPN
 
-
+   vlan 10
+      rd auto
+      route-target both 65099:10010
+      redistribute learned
 
    address-family ipv4
       neighbor SPINE-UNDERLAY activate
