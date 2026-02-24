@@ -235,6 +235,9 @@ router bgp 65099
    neighbor 10.99.241.1 peer group SPINE-UNDERLAY
    neighbor 10.99.242.1 peer group SPINE-UNDERLAY
 
+   neighbor 10.99.246.1 remote-as 65099
+   neighbor 10.99.246.1 next-hop-self
+
    neighbor SPINE-EVPN peer group
    neighbor SPINE-EVPN remote-as 65099
    neighbor SPINE-EVPN update-source Loopback0
@@ -252,6 +255,7 @@ router bgp 65099
       neighbor SPINE-UNDERLAY activate
       network 10.99.243.1/32
       network 10.99.244.1/32
+      neighbor 10.99.246.1 activate
 
    
    address-family evpn
@@ -322,10 +326,10 @@ mlag configuration
    dual-primary detection delay 1 action errdisable all-interfaces
 
 
-int et 7
+int eEthernet 7
 description Po78 lf2
    channel-group 78 mode active
-int et 8
+int eEthernet 8
 description Po78 lf2
    channel-group 78 mode active
 
@@ -368,7 +372,7 @@ interface Port-Channel3
    switchport trunk allowed vlan 10,20
    switchport mode trunk
    mlag 3
-!
+
 interface Port-Channel5
    mtu 9100
    switchport trunk allowed vlan 10,20
@@ -420,6 +424,9 @@ router bgp 65099
    neighbor 10.99.241.3 peer group SPINE-UNDERLAY
    neighbor 10.99.242.3 peer group SPINE-UNDERLAY
 
+   neighbor 10.99.246.2 remote-as 65099
+   neighbor 10.99.246.2 next-hop-self
+
    neighbor SPINE-EVPN peer group
    neighbor SPINE-EVPN remote-as 65099
    neighbor SPINE-EVPN update-source Loopback0
@@ -437,6 +444,7 @@ router bgp 65099
       neighbor SPINE-UNDERLAY activate
       network 10.99.243.2/32
       network 10.99.244.2/32
+      neighbor 10.99.246.2 activate
 
    address-family evpn
       neighbor SPINE-EVPN activate
