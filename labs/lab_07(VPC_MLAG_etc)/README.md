@@ -101,9 +101,47 @@ ip virtual-router mac-address 0000.0000.0001
 vrf instance VRF_CORE_1
 vrf instance VRF_CORE_2
 
+vrf instance MGMT
+ ip routing 
+
+interface Management 1
+vrf MGMT
+ip address 10.99.245.1/24
+
 ip routing
 ip routing VRF_CORE_1
 ip routing VRF_CORE_2
+
+vlan 4094
+name MLAG-PEERLINK
+trunk group MLAG-PEERLINK
+
+Int Po78
+descr MLAG_PEERLINK
+switchport mode trunk
+switchport trunk group MLAG-PEERLINK
+spanning-tree link-type point-to-point
+
+int Vlan4094
+no autostate
+ip address 10.99.246.1/30
+
+mlag configuration
+   domain-id 12
+   local-interface Vlan4094
+   peer-address 10.99.246.2
+   peer-address heartbeat 10.99.245.2 vrf MGMT
+   peer-link Port-Channel78
+   dual-primary detection delay 1 action errdisable all-interfaces
+
+
+int et 7
+description Po78 lf2
+   channel-group 78 mode active
+int et 8
+description Po78 lf2
+   channel-group 78 mode active
+
 
 vlan 10
    name VLAN10
@@ -124,10 +162,33 @@ interface Ethernet2
 
 interface Ethernet3
    description to-99-esx1-Eth1
-   switchport mode trunk
-   switchport trunk allowed vlan 10
    mtu 9100
-   no shutdown
+   switchport trunk allowed vlan 10,20
+   switchport mode trunk
+   channel-group 3 mode active
+
+interface Ethernet5
+   description 99-esx2-eth2
+   mtu 9100
+   speed forced 10000full
+   switchport trunk allowed vlan 10,20
+   switchport mode trunk
+   channel-group 5 mode active
+
+
+interface Port-Channel3
+   description 99-esx1
+   mtu 9100
+   switchport trunk allowed vlan 10,20
+   switchport mode trunk
+   mlag 3
+!
+interface Port-Channel5
+   mtu 9100
+   switchport trunk allowed vlan 10,20
+   switchport mode trunk
+   mlag 5
+
 
 
 interface Vlan10
@@ -135,6 +196,12 @@ interface Vlan10
    mtu 9100
    vrf VRF_CORE_1
    ip address virtual 192.168.1.254/24
+   
+  interface Vlan20
+   description Vlan20
+   mtu 9100
+   vrf VRF_CORE_2
+   ip address virtual 192.168.2.254/24 
 
 
 interface Loopback0
@@ -225,6 +292,43 @@ vrf instance VRF_CORE_2
 ip routing vrf VRF_CORE_1
 ip routing vrf VRF_CORE_2
 
+vrf instance MGMT
+ ip routing 
+
+interface Management 1
+vrf MGMT
+ip address 10.99.245.2/24
+
+vlan 4094
+name MLAG-PEERLINK
+trunk group MLAG-PEERLINK
+
+Int Po78
+descr MLAG_PEERLINK
+switchport mode trunk
+switchport trunk group MLAG-PEERLINK
+spanning-tree link-type point-to-point
+
+int Vlan4094
+no autostate
+ip address 10.99.246.2/30
+
+mlag configuration
+   domain-id 12
+   local-interface Vlan4094
+   peer-address 10.99.246.1
+   peer-address heartbeat 10.99.245.1 vrf MGMT
+   peer-link Port-Channel78
+   dual-primary detection delay 1 action errdisable all-interfaces
+
+
+int et 7
+description Po78 lf2
+   channel-group 78 mode active
+int et 8
+description Po78 lf2
+   channel-group 78 mode active
+
 vlan 10
    name VLAN10
 
@@ -244,11 +348,33 @@ interface Ethernet2
    ip address 10.99.242.2/31
 
 interface Ethernet3
-   description to-99-esx2-Eth1
-   switchport mode trunk
-   switchport trunk allowed vlan 10,20
+   description to-99-esx1-Eth1
    mtu 9100
-   no shutdown
+   switchport trunk allowed vlan 10,20
+   switchport mode trunk
+   channel-group 3 mode active
+   
+interface Ethernet5
+   description 99-esx2-eth2
+   mtu 9100
+   speed forced 10000full
+   switchport trunk allowed vlan 10,20
+   switchport mode trunk
+   channel-group 5 mode active
+
+interface Port-Channel3
+   description 99-esx1
+   mtu 9100
+   switchport trunk allowed vlan 10,20
+   switchport mode trunk
+   mlag 3
+!
+interface Port-Channel5
+   mtu 9100
+   switchport trunk allowed vlan 10,20
+   switchport mode trunk
+   mlag 5
+
 
 interface Vlan10
    description Vlan10
@@ -268,7 +394,7 @@ interface Loopback0
 
 interface Loopback1
    description VTEP-Source
-   ip address 10.99.244.2/32
+   ip address 10.99.244.1/32
 
 interface Vxlan1
    description VXLAN-Tunnel-Endpoint
@@ -315,6 +441,7 @@ router bgp 65099
    address-family evpn
       neighbor SPINE-EVPN activate
 
+
 vrf VRF_CORE_1
    rd 65099:101
    route-target import evpn 65099:101
@@ -345,6 +472,13 @@ vrf instance VRF_CORE_2
 
 ip routing vrf VRF_CORE_1
 ip routing vrf VRF_CORE_2
+
+vrf instance MGMT
+ ip routing 
+
+interface Management 1
+vrf MGMT
+ip address 10.99.245.3/24
 
 vlan 30
    name VLAN30
@@ -423,6 +557,8 @@ router bgp 65099
    address-family evpn
       neighbor SPINE-EVPN activate
 
+
+
 vrf VRF_CORE_1
    rd 65099:101
    route-target import evpn 65099:101
@@ -454,6 +590,13 @@ vrf instance VRF_CORE_2
 
 ip routing vrf VRF_CORE_1
 ip routing vrf VRF_CORE_2
+
+vrf instance MGMT
+ ip routing 
+
+interface Management 1
+vrf MGMT
+ip address 10.99.245.4/24
 
 vlan 40
    name VLAN40
@@ -532,6 +675,7 @@ router bgp 65099
    address-family evpn
       neighbor SPINE-EVPN activate
 
+
 vrf VRF_CORE_1
    rd 65099:101
    route-target import evpn 65099:101
@@ -557,6 +701,13 @@ hostname 99-sp1
 
 ip routing
 service routing protocols model multi-agent
+
+vrf instance MGMT
+ ip routing 
+
+interface Management 1
+vrf MGMT
+ip address 10.99.245.11/24
 
 interface Ethernet1
    description to-99-blf1-Eth1
@@ -629,6 +780,13 @@ hostname 99-sp2
 
 ip routing
 service routing protocols model multi-agent
+
+vrf instance MGMT
+ ip routing 
+
+interface Management 1
+vrf MGMT
+ip address 10.99.245.22/24
 
 interface Ethernet1
    description to-99-blf1-Eth2
