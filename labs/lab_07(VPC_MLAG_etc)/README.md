@@ -490,6 +490,8 @@ ip address 10.99.245.3/24
 
 vlan 30
    name VLAN30
+vlan 40
+   name VLAN40
 
 interface Ethernet1
    description to-99-sp1-Eth3
@@ -504,17 +506,32 @@ interface Ethernet2
    ip address 10.99.242.4/31
 
 interface Ethernet3
-   description to-99-esx3-Eth1
-   switchport mode trunk
-   switchport trunk allowed vlan 30
+   description to esx3 int et 1
    mtu 9100
-   no shutdown
+   switchport trunk allowed vlan 30
+   switchport mode trunk
+   channel-group 3 mode active
+!
+interface Ethernet4
+   description to esx4 et1
+   mtu 9100
+   switchport trunk allowed vlan 40
+   switchport mode trunk
+   channel-group 4 mode active
+
 
 interface Vlan30
    description Vlan30
    mtu 9100
    vrf VRF_CORE_2
    ip address virtual 192.168.3.254/24
+
+interface Vlan40
+   description Vlan40
+   mtu 9100
+   vrf VRF_CORE_1
+   ip address virtual 192.168.4.254/24
+
 
 interface Loopback0
    description Router-ID
@@ -591,7 +608,7 @@ hostname 99-lf4
 
 ip routing
 service routing protocols model multi-agent
-ip virtual-router mac-address 0000.0000.0001
+ip virtual-router mac-address 0000.0000.0002
 
 vrf instance VRF_CORE_1
 vrf instance VRF_CORE_2
@@ -605,6 +622,9 @@ vrf instance MGMT
 interface Management 1
 vrf MGMT
 ip address 10.99.245.4/24
+
+vlan 30
+   name VLAN30
 
 vlan 40
    name VLAN40
@@ -622,11 +642,24 @@ interface Ethernet2
    ip address 10.99.242.6/31
 
 interface Ethernet3
-   description to-99-esx4-Eth1
-   switchport mode trunk
-   switchport trunk allowed vlan 40
+   description to esx3 int et2
    mtu 9100
-   no shutdown
+   switchport trunk allowed vlan 30
+   switchport mode trunk
+   channel-group 3 mode active
+!
+interface Ethernet4
+   description to esx4 int et 2
+   mtu 9100
+   switchport trunk allowed vlan 40
+   switchport mode trunk
+   channel-group 4 mode active
+
+interface Vlan30
+   description Vlan30
+   mtu 9100
+   vrf VRF_CORE_2
+   ip address virtual 192.168.3.254/24
 
 interface Vlan40
    description Vlan40
