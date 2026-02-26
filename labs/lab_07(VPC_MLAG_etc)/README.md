@@ -1036,6 +1036,20 @@ Port Channel Port-Channel78:
 
 
 ```
+```
+99-lf3#sh lacp peer
+State: A = Active, P = Passive; S=ShortTimeout, L=LongTimeout;
+       G = Aggregable, I = Individual; s+=InSync, s-=OutOfSync;
+       C = Collecting, X = state machine expired,
+       D = Distributing, d = default neighbor state
+                 |                        Partner
+ Port    Status  | Sys-id                    Port#   State     OperKey  PortPri
+------ ----------|------------------------- ------- --------- --------- -------
+Port Channel Port-Channel3:
+ Et3     Bundled | 8000,50-00-00-1b-5e-8d        1   ALGs+CD    0x0001    32768
+Port Channel Port-Channel4:
+ Et4     Bundled | 8000,50-00-00-03-37-66        1   ALGs+CD    0x0001    32768
+```
 
 ```
 99-blf1#sh mac address-table vl 20
