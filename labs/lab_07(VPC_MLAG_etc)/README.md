@@ -1028,32 +1028,7 @@ Port Channel Port-Channel78:
 
 
 ```
-```
-99-blf1#sh bgp evpn route-type mac-ip
-BGP routing table information for VRF default
-Router identifier 10.99.243.1, local AS number 65099
-Route status codes: * - valid, > - active, S - Stale, E - ECMP head, e - ECMP
-                    c - Contributing to ECMP, % - Pending BGP convergence
-Origin codes: i - IGP, e - EGP, ? - incomplete
-AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Link Local Nexthop
 
-          Network                Next Hop              Metric  LocPref Weight  Path
- * >Ec    RD: 10.99.243.2:10 mac-ip 5000.006b.2e70
-                                 10.99.244.2           -       100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.22
- *  ec    RD: 10.99.243.2:10 mac-ip 5000.006b.2e70
-                                 10.99.244.2           -       100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.11
- * >Ec    RD: 10.99.243.2:10 mac-ip 5000.006b.2e70 192.168.1.2
-                                 10.99.244.2           -       100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.22
- *  ec    RD: 10.99.243.2:10 mac-ip 5000.006b.2e70 192.168.1.2
-                                 10.99.244.2           -       100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.11
- * >      RD: 10.99.243.1:10 mac-ip 5000.00d5.5dc0
-                                 -                     -       -       0       i
- * >      RD: 10.99.243.1:10 mac-ip 5000.00d5.5dc0 192.168.1.1
-                                 -                     -       -       0       i
-99-blf1#
-
-
-```
 ```
 99-blf1#sh mac address-table vl 20
           Mac Address Table
@@ -1079,99 +1054,154 @@ Total Mac Addresses for this criterion: 2
 
 ```
 
-## 2.  Проверка таблицы маршрутов VRF_CORE_1/2  
+## 2.  Проверка таблицы bgp VRF_CORE_1/2  
 ```
-99-blf2#sh ip route vrf VRF_CORE_1
-VRF: VRF_CORE_1
+99-blf2#sh ip bgp vrf VRF_CORE_1
+AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Link Local Nexthop
 
-Gateway of last resort is not set
-
- C        192.168.1.0/24 is directly connected, Vlan10
- B I      192.168.4.1/32 [200/0] via VTEP 10.99.244.3 VNI 10001 router-mac 50:00:00:f6:ad:37 local-interface Vxlan1
-                                 via VTEP 10.99.244.4 VNI 10001 router-mac 50:00:00:af:d3:f6 local-interface Vxlan1
- B I      192.168.4.0/24 [200/0] via VTEP 10.99.244.3 VNI 10001 router-mac 50:00:00:f6:ad:37 local-interface Vxlan1
-                                 via VTEP 10.99.244.4 VNI 10001 router-mac 50:00:00:af:d3:f6 local-interface Vxlan1
-
-
-
-```
-
-```
-99-blf2#sh ip route vrf VRF_CORE_2
-
-VRF: VRF_CORE_2
-
- C        192.168.2.0/24 is directly connected, Vlan20
- B I      192.168.3.1/32 [200/0] via VTEP 10.99.244.3 VNI 10002 router-mac 50:00:00:f6:ad:37 local-interface Vxlan1
-                                 via VTEP 10.99.244.4 VNI 10002 router-mac 50:00:00:af:d3:f6 local-interface Vxlan1
- B I      192.168.3.0/24 [200/0] via VTEP 10.99.244.3 VNI 10002 router-mac 50:00:00:f6:ad:37 local-interface Vxlan1
-                                 via VTEP 10.99.244.4 VNI 10002 router-mac 50:00:00:af:d3:f6 local-interface Vxlan1
+          Network                Next Hop              Metric  AIGP       LocPref Weight  Path
+ * >      192.168.1.0/24         -                     -       -          -       0       i
+          192.168.1.0/24         10.99.244.1           0       -          100     0       i Or-ID: 10.99.243.1 C-LST: 10.99.243.11
+          192.168.1.1/32         10.99.244.1           0       -          100     0       i Or-ID: 10.99.243.1 C-LST: 10.99.243.22
+          192.168.1.1/32         10.99.244.1           0       -          100     0       i Or-ID: 10.99.243.1 C-LST: 10.99.243.11
+          192.168.1.2/32         10.99.244.1           0       -          100     0       i Or-ID: 10.99.243.1 C-LST: 10.99.243.11
+          192.168.1.2/32         10.99.244.1           0       -          100     0       i Or-ID: 10.99.243.1 C-LST: 10.99.243.22
+ * >Ec    192.168.4.0/24         10.99.244.4           0       -          100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.22
+ *  ec    192.168.4.0/24         10.99.244.4           0       -          100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.11
+ * >Ec    192.168.4.1/32         10.99.244.4           0       -          100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.22
+ *  ec    192.168.4.1/32         10.99.244.3           0       -          100     0       i Or-ID: 10.99.243.3 C-LST: 10.99.243.22
+ *  ec    192.168.4.1/32         10.99.244.3           0       -          100     0       i Or-ID: 10.99.243.3 C-LST: 10.99.243.11
+ *  ec    192.168.4.1/32         10.99.244.4           0       -          100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.11
 
 
 ```
 
+```
+9sh ip bgp vrf VRF_CORE_2
+BGP routing table information for VRF VRF_CORE_2
+Router identifier 192.168.2.254, local AS number 65099
+Route status codes: s - suppressed, * - valid, > - active, E - ECMP head, e - ECMP
+                    S - Stale, c - Contributing to ECMP, b - backup, L - labeled-unicast
+                    % - Pending BGP convergence
+Origin codes: i - IGP, e - EGP, ? - incomplete
+RPKI Origin Validation codes: V - valid, I - invalid, U - unknown
+AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Link Local Nexthop
+
+          Network                Next Hop              Metric  AIGP       LocPref Weight  Path
+ * >      192.168.2.0/24         -                     -       -          -       0       i
+          192.168.2.1/32         10.99.244.1           0       -          100     0       i Or-ID: 10.99.243.1 C-LST: 10.99.243.22
+          192.168.2.1/32         10.99.244.1           0       -          100     0       i Or-ID: 10.99.243.1 C-LST: 10.99.243.11
+ * >Ec    192.168.3.0/24         10.99.244.4           0       -          100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.22
+ *  ec    192.168.3.0/24         10.99.244.4           0       -          100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.11
+ * >Ec    192.168.3.1/32         10.99.244.4           0       -          100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.22
+ *  ec    192.168.3.1/32         10.99.244.3           0       -          100     0       i Or-ID: 10.99.243.3 C-LST: 10.99.243.22
+ *  ec    192.168.3.1/32         10.99.244.4           0       -          100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.11
+ *  ec    192.168.3.1/32         10.99.244.3           0       -          100     0       i Or-ID: 10.99.243.3 C-LST: 10.99.243.11
+
+
+```
+Видим что каждый маршрут со стороны сети 192.168.3.0/24 и 192.168.4.0/24  имеет по два пути через каждый спайн с двумя разными vtep так как там настроен multihoming
+
+
+```
+99-lf3#sh ip bgp vrf VRF_CORE_1
+BGP routing table information for VRF VRF_CORE_1
+Router identifier 192.168.4.254, local AS number 65099
+
+          Network                Next Hop              Metric  AIGP       LocPref Weight  Path
+ * >Ec    192.168.1.0/24         10.99.244.1           0       -          100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.22
+ *  ec    192.168.1.0/24         10.99.244.1           0       -          100     0       i Or-ID: 10.99.243.1 C-LST: 10.99.243.11
+ * >Ec    192.168.1.1/32         10.99.244.1           0       -          100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.11
+ *  ec    192.168.1.1/32         10.99.244.1           0       -          100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.22
+ *  ec    192.168.1.1/32         10.99.244.1           0       -          100     0       i Or-ID: 10.99.243.1 C-LST: 10.99.243.11
+ *  ec    192.168.1.1/32         10.99.244.1           0       -          100     0       i Or-ID: 10.99.243.1 C-LST: 10.99.243.22
+ * >      192.168.4.0/24         -                     -       -          -       0       i
+ *        192.168.4.0/24         10.99.244.4           0       -          100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.22
+          192.168.4.1/32         10.99.244.4           0       -          100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.22
+          192.168.4.1/32         10.99.244.4           0       -          100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.11
+99-lf3#
+99-lf3#sh ip bgp vrf VRF_CORE_2
+BGP routing table information for VRF VRF_CORE_2
+Router identifier 192.168.3.254, local AS number 65099
+
+          Network                Next Hop              Metric  AIGP       LocPref Weight  Path
+ * >Ec    192.168.2.0/24         10.99.244.1           0       -          100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.22
+ *  ec    192.168.2.0/24         10.99.244.1           0       -          100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.11
+ * >Ec    192.168.2.1/32         10.99.244.1           0       -          100     0       i Or-ID: 10.99.243.1 C-LST: 10.99.243.22
+ *  ec    192.168.2.1/32         10.99.244.1           0       -          100     0       i Or-ID: 10.99.243.1 C-LST: 10.99.243.11
+ *  ec    192.168.2.1/32         10.99.244.1           0       -          100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.11
+ *  ec    192.168.2.1/32         10.99.244.1           0       -          100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.22
+ * >      192.168.3.0/24         -                     -       -          -       0       i
+ *        192.168.3.0/24         10.99.244.4           0       -          100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.22
+          192.168.3.1/32         10.99.244.4           0       -          100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.22
+          192.168.3.1/32         10.99.244.4           0       -          100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.11
+```
+Видим что каждый маршрут со стороны сети 192.168.1.0/24 и 192.168.2.0/24  имеет по два пути через каждый спайн с двумя одинаковыми vtep но разными Or-ID  потому что blf1/2 собраны в mlag 
 
 ## 3. Проверка межсерверной связности между VM 
 Пингуем с ESXI2 , который живет в двух VRF 
 ```
 99-esx2#ping vrf VRF_CORE_1 192.168.1.1
 PING 192.168.1.1 (192.168.1.1) 72(100) bytes of data.
-80 bytes from 192.168.1.1: icmp_seq=1 ttl=64 time=26.6 ms
-80 bytes from 192.168.1.1: icmp_seq=2 ttl=64 time=19.1 ms
-80 bytes from 192.168.1.1: icmp_seq=3 ttl=64 time=25.7 ms
-80 bytes from 192.168.1.1: icmp_seq=4 ttl=64 time=21.5 ms
-80 bytes from 192.168.1.1: icmp_seq=5 ttl=64 time=16.8 ms
+80 bytes from 192.168.1.1: icmp_seq=1 ttl=64 time=125 ms
+80 bytes from 192.168.1.1: icmp_seq=2 ttl=64 time=118 ms
+80 bytes from 192.168.1.1: icmp_seq=3 ttl=64 time=112 ms
+80 bytes from 192.168.1.1: icmp_seq=4 ttl=64 time=107 ms
+80 bytes from 192.168.1.1: icmp_seq=5 ttl=64 time=100 ms
 
 --- 192.168.1.1 ping statistics ---
-5 packets transmitted, 5 received, 0% packet loss, time 75ms
-rtt min/avg/max/mdev = 16.809/21.993/26.691/3.780 ms, pipe 3, ipg/ewma 18.999/24.173 ms
+5 packets transmitted, 5 received, 0% packet loss, time 47ms
+rtt min/avg/max/mdev = 100.337/113.012/125.676/8.781 ms, pipe 5, ipg/ewma 11.800/118.707 ms
 99-esx2#
 99-esx2#ping vrf VRF_CORE_1 192.168.4.1
 PING 192.168.4.1 (192.168.4.1) 72(100) bytes of data.
-80 bytes from 192.168.4.1: icmp_seq=1 ttl=62 time=38.8 ms
-80 bytes from 192.168.4.1: icmp_seq=2 ttl=62 time=28.7 ms
-80 bytes from 192.168.4.1: icmp_seq=3 ttl=62 time=24.8 ms
-80 bytes from 192.168.4.1: icmp_seq=4 ttl=62 time=31.5 ms
-80 bytes from 192.168.4.1: icmp_seq=5 ttl=62 time=29.2 ms
+80 bytes from 192.168.4.1: icmp_seq=1 ttl=62 time=67.2 ms
+80 bytes from 192.168.4.1: icmp_seq=2 ttl=62 time=58.1 ms
+80 bytes from 192.168.4.1: icmp_seq=3 ttl=62 time=49.1 ms
+80 bytes from 192.168.4.1: icmp_seq=4 ttl=62 time=41.7 ms
+80 bytes from 192.168.4.1: icmp_seq=5 ttl=62 time=40.6 ms
 
 --- 192.168.4.1 ping statistics ---
-5 packets transmitted, 5 received, 0% packet loss, time 68ms
-rtt min/avg/max/mdev = 24.863/30.662/38.888/4.642 ms, pipe 4, ipg/ewma 17.046/34.689 ms
+5 packets transmitted, 5 received, 0% packet loss, time 44ms
+rtt min/avg/max/mdev = 40.621/51.376/67.227/10.113 ms, pipe 5, ipg/ewma 11.115/58.622 ms
 99-esx2#
 99-esx2#ping vrf VRF_CORE_2 192.168.3.1
 PING 192.168.3.1 (192.168.3.1) 72(100) bytes of data.
-80 bytes from 192.168.3.1: icmp_seq=1 ttl=62 time=74.8 ms
-80 bytes from 192.168.3.1: icmp_seq=2 ttl=62 time=64.9 ms
-80 bytes from 192.168.3.1: icmp_seq=3 ttl=62 time=55.6 ms
-80 bytes from 192.168.3.1: icmp_seq=4 ttl=62 time=47.8 ms
-80 bytes from 192.168.3.1: icmp_seq=5 ttl=62 time=40.1 ms
+80 bytes from 192.168.3.1: icmp_seq=1 ttl=62 time=35.7 ms
+80 bytes from 192.168.3.1: icmp_seq=2 ttl=62 time=25.6 ms
+80 bytes from 192.168.3.1: icmp_seq=3 ttl=62 time=22.2 ms
+80 bytes from 192.168.3.1: icmp_seq=4 ttl=62 time=22.8 ms
+80 bytes from 192.168.3.1: icmp_seq=5 ttl=62 time=26.3 ms
 
 --- 192.168.3.1 ping statistics ---
-5 packets transmitted, 5 received, 0% packet loss, time 45ms
-rtt min/avg/max/mdev = 40.124/56.673/74.807/12.246 ms, pipe 5, ipg/ewma 11.315/64.863 ms
+5 packets transmitted, 5 received, 0% packet loss, time 67ms
+rtt min/avg/max/mdev = 22.230/26.551/35.722/4.850 ms, pipe 4, ipg/ewma 16.879/31.003 ms
 99-esx2#
 99-esx2#ping vrf VRF_CORE_2 192.168.3.254
 PING 192.168.3.254 (192.168.3.254) 72(100) bytes of data.
-80 bytes from 192.168.3.254: icmp_seq=1 ttl=63 time=24.3 ms
-80 bytes from 192.168.3.254: icmp_seq=2 ttl=63 time=16.4 ms
-80 bytes from 192.168.3.254: icmp_seq=3 ttl=63 time=37.3 ms
-80 bytes from 192.168.3.254: icmp_seq=4 ttl=63 time=27.3 ms
-80 bytes from 192.168.3.254: icmp_seq=5 ttl=63 time=19.6 ms
+80 bytes from 192.168.3.254: icmp_seq=1 ttl=63 time=47.7 ms
+80 bytes from 192.168.3.254: icmp_seq=2 ttl=63 time=38.2 ms
+80 bytes from 192.168.3.254: icmp_seq=3 ttl=63 time=29.5 ms
+80 bytes from 192.168.3.254: icmp_seq=4 ttl=63 time=21.8 ms
+80 bytes from 192.168.3.254: icmp_seq=5 ttl=63 time=20.3 ms
 
 --- 192.168.3.254 ping statistics ---
-5 packets transmitted, 5 received, 0% packet loss, time 86ms
-rtt min/avg/max/mdev = 16.434/25.029/37.331/7.204 ms, pipe 2, ipg/ewma 21.546/24.672 ms
+5 packets transmitted, 5 received, 0% packet loss, time 43ms
+rtt min/avg/max/mdev = 20.358/31.563/47.787/10.318 ms, pipe 5, ipg/ewma 10.910/38.979 ms
 99-esx2#
 99-esx2#ping vrf VRF_CORE_1 192.168.4.254
 PING 192.168.4.254 (192.168.4.254) 72(100) bytes of data.
-80 bytes from 192.168.4.254: icmp_seq=1 ttl=63 time=44.1 ms
-80 bytes from 192.168.4.254: icmp_seq=2 ttl=63 time=34.6 ms
-80 bytes from 192.168.4.254: icmp_seq=3 ttl=63 time=25.4 ms
-80 bytes from 192.168.4.254: icmp_seq=4 ttl=63 time=24.9 ms
-80 bytes from 192.168.4.254: icmp_seq=5 ttl=63 time=25.5 ms
+80 bytes from 192.168.4.254: icmp_seq=1 ttl=63 time=35.3 ms
+80 bytes from 192.168.4.254: icmp_seq=2 ttl=63 time=25.7 ms
+80 bytes from 192.168.4.254: icmp_seq=3 ttl=63 time=23.0 ms
+80 bytes from 192.168.4.254: icmp_seq=4 ttl=63 time=20.5 ms
+80 bytes from 192.168.4.254: icmp_seq=5 ttl=63 time=13.8 ms
 
 --- 192.168.4.254 ping statistics ---
-5 packets transmitted, 5 received, 0% packet loss, time 74ms
+5 packets transmitted, 5 received, 0% packet loss, time 65ms
+rtt min/avg/max/mdev = 13.822/23.719/35.339/7.039 ms, pipe 4, ipg/ewma 16.375/29.060 ms
+99-esx2#
+
 
 ```
 ## 4. Проверка межсерверной связности между VM из разных VRF 
