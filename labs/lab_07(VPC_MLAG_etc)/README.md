@@ -11,6 +11,9 @@
 
 ## Топология сети
 ![Схема Сети ](fabric_scheme.jpg)
+
+Соберем blf1/2 в MLAG а через lf3/4 настроим multihoming
+
 ## IP-план (Address Plan) 
 
 ### Underlay сеть (Fabric Links - Point-to-Point /31)
