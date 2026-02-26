@@ -547,6 +547,7 @@ interface Vxlan1
    vxlan source-interface Loopback1
    vxlan learn-restrict any
    vxlan vlan 30 vni 10030
+   vxlan vlan 40 vni 10040
    vxlan vrf VRF_CORE_1 vni 10001
    vxlan vrf VRF_CORE_2 vni 10002
 
@@ -572,7 +573,15 @@ router bgp 65099
    neighbor 10.99.243.11 peer group SPINE-EVPN
    neighbor 10.99.243.22 peer group SPINE-EVPN
 
-
+   vlan 30
+      rd auto
+      route-target both 65099:10030
+      redistribute learned
+   !
+   vlan 40
+      rd auto
+      route-target both 65099:10040
+      redistribute learned
 
    address-family ipv4
       neighbor SPINE-UNDERLAY activate
@@ -680,6 +689,7 @@ interface Vxlan1
    no shutdown
    vxlan source-interface Loopback1
    vxlan learn-restrict any
+   vxlan vlan 30 vni 10030
    vxlan vlan 40 vni 10040
    vxlan vrf VRF_CORE_1 vni 10001
    vxlan vrf VRF_CORE_2 vni 10002
@@ -706,7 +716,15 @@ router bgp 65099
    neighbor 10.99.243.11 peer group SPINE-EVPN
    neighbor 10.99.243.22 peer group SPINE-EVPN
 
-
+   vlan 30
+      rd auto
+      route-target both 65099:10030
+      redistribute learned
+   !
+   vlan 40
+      rd auto
+      route-target both 65099:10040
+      redistribute learned
 
    address-family ipv4
       neighbor SPINE-UNDERLAY activate
@@ -924,7 +942,7 @@ ip route 0.0.0.0/0 192.168.1.254
 ### 99-esx2 (ESX 2)
 ```
  hostname 99-esx2
- spanning-tree mode rstp
+ spanning-tree mode mstp
  vlan 10,20
  vrf instance VRF_CORE_1
  vrf instance VRF_CORE_2
@@ -964,7 +982,52 @@ ip route vrf VRF_CORE_2 0.0.0.0/0 192.168.2.254
 ---
 
 ## Проверка IP связности
- ## 1. Проверка связности внутри Vlan10 ( 1/2 blf)
+ ## 1. Проверка настроенного mlag домена и портченнелов blf1/2
+ ```
+ 99-blf1#sh mlag
+MLAG Configuration:
+domain-id                          :                  12
+local-interface                    :            Vlan4094
+peer-address                       :         10.99.246.2
+peer-link                          :      Port-Channel78
+hb-peer-address                    :         10.99.245.2
+hb-peer-vrf                        :                MGMT
+peer-config                        :          consistent
+
+MLAG Status:
+state                              :              Active
+negotiation status                 :           Connected
+peer-link status                   :                  Up
+local-int status                   :                  Up
+system-id                          :   52:00:00:cb:38:c2
+dual-primary detection             :          Configured
+dual-primary interface errdisabled :               False
+
+MLAG Ports:
+Disabled                           :                   0
+Configured                         :                   0
+Inactive                           :                   0
+Active-partial                     :                   1
+```
+```
+99-blf1#sh lacp peer
+State: A = Active, P = Passive; S=ShortTimeout, L=LongTimeout;
+       G = Aggregable, I = Individual; s+=InSync, s-=OutOfSync;
+       C = Collecting, X = state machine expired,
+       D = Distributing, d = default neighbor state
+                 |                        Partner
+ Port    Status  | Sys-id                    Port#   State     OperKey  PortPri
+------ ----------|------------------------- ------- --------- --------- -------
+Port Channel Port-Channel3*:
+ Et3     Bundled | 8000,50-00-00-d5-5d-c0        1   ALGs+CD    0x0001    32768
+Port Channel Port-Channel5*:
+ Et5     Bundled | 8000,50-00-00-6b-2e-70        2   ALGs+CD    0x0002    32768
+Port Channel Port-Channel78:
+ Et7     Bundled | 8000,50-00-00-cb-38-c2        7   ALGs+CD    0x004e    32768
+ Et8     Bundled | 8000,50-00-00-cb-38-c2        8   ALGs+CD    0x004e    32768
+
+
+```
 ```
 99-blf1#sh bgp evpn route-type mac-ip
 BGP routing table information for VRF default
@@ -992,6 +1055,17 @@ AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Li
 
 ```
 ```
+99-blf1#sh mac address-table vl 20
+          Mac Address Table
+------------------------------------------------------------------
+
+Vlan    Mac Address       Type        Ports      Moves   Last Move
+----    -----------       ----        -----      -----   ---------
+  20    0000.0000.0001    STATIC      Cpu
+  20    5000.006b.2e70    DYNAMIC     Po5        1       0:09:03 ago
+  20    5000.00cb.38c2    STATIC      Po78
+Total Mac Addresses for this criterion: 3
+
 99-blf1#sh mac address-table vl 10
           Mac Address Table
 ------------------------------------------------------------------
@@ -999,9 +1073,9 @@ AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Li
 Vlan    Mac Address       Type        Ports      Moves   Last Move
 ----    -----------       ----        -----      -----   ---------
   10    0000.0000.0001    STATIC      Cpu
-  10    5000.006b.2e70    DYNAMIC     Vx1        1       0:02:43 ago
-  10    5000.00d5.5dc0    DYNAMIC     Et3        1       0:08:02 ago
-Total Mac Addresses for this criterion: 3
+  10    5000.00cb.38c2    STATIC      Po78
+Total Mac Addresses for this criterion: 2
+
 
 ```
 
@@ -1012,9 +1086,13 @@ VRF: VRF_CORE_1
 
 Gateway of last resort is not set
 
- B I      192.168.1.1/32 [200/0] via VTEP 10.99.244.1 VNI 10001 router-mac 50:00:00:d7:ee:0b local-interface Vxlan1
  C        192.168.1.0/24 is directly connected, Vlan10
- B I      192.168.4.0/24 [200/0] via VTEP 10.99.244.4 VNI 10002 router-mac 50:00:00:af:d3:f6 local-interface Vxlan1
+ B I      192.168.4.1/32 [200/0] via VTEP 10.99.244.3 VNI 10001 router-mac 50:00:00:f6:ad:37 local-interface Vxlan1
+                                 via VTEP 10.99.244.4 VNI 10001 router-mac 50:00:00:af:d3:f6 local-interface Vxlan1
+ B I      192.168.4.0/24 [200/0] via VTEP 10.99.244.3 VNI 10001 router-mac 50:00:00:f6:ad:37 local-interface Vxlan1
+                                 via VTEP 10.99.244.4 VNI 10001 router-mac 50:00:00:af:d3:f6 local-interface Vxlan1
+
+
 
 ```
 
@@ -1024,7 +1102,12 @@ Gateway of last resort is not set
 VRF: VRF_CORE_2
 
  C        192.168.2.0/24 is directly connected, Vlan20
+ B I      192.168.3.1/32 [200/0] via VTEP 10.99.244.3 VNI 10002 router-mac 50:00:00:f6:ad:37 local-interface Vxlan1
+                                 via VTEP 10.99.244.4 VNI 10002 router-mac 50:00:00:af:d3:f6 local-interface Vxlan1
  B I      192.168.3.0/24 [200/0] via VTEP 10.99.244.3 VNI 10002 router-mac 50:00:00:f6:ad:37 local-interface Vxlan1
+                                 via VTEP 10.99.244.4 VNI 10002 router-mac 50:00:00:af:d3:f6 local-interface Vxlan1
+
+
 ```
 
 
