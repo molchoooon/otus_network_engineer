@@ -1225,6 +1225,77 @@ Router identifier 192.168.3.254, local AS number 65099
           192.168.3.1/32         10.99.244.4           0       -          100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.11
 ```
 Видим что каждый маршрут со стороны сети 192.168.1.0/24 и 192.168.2.0/24  имеет по два пути через каждый спайн с двумя одинаковыми vtep но разными Or-ID  потому что blf1/2 собраны в mlag 
+Также видим прилетающие роут тайп 1 и 4 маршруты с лифов 3/4 свидететьслвующие об использовании multihoming
+```
+99-blf1#sh bgp evpn route-type auto-discovery
+BGP routing table information for VRF default
+Router identifier 10.99.243.1, local AS number 65099
+Route status codes: * - valid, > - active, S - Stale, E - ECMP head, e - ECMP
+                    c - Contributing to ECMP, % - Pending BGP convergence
+Origin codes: i - IGP, e - EGP, ? - incomplete
+AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Link Local Nexthop
+
+          Network                Next Hop              Metric  LocPref Weight  Path
+ * >Ec    RD: 10.99.243.3:30 auto-discovery 0 0000:0000:0000:0000:3403
+                                 10.99.244.3           -       100     0       i Or-ID: 10.99.243.3 C-LST: 10.99.243.22
+ *  ec    RD: 10.99.243.3:30 auto-discovery 0 0000:0000:0000:0000:3403
+                                 10.99.244.3           -       100     0       i Or-ID: 10.99.243.3 C-LST: 10.99.243.11
+ * >Ec    RD: 10.99.243.4:30 auto-discovery 0 0000:0000:0000:0000:3403
+                                 10.99.244.4           -       100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.22
+ *  ec    RD: 10.99.243.4:30 auto-discovery 0 0000:0000:0000:0000:3403
+                                 10.99.244.4           -       100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.11
+ * >Ec    RD: 10.99.244.3:1 auto-discovery 0000:0000:0000:0000:3403
+                                 10.99.244.3           -       100     0       i Or-ID: 10.99.243.3 C-LST: 10.99.243.22
+ *  ec    RD: 10.99.244.3:1 auto-discovery 0000:0000:0000:0000:3403
+                                 10.99.244.3           -       100     0       i Or-ID: 10.99.243.3 C-LST: 10.99.243.11
+ * >Ec    RD: 10.99.244.4:1 auto-discovery 0000:0000:0000:0000:3403
+                                 10.99.244.4           -       100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.22
+ *  ec    RD: 10.99.244.4:1 auto-discovery 0000:0000:0000:0000:3403
+                                 10.99.244.4           -       100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.11
+ * >Ec    RD: 10.99.243.3:40 auto-discovery 0 0000:0000:0000:0000:3404
+                                 10.99.244.3           -       100     0       i Or-ID: 10.99.243.3 C-LST: 10.99.243.22
+ *  ec    RD: 10.99.243.3:40 auto-discovery 0 0000:0000:0000:0000:3404
+                                 10.99.244.3           -       100     0       i Or-ID: 10.99.243.3 C-LST: 10.99.243.11
+ * >Ec    RD: 10.99.243.4:40 auto-discovery 0 0000:0000:0000:0000:3404
+                                 10.99.244.4           -       100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.22
+ *  ec    RD: 10.99.243.4:40 auto-discovery 0 0000:0000:0000:0000:3404
+                                 10.99.244.4           -       100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.11
+ * >Ec    RD: 10.99.244.3:1 auto-discovery 0000:0000:0000:0000:3404
+                                 10.99.244.3           -       100     0       i Or-ID: 10.99.243.3 C-LST: 10.99.243.22
+ *  ec    RD: 10.99.244.3:1 auto-discovery 0000:0000:0000:0000:3404
+                                 10.99.244.3           -       100     0       i Or-ID: 10.99.243.3 C-LST: 10.99.243.11
+ * >Ec    RD: 10.99.244.4:1 auto-discovery 0000:0000:0000:0000:3404
+                                 10.99.244.4           -       100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.22
+ *  ec    RD: 10.99.244.4:1 auto-discovery 0000:0000:0000:0000:3404
+                                 10.99.244.4           -       100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.11
+99-blf1#
+99-blf1#sh bgp evpn route-type ethernet-segment
+BGP routing table information for VRF default
+Router identifier 10.99.243.1, local AS number 65099
+Route status codes: * - valid, > - active, S - Stale, E - ECMP head, e - ECMP
+                    c - Contributing to ECMP, % - Pending BGP convergence
+Origin codes: i - IGP, e - EGP, ? - incomplete
+AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Link Local Nexthop
+
+          Network                Next Hop              Metric  LocPref Weight  Path
+ * >Ec    RD: 10.99.244.3:1 ethernet-segment 0000:0000:0000:0000:3403 10.99.244.3
+                                 10.99.244.3           -       100     0       i Or-ID: 10.99.243.3 C-LST: 10.99.243.22
+ *  ec    RD: 10.99.244.3:1 ethernet-segment 0000:0000:0000:0000:3403 10.99.244.3
+                                 10.99.244.3           -       100     0       i Or-ID: 10.99.243.3 C-LST: 10.99.243.11
+ * >Ec    RD: 10.99.244.4:1 ethernet-segment 0000:0000:0000:0000:3403 10.99.244.4
+                                 10.99.244.4           -       100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.22
+ *  ec    RD: 10.99.244.4:1 ethernet-segment 0000:0000:0000:0000:3403 10.99.244.4
+                                 10.99.244.4           -       100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.11
+ * >Ec    RD: 10.99.244.3:1 ethernet-segment 0000:0000:0000:0000:3404 10.99.244.3
+                                 10.99.244.3           -       100     0       i Or-ID: 10.99.243.3 C-LST: 10.99.243.22
+ *  ec    RD: 10.99.244.3:1 ethernet-segment 0000:0000:0000:0000:3404 10.99.244.3
+                                 10.99.244.3           -       100     0       i Or-ID: 10.99.243.3 C-LST: 10.99.243.11
+ * >Ec    RD: 10.99.244.4:1 ethernet-segment 0000:0000:0000:0000:3404 10.99.244.4
+                                 10.99.244.4           -       100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.22
+ *  ec    RD: 10.99.244.4:1 ethernet-segment 0000:0000:0000:0000:3404 10.99.244.4
+                                 10.99.244.4           -       100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.11
+```
+
 
 ## 3. Проверка межсерверной связности между VM 
 Пингуем с ESXI2 , который живет в двух VRF 
