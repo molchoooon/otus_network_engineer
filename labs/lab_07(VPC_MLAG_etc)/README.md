@@ -476,43 +476,61 @@ vrf VRF_CORE_2
  ```
 ### 99-lf3 (Leaf 3)
 ```bash
-configure terminal
+
 hostname 99-lf3
-
-ip routing
-service routing protocols model multi-agent
-ip virtual-router mac-address 0000.0000.0001
-
-vrf instance VRF_CORE_1
-vrf instance VRF_CORE_2
-
-ip routing vrf VRF_CORE_1
-ip routing vrf VRF_CORE_2
-
-vrf instance MGMT
- ip routing 
-
-interface Management 1
-vrf MGMT
-ip address 10.99.245.3/24
-
+!
+spanning-tree mode mstp
+!
+vlan 10
+   name VLAN10
+!
+vlan 20
+   name VLAN20
+!
 vlan 30
    name VLAN30
+!
 vlan 40
    name VLAN40
-
+!
+vrf instance MGMT
+!
+vrf instance VRF_CORE_1
+!
+vrf instance VRF_CORE_2
+!
+interface Port-Channel3
+   switchport trunk allowed vlan 30
+   switchport mode trunk
+   !
+   evpn ethernet-segment
+      identifier 0000:0000:0000:0000:3403
+      designated-forwarder election algorithm preference 100
+      route-target import 00:00:00:00:34:03
+   lacp system-id 0000.0000.3403
+!
+interface Port-Channel4
+   switchport trunk allowed vlan 40
+   switchport mode trunk
+   !
+   evpn ethernet-segment
+      identifier 0000:0000:0000:0000:3404
+      designated-forwarder election algorithm preference 100
+      route-target import 00:00:00:00:34:04
+   lacp system-id 0000.0000.3404
+!
 interface Ethernet1
    description to-99-sp1-Eth3
-   no switchport
    mtu 9100
+   no switchport
    ip address 10.99.241.4/31
-
+!
 interface Ethernet2
    description to-99-sp2-Eth3
-   no switchport
    mtu 9100
+   no switchport
    ip address 10.99.242.4/31
-
+!
 interface Ethernet3
    description to esx3 int et 1
    mtu 9100
@@ -526,61 +544,76 @@ interface Ethernet4
    switchport trunk allowed vlan 40
    switchport mode trunk
    channel-group 4 mode active
-
-
+!
+interface Ethernet5
+!
+interface Ethernet6
+!
+interface Ethernet7
+!
+interface Ethernet8
+!
+interface Loopback0
+   description Router-ID
+   ip address 10.99.243.3/32
+!
+interface Loopback1
+   description VTEP-Source
+   ip address 10.99.244.3/32
+!
+interface Management1
+   vrf MGMT
+   ip address 10.99.245.3/24
+!
 interface Vlan30
-   description Vlan30
+   description Server-Network-3
    mtu 9100
    vrf VRF_CORE_2
    ip address virtual 192.168.3.254/24
-
+!
 interface Vlan40
    description Vlan40
    mtu 9100
    vrf VRF_CORE_1
    ip address virtual 192.168.4.254/24
-
-
-interface Loopback0
-   description Router-ID
-   ip address 10.99.243.3/32
-
-interface Loopback1
-   description VTEP-Source
-   ip address 10.99.244.3/32
-
+!
 interface Vxlan1
    description VXLAN-Tunnel-Endpoint
-   no shutdown
    vxlan source-interface Loopback1
-   vxlan learn-restrict any
+   vxlan udp-port 4789
    vxlan vlan 30 vni 10030
    vxlan vlan 40 vni 10040
    vxlan vrf VRF_CORE_1 vni 10001
    vxlan vrf VRF_CORE_2 vni 10002
-
+   vxlan learn-restrict any
+!
+ip virtual-router mac-address 00:00:00:00:00:01
+!
+ip routing
+no ip routing vrf MGMT
+ip routing vrf VRF_CORE_1
+ip routing vrf VRF_CORE_2
+!
 router bgp 65099
    router-id 10.99.243.3
    no bgp default ipv4-unicast
    timers bgp 3 9
    maximum-paths 10 ecmp 10
-
-   neighbor SPINE-UNDERLAY peer group
-   neighbor SPINE-UNDERLAY remote-as 65099
-   neighbor SPINE-UNDERLAY timers 3 9
-   neighbor SPINE-UNDERLAY send-community
-   neighbor SPINE-UNDERLAY bfd interval 300 min-rx 300 multiplier 3
-   neighbor 10.99.241.5 peer group SPINE-UNDERLAY
-   neighbor 10.99.242.5 peer group SPINE-UNDERLAY
-
    neighbor SPINE-EVPN peer group
    neighbor SPINE-EVPN remote-as 65099
    neighbor SPINE-EVPN update-source Loopback0
    neighbor SPINE-EVPN ebgp-multihop 2
    neighbor SPINE-EVPN send-community extended
+   neighbor SPINE-UNDERLAY peer group
+   neighbor SPINE-UNDERLAY remote-as 65099
+   neighbor SPINE-UNDERLAY bfd
+   neighbor SPINE-UNDERLAY timers 3 9
+   neighbor SPINE-UNDERLAY send-community
+   neighbor 10.99.241.5 peer group SPINE-UNDERLAY
+   neighbor 10.99.242.5 peer group SPINE-UNDERLAY
    neighbor 10.99.243.11 peer group SPINE-EVPN
    neighbor 10.99.243.22 peer group SPINE-EVPN
-
+   !
    vlan 30
       rd auto
       route-target both 65099:10030
@@ -590,74 +623,90 @@ router bgp 65099
       rd auto
       route-target both 65099:10040
       redistribute learned
-
+   !
+   address-family evpn
+      neighbor SPINE-EVPN activate
+   !
    address-family ipv4
       neighbor SPINE-UNDERLAY activate
       network 10.99.243.3/32
       network 10.99.244.3/32
+   !
+   vrf VRF_CORE_1
+      rd 65099:101
+      route-target import evpn 65099:101
+      route-target export evpn 65099:101
+      !
+      address-family ipv4
+         redistribute connected
+   !
+   vrf VRF_CORE_2
+      rd 65099:102
+      route-target import evpn 65099:102
+      route-target export evpn 65099:102
+      !
+      address-family ipv4
+         redistribute connected
 
-   address-family evpn
-      neighbor SPINE-EVPN activate
-
-
-
-vrf VRF_CORE_1
-   rd 65099:101
-   route-target import evpn 65099:101
-   route-target export evpn 65099:101
-   
-   address-family ipv4
-      redistribute connected
-
-vrf VRF_CORE_2
-   rd 65099:102
-   route-target import evpn 65099:102
-   route-target export evpn 65099:102
-   
-   address-family ipv4
-      redistribute connected
  ```
 
  ### 99-lf4 (Leaf 4)
 ```bash
-configure terminal
+
 hostname 99-lf4
-
-ip routing
-service routing protocols model multi-agent
-ip virtual-router mac-address 0000.0000.0002
-
-vrf instance VRF_CORE_1
-vrf instance VRF_CORE_2
-
-ip routing vrf VRF_CORE_1
-ip routing vrf VRF_CORE_2
-
-vrf instance MGMT
- ip routing 
-
-interface Management 1
-vrf MGMT
-ip address 10.99.245.4/24
-
+!
+spanning-tree mode mstp
+!
+vlan 10
+   name VLAN10
+!
+vlan 20
+   name VLAN20
+!
 vlan 30
    name VLAN30
-
+!
 vlan 40
-   name VLAN40
-
+   name vlan40
+!
+vrf instance MGMT
+!
+vrf instance VRF_CORE_1
+!
+vrf instance VRF_CORE_2
+!
+interface Port-Channel3
+   switchport trunk allowed vlan 30
+   switchport mode trunk
+   !
+   evpn ethernet-segment
+      identifier 0000:0000:0000:0000:3403
+      designated-forwarder election algorithm preference 90
+      route-target import 00:00:00:00:34:03
+   lacp system-id 0000.0000.3403
+!
+interface Port-Channel4
+   switchport trunk allowed vlan 40
+   switchport mode trunk
+   !
+   evpn ethernet-segment
+      identifier 0000:0000:0000:0000:3404
+      designated-forwarder election algorithm preference 100
+      route-target import 00:00:00:00:34:04
+   lacp system-id 0000.0000.3404
+!
 interface Ethernet1
    description to-99-sp1-Eth4
-   no switchport
    mtu 9100
+   no switchport
    ip address 10.99.241.6/31
-
+!
 interface Ethernet2
    description to-99-sp2-Eth4
-   no switchport
    mtu 9100
+   no switchport
    ip address 10.99.242.6/31
-
+!
 interface Ethernet3
    description to esx3 int et2
    mtu 9100
@@ -671,59 +720,76 @@ interface Ethernet4
    switchport trunk allowed vlan 40
    switchport mode trunk
    channel-group 4 mode active
-
+!
+interface Ethernet5
+!
+interface Ethernet6
+!
+interface Ethernet7
+!
+interface Ethernet8
+!
+interface Loopback0
+   description Router-ID
+   ip address 10.99.243.4/32
+!
+interface Loopback1
+   description VTEP-Source
+   ip address 10.99.244.4/32
+!
+interface Management1
+   vrf MGMT
+   ip address 10.99.245.4/24
+!
 interface Vlan30
-   description Vlan30
+   description Server-Network-3
    mtu 9100
    vrf VRF_CORE_2
    ip address virtual 192.168.3.254/24
-
+!
 interface Vlan40
    description Vlan40
    mtu 9100
    vrf VRF_CORE_1
    ip address virtual 192.168.4.254/24
-
-interface Loopback0
-   description Router-ID
-   ip address 10.99.243.4/32
-
-interface Loopback1
-   description VTEP-Source
-   ip address 10.99.244.4/32
-
+!
 interface Vxlan1
    description VXLAN-Tunnel-Endpoint
-   no shutdown
    vxlan source-interface Loopback1
-   vxlan learn-restrict any
+   vxlan udp-port 4789
    vxlan vlan 30 vni 10030
    vxlan vlan 40 vni 10040
    vxlan vrf VRF_CORE_1 vni 10001
    vxlan vrf VRF_CORE_2 vni 10002
-
+   vxlan learn-restrict any
+!
+ip virtual-router mac-address 00:00:00:00:00:01
+!
+ip routing
+no ip routing vrf MGMT
+ip routing vrf VRF_CORE_1
+ip routing vrf VRF_CORE_2
+!
 router bgp 65099
    router-id 10.99.243.4
    no bgp default ipv4-unicast
    timers bgp 3 9
    maximum-paths 10 ecmp 10
-
-   neighbor SPINE-UNDERLAY peer group
-   neighbor SPINE-UNDERLAY remote-as 65099
-   neighbor SPINE-UNDERLAY timers 3 9
-   neighbor SPINE-UNDERLAY send-community
-   neighbor SPINE-UNDERLAY bfd interval 300 min-rx 300 multiplier 3
-   neighbor 10.99.241.7 peer group SPINE-UNDERLAY
-   neighbor 10.99.242.7 peer group SPINE-UNDERLAY
-
    neighbor SPINE-EVPN peer group
    neighbor SPINE-EVPN remote-as 65099
    neighbor SPINE-EVPN update-source Loopback0
    neighbor SPINE-EVPN ebgp-multihop 2
    neighbor SPINE-EVPN send-community extended
+   neighbor SPINE-UNDERLAY peer group
+   neighbor SPINE-UNDERLAY remote-as 65099
+   neighbor SPINE-UNDERLAY bfd
+   neighbor SPINE-UNDERLAY timers 3 9
+   neighbor SPINE-UNDERLAY send-community
+   neighbor 10.99.241.7 peer group SPINE-UNDERLAY
+   neighbor 10.99.242.7 peer group SPINE-UNDERLAY
    neighbor 10.99.243.11 peer group SPINE-EVPN
    neighbor 10.99.243.22 peer group SPINE-EVPN
-
+   !
    vlan 30
       rd auto
       route-target both 65099:10030
@@ -733,31 +799,31 @@ router bgp 65099
       rd auto
       route-target both 65099:10040
       redistribute learned
-
+   !
+   address-family evpn
+      neighbor SPINE-EVPN activate
+   !
    address-family ipv4
       neighbor SPINE-UNDERLAY activate
       network 10.99.243.4/32
       network 10.99.244.4/32
+   !
+   vrf VRF_CORE_1
+      rd 65099:101
+      route-target import evpn 65099:101
+      route-target export evpn 65099:101
+      !
+      address-family ipv4
+         redistribute connected
+   !
+   vrf VRF_CORE_2
+      rd 65099:102
+      route-target import evpn 65099:102
+      route-target export evpn 65099:102
+      !
+      address-family ipv4
+         redistribute connected
 
-   address-family evpn
-      neighbor SPINE-EVPN activate
-
-
-vrf VRF_CORE_1
-   rd 65099:101
-   route-target import evpn 65099:101
-   route-target export evpn 65099:101
-   
-   address-family ipv4
-      redistribute connected
-
-vrf VRF_CORE_2
-   rd 65099:102
-   route-target import evpn 65099:102
-   route-target export evpn 65099:102
-   
-   address-family ipv4
-      redistribute connected
 
  ```
 
