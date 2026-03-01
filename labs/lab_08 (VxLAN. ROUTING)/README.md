@@ -158,7 +158,7 @@ interface GigabitEthernet0/0/0
  service-manage https permit
  service-manage ping permit
  service-manage ssh permit
-
+ 
 stelnet server enable
 ssh authentication-type default password
 user-interface vty 0 4
