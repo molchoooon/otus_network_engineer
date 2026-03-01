@@ -39,6 +39,7 @@
 | 99-lf4      | 10.99.242.6/31   | Ethernet2 | 99-sp2        | Ethernet4   | to Spine2           |
 | 99-lf4      | -                | Ethernet3 | 99-esx3       | Ethernet2   | Server Trunk        |
 | 99-lf4      | -                | Ethernet4 | 99-esx4       | Ethernet1   | Server Trunk        |
+| 99-fw01     | 10.99.242.12/31  | GI1/0/2   | 99-fw02       | GI1/0/2     | HRP LINK            |
 
 ### Loopback адреса для BGP Underlay (Сеть 10.99.243.0/24)
 
@@ -177,6 +178,63 @@ q
 save
 ```
 Все, теперь мы можем зайти на них с любого из наших свичей по ssh или по http на менеджмент адрес 
+
+## Поднимем HRP
+99-fw01
+```
+interface Eth-Trunk23
+ip address 10.99.241.12 255.255.255.254
+description HRP LINK to 99-fw02
+service-manage all permit
+q
+interface Gi1/0/2
+eth-trunk 23
+description HRP LINK to 99-fw02
+interface Gi1/0/3
+eth-trunk 23
+description HRP LINK to 99-fw02
+q
+firewall zone trust 
+add int Eth-Trunk23
+
+hrp enable
+hrp standby config enable
+hrp interface Eth-Trunk23 remote 10.99.241.13
+```
+99-fw02
+```
+interface Eth-Trunk23
+ip address 10.99.241.13 255.255.255.254
+description HRP LINK to 99-fw01
+service-manage all permit
+q
+interface Gi1/0/2
+eth-trunk 23
+description HRP LINK to 99-fw01
+interface Gi1/0/3
+eth-trunk 23
+description HRP LINK to 99-fw01
+q
+firewall zone trust 
+add int Eth-Trunk23
+
+hrp enable
+hrp standby config enable
+hrp standby-device
+hrp interface Eth-Trunk23 remote 10.99.241.12
+
+```
+Проверим:
+```
+HRP_S<99-fw02>disp hrp state
+ Role: standby, peer: active
+ Running priority: 45000, peer: 45000
+ Core state: abnormal(standby), peer: abnormal(active)
+ Backup channel usage: 0.00%
+ Stable time: 0 days, 0 hours, 0 minutes
+ Last state change information: 2026-03-01 23:46:52 HRP link changes to up.
+
+```
 
 ### 99-blf1 (Border Leaf 1)
 ```bash
