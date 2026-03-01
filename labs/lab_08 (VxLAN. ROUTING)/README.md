@@ -1,18 +1,17 @@
-# Лабораторная работа:  Настройка отказоустойчивых подключений для клиентов с использованием LAG и multihoming 
+# Лабораторная работа:  Реализовать передачу суммарных префиксов через EVPN route-type 5
 
 ## Задание
-1. Подключите клиентов 2-я линками к различным Leaf
-2. Настроите агрегированный канал со стороны клиента
-3. Настроите multihoming для работы в Overlay сети. Если используете Cisco NXOS - vPC, если иной вендор - то ESI LAG (либо MC-LAG с поддержкой VXLAN)
-4. Зафиксируете в документации - план работы, адресное пространство, схему сети, конфигурацию устройств
-5. Опционально - протестировать отказоустойчивость - убедиться, что связнность не теряется при отключении одного из линков
+1. Разместить каждый Vlan ( 10,20,30,40) в своем VRF
+2. Затерминировать их на Фаерволле
+3. Собрать отказоустойчивый кластер USG 6000
+4. Настроить маршрутизацию между VRF через фаерволл
 
 ---
 
 ## Топология сети
 ![Схема Сети ](fabric_scheme.jpg)
 
-Соберем blf1/2 в MLAG а через lf3/4 настроим multihoming
+Добавим в IP-план линки до фаерволлов, и адреса для пиринга с ними
 
 ## IP-план (Address Plan) 
 
@@ -23,19 +22,23 @@
 | 99-blf1     | 10.99.241.0/31   | Ethernet1 | 99-sp1        | Ethernet1   | to Spine1           |
 | 99-blf1     | 10.99.242.0/31   | Ethernet2 | 99-sp2        | Ethernet1   | to Spine2           |
 | 99-blf1     | -                | Ethernet3 | 99-esx1       | Ethernet1   | Server Trunk        |
-| 99-blf1     | -                | Ethernet4 | 99-esx4       | Ethernet2   | Server Trunk        |
+| 99-blf1     | 10.99.241.8/31   | Ethernet4 | 99-fw01       | Ethernet1   | to fw01             |
+| 99-blf1     | -                | Ethernet5 | 99-esx2       | Ethernet2   | Server Trunk        |
+| 99-blf1     | 10.99.242.8/31   | Ethernet6 | 99-fw02       | Ethernet1   | to fw02             |
 | 99-blf2     | 10.99.241.2/31   | Ethernet1 | 99-sp1        | Ethernet2   | to Spine1           |
 | 99-blf2     | 10.99.242.2/31   | Ethernet2 | 99-sp2        | Ethernet2   | to Spine2           |
-| 99-blf2     | -                | Ethernet3 | 99-esx2       | Ethernet1   | Server Trunk        |
-| 99-blf2     | -                | Ethernet4 | 99-esx3       | Ethernet2   | Server Trunk        |
+| 99-blf2     | -                | Ethernet3 | 99-esx1       | Ethernet1   | Server Trunk        |
+| 99-blf2     | 10.99.241.10/31  | Ethernet4 | 99-fw01       | Ethernet1   | to fw01             |
+| 99-blf2     | -                | Ethernet5 | 99-esx2       | Ethernet2   | Server Trunk        |
+| 99-blf2     | 10.99.242.10/31  | Ethernet6 | 99-fw02       | Ethernet1   | to fw02             |
 | 99-lf3      | 10.99.241.4/31   | Ethernet1 | 99-sp1        | Ethernet3   | to Spine1           |
 | 99-lf3      | 10.99.242.4/31   | Ethernet2 | 99-sp2        | Ethernet3   | to Spine2           |
 | 99-lf3      | -                | Ethernet3 | 99-esx3       | Ethernet1   | Server Trunk        |
-| 99-lf3      | -                | Ethernet4 | 99-esx2       | Ethernet2   | Server Trunk        |
+| 99-lf3      | -                | Ethernet4 | 99-esx4       | Ethernet2   | Server Trunk        |
 | 99-lf4      | 10.99.241.6/31   | Ethernet1 | 99-sp1        | Ethernet4   | to Spine1           |
 | 99-lf4      | 10.99.242.6/31   | Ethernet2 | 99-sp2        | Ethernet4   | to Spine2           |
-| 99-lf4      | -                | Ethernet3 | 99-esx4       | Ethernet1   | Server Trunk        |
-| 99-lf4      | -                | Ethernet4 | 99-esx1       | Ethernet2   | Server Trunk        |
+| 99-lf4      | -                | Ethernet3 | 99-esx3       | Ethernet2   | Server Trunk        |
+| 99-lf4      | -                | Ethernet4 | 99-esx4       | Ethernet1   | Server Trunk        |
 
 ### Loopback адреса для BGP Underlay (Сеть 10.99.243.0/24)
 
@@ -67,35 +70,113 @@
 | 99-lf4      | 10.99.245.4/32    | Mgmt ip       |
 | 99-sp1      | 10.99.245.11/32   | Mgmt ip       |
 | 99-sp2      | 10.99.245.22/32   | Mgmt ip       |
+| 99-fw01     | 10.99.245.252/32  | Mgmt ip       |
+| 99-fw02     | 10.99.245.253/32  | Mgmt ip       |
+| 99-fw       | 10.99.245.254/32  | VIP GW        |
+
 
 ### EVPN L2-домены (VLAN ↔ VNI Mapping)
+Поменяем эникаст ГВ на лифах, и добавим ГВ для VRF на фаерволле на VIP адресе 
 
 | VLAN | Описание          | L2 VNI | Anycast Gateway   | Leaf с настроенным VNI |
 |------|-------------------|--------|-------------------|------------------------|
-| 10   | VLAN10   | 10010  | 192.168.1.254/24  | 99-blf1, 99-blf2 VRF_CORE1 |
-| 20   | VLAN20   | 10020  | 192.168.2.254/24  | 99-blf1, 99-blf 2VRF_CORE2 |
-| 30   | VLAN30   | 10030  | 192.168.3.254/24  | 99-lf3, 99-lf4 VRF_CORE2 |
-| 40   | VLAN40   | 10040  | 192.168.4.254/24  | 99-lf3, 99-lf4 VRF_CORE1 |
+| 10   | VLAN10   | 10010  | 192.168.1.100/24  | 99-blf1, 99-blf2 VRF_CORE1 |
+| 20   | VLAN20   | 10020  | 192.168.2.100/24  | 99-blf1, 99-blf2 VRF_CORE2 |
+| 30   | VLAN30   | 10030  | 192.168.3.100/24  | 99-lf3, 99-lf4 VRF_CORE3 |
+| 40   | VLAN40   | 10040  | 192.168.4.100/24  | 99-lf3, 99-lf4 VRF_CORE4 |
+
+| VLAN | VR VIP Gateway    |   Адреса на нодах 99-fw01/02   |
+|------|-------------------|--------------------------------|
+| 10   | 192.168.1.254/24  | 192.168.1.252/192.168.1.253/24 |
+| 20   | 192.168.2.254/24  | 192.168.2.252/192.168.1.253/24 |
+| 30   | 192.168.3.254/24  | 192.168.2.252/192.168.1.253/24 |
+| 40   | 192.168.4.254/24  | 192.168.2.252/192.168.1.253/24 |
 
 
 ### Конфигурация "ESXi" устройств 
 
 | ESXi Device | Физические порты (Trunk) | Виртуальные интерфейсы (SVI)                     | IP Address/Маска   | Gateway         |
 |-------------|--------------------------|------------------------------------------------|-------------------|-----------------|
-| 99-esx1     | Eth1 → 99-blf1 Eth3   Po1   | Vlan10 (SVI для VLAN10)                        | 192.168.1.1/24    | 192.168.1.254   |
-| 99-esx1     | Eth2 → 99-blf2 Eth3   Po1   | Vlan10 (SVI для VLAN10)                        | 192.168.1.1/24    | 192.168.1.254   |
-| 99-esx2     | Eth1 → 99-blf1 Eth5   Po2  | Vlan10 (SVI для VLAN10)                        | 192.168.1.2/24    | 192.168.1.254   |
-| 99-esx2     | Eth1 → 99-blf2 Eth5    Po2   | Vlan20 (SVI для VLAN20)                        | 192.168.2.1/24    | 192.168.2.254   |
-| 99-esx2     | Eth1 → 99-blf1 Eth5   Po2  | Vlan10 (SVI для VLAN10)                        | 192.168.1.2/24    | 192.168.1.254   |
-| 99-esx2     | Eth1 → 99-blf2 Eth5    Po2   | Vlan20 (SVI для VLAN20)                        | 192.168.2.1/24    | 192.168.2.254   |
-| 99-esx3     | Eth1 → 99-lf3 Eth3   Po1   | Vlan30 (SVI для VLAN30)                        | 192.168.3.1/24    | 192.168.3.254   |
-| 99-esx3     | Eth1 → 99-lf4 Eth3   Po1    | Vlan30 (SVI для VLAN30)                        | 192.168.3.1/24    | 192.168.3.254   |
-| 99-esx4     | Eth1 → 99-lf3 Eth5    Po1   | Vlan40 (SVI для VLAN40)                        | 192.168.4.1/24    | 192.168.4.254   |
-| 99-esx4     | Eth1 → 99-lf4 Eth5    Po1   | Vlan40 (SVI для VLAN40)                        | 192.168.4.1/24    | 192.168.4.254   |
+| 99-esx1     | Eth1 → 99-blf1 Eth3   Po1   | Vlan10 (SVI для VLAN10)                        | 192.168.1.1/24    | 192.168.1.100  |
+| 99-esx1     | Eth2 → 99-blf2 Eth3   Po1   | Vlan10 (SVI для VLAN10)                        | 192.168.1.1/24    | 192.168.1.100  |
+| 99-esx2     | Eth1 → 99-blf1 Eth5   Po2  | Vlan10 (SVI для VLAN10)                        | 192.168.1.2/24    | 192.168.1.100   |
+| 99-esx2     | Eth1 → 99-blf2 Eth5    Po2   | Vlan20 (SVI для VLAN20)                        | 192.168.2.1/24    | 192.168.2.100   |
+| 99-esx2     | Eth1 → 99-blf1 Eth5   Po2  | Vlan10 (SVI для VLAN10)                        | 192.168.1.2/24    | 192.168.1.100   |
+| 99-esx2     | Eth1 → 99-blf2 Eth5    Po2   | Vlan20 (SVI для VLAN20)                        | 192.168.2.1/24    | 192.168.2.100   |
+| 99-esx3     | Eth1 → 99-lf3 Eth3   Po1   | Vlan30 (SVI для VLAN30)                        | 192.168.3.1/24    | 192.168.3.100   |
+| 99-esx3     | Eth1 → 99-lf4 Eth3   Po1    | Vlan30 (SVI для VLAN30)                        | 192.168.3.1/24    | 192.168.3.100   |
+| 99-esx4     | Eth1 → 99-lf3 Eth5    Po1   | Vlan40 (SVI для VLAN40)                        | 192.168.4.1/24    | 192.168.4.100   |
+| 99-esx4     | Eth1 → 99-lf4 Eth5    Po1   | Vlan40 (SVI для VLAN40)                        | 192.168.4.1/24    | 192.168.4.100  |
 
 ---
 
-## Конфигурация BGP
+## Конфигурация 
+
+## FW01/02
+Для начала настроим доступ по ssh с blf поскольку нормальный доступ на хувиках в лабе не заработал, потому что после включения нужно прожать кнопку энтер чтоб устройство загрузилось, а в ssh режиме этого сделать не выходит.
+
+
+```
+system-config
+sysname 99-fw01
+
+interface GigabitEthernet0/0/0
+ undo shutdown
+ ip binding vpn-instance default
+ ip address 10.99.245.252 255.255.255.0
+ service-manage http permit
+ service-manage https permit
+ service-manage ping permit
+ service-manage ssh permit
+
+stelnet server enable
+ssh authentication-type default password
+user-interface vty 0 4
+ authentication-mode aaa
+ protocol inbound ssh
+aaa
+   manager-user admin
+  password cipher *******
+  service-type ssh
+  q
+ firewall zone trust
+ set priority 85
+ add interface GigabitEthernet0/0/0
+ q
+q
+save 
+```
+```
+system-config
+sysname 99-fw02
+
+interface GigabitEthernet0/0/0
+ undo shutdown
+ ip binding vpn-instance default
+ ip address 10.99.245.253 255.255.255.0
+ service-manage http permit
+ service-manage https permit
+ service-manage ping permit
+ service-manage ssh permit
+
+stelnet server enable
+ssh authentication-type default password
+user-interface vty 0 4
+ authentication-mode aaa
+ protocol inbound ssh
+aaa
+   manager-user admin
+  password cipher *******
+  service-type ssh
+  q
+ firewall zone trust
+ set priority 85
+ add interface GigabitEthernet0/0/0
+q
+q
+save
+```
+Все, теперь мы можем зайти на них с любого из наших свичей по ssh или по http на менеджмент адрес 
 
 ### 99-blf1 (Border Leaf 1)
 ```bash
