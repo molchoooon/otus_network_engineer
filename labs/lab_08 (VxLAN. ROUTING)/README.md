@@ -382,7 +382,7 @@ neighbor FW-UNDERLAY peer group
 ```
 
 ### Настройка маршрутизации на фаерволле
-```
+```bash
 ip vpn-instance VRF_CORE_1
  route-distinguisher 65099:101
  vpn-target 65099:101 import-extcommunity
