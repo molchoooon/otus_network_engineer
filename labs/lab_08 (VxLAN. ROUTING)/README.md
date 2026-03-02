@@ -236,6 +236,107 @@ HRP_S<99-fw02>disp hrp state
 
 ```
 
+### Настройка VRF на фабрике 
+
+Подправим конфиг на лифах - вынесем каждую подсеть 192.168.N.0/24 в свой VRF и добавим роутинг в менеджмент сети
+
+blf01/02
+```
+vrf instance VRF_CORE_3
+vrf instance VRF_CORE_4
+
+ip routing vrf MGMT
+ip routing vrf VRF_CORE_1
+ip routing vrf VRF_CORE_2
+ip routing vrf VRF_CORE_3
+ip routing vrf VRF_CORE_4
+
+
+router bgp 65099
+vrf VRF_CORE_3
+      rd 65099:103
+      route-target import evpn 65099:103
+      route-target export evpn 65099:103
+           address-family ipv4
+         redistribute connected
+ex
+ex
+vrf VRF_CORE_4
+      rd 65099:104
+      route-target import evpn 65099:104
+      route-target export evpn 65099:104
+      address-family ipv4
+         redistribute connected
+ex
+ex
+ip route vrf VRF_CORE_1 0.0.0.0/0 192.168.1.254
+ip route vrf VRF_CORE_2 0.0.0.0/0 192.168.2.254
+ip route vrf VRF_CORE_3 0.0.0.0/0 192.168.3.254
+ip route vrf VRF_CORE_4 0.0.0.0/0 192.168.4.254
+ip route vrf MGMT 0.0.0.0/0 10.99.245.254
+
+interface Vlan10
+   description Vlan10
+   mtu 9100
+   vrf VRF_CORE_1
+   ip address virtual 192.168.1.100/24
+ex
+interface Vlan20
+   description Vlan20
+   mtu 9100
+   vrf VRF_CORE_2
+   ip address virtual 192.168.2.100/24
+
+```
+lf03/04
+```
+vrf instance VRF_CORE_3
+vrf instance VRF_CORE_4
+
+ip routing vrf MGMT
+ip routing vrf VRF_CORE_1
+ip routing vrf VRF_CORE_2
+ip routing vrf VRF_CORE_3
+ip routing vrf VRF_CORE_4
+
+
+router bgp 65099
+vrf VRF_CORE_3
+      rd 65099:103
+      route-target import evpn 65099:103
+      route-target export evpn 65099:103
+           address-family ipv4
+         redistribute connected
+ex
+ex
+vrf VRF_CORE_4
+      rd 65099:104
+      route-target import evpn 65099:104
+      route-target export evpn 65099:104
+      address-family ipv4
+         redistribute connected
+ex
+ex
+ip route vrf VRF_CORE_1 0.0.0.0/0 192.168.1.254
+ip route vrf VRF_CORE_2 0.0.0.0/0 192.168.2.254
+ip route vrf VRF_CORE_3 0.0.0.0/0 192.168.3.254
+ip route vrf VRF_CORE_4 0.0.0.0/0 192.168.4.254
+ip route vrf MGMT 0.0.0.0/0 10.99.245.254
+
+interface Vlan30
+   description Vlan30
+   mtu 9100
+   vrf VRF_CORE_3
+   ip address virtual 192.168.3.100/24
+ex
+interface Vlan40
+   description Vlan40
+   mtu 9100
+   vrf VRF_CORE_4
+   ip address virtual 192.168.4.100/24
+
+```
+
 ### 99-blf1 (Border Leaf 1)
 ```bash
 configure terminal
