@@ -22,15 +22,15 @@
 | 99-blf1     | 10.99.241.0/31   | Ethernet1 | 99-sp1        | Ethernet1   | to Spine1           |
 | 99-blf1     | 10.99.242.0/31   | Ethernet2 | 99-sp2        | Ethernet1   | to Spine2           |
 | 99-blf1     | -                | Ethernet3 | 99-esx1       | Ethernet1   | Server Trunk        |
-| 99-blf1     | 10.99.241.8/31   | Ethernet4 | 99-fw01       | Ethernet1   | to fw01             |
+| 99-blf1     | 10.99.241.8/31   | Ethernet4 | 99-fw01       | GI1/0/0     | to fw01             |
 | 99-blf1     | -                | Ethernet5 | 99-esx2       | Ethernet2   | Server Trunk        |
-| 99-blf1     | 10.99.242.8/31   | Ethernet6 | 99-fw02       | Ethernet1   | to fw02             |
+| 99-blf1     | 10.99.242.8/31   | Ethernet6 | 99-fw02       | GI1/0/0     | to fw02             |
 | 99-blf2     | 10.99.241.2/31   | Ethernet1 | 99-sp1        | Ethernet2   | to Spine1           |
 | 99-blf2     | 10.99.242.2/31   | Ethernet2 | 99-sp2        | Ethernet2   | to Spine2           |
 | 99-blf2     | -                | Ethernet3 | 99-esx1       | Ethernet1   | Server Trunk        |
-| 99-blf2     | 10.99.241.10/31  | Ethernet4 | 99-fw01       | Ethernet1   | to fw01             |
+| 99-blf2     | 10.99.241.10/31  | Ethernet4 | 99-fw01       | GI1/0/1     | to fw01             |
 | 99-blf2     | -                | Ethernet5 | 99-esx2       | Ethernet2   | Server Trunk        |
-| 99-blf2     | 10.99.242.10/31  | Ethernet6 | 99-fw02       | Ethernet1   | to fw02             |
+| 99-blf2     | 10.99.242.10/31  | Ethernet6 | 99-fw02       | GI1/0/1     | to fw02             |
 | 99-lf3      | 10.99.241.4/31   | Ethernet1 | 99-sp1        | Ethernet3   | to Spine1           |
 | 99-lf3      | 10.99.242.4/31   | Ethernet2 | 99-sp2        | Ethernet3   | to Spine2           |
 | 99-lf3      | -                | Ethernet3 | 99-esx3       | Ethernet1   | Server Trunk        |
@@ -241,7 +241,7 @@ HRP_S<99-fw02>disp hrp state
 Подправим конфиг на лифах - вынесем каждую подсеть 192.168.N.0/24 в свой VRF и добавим роутинг в менеджмент сети
 
 blf01/02
-```
+```bash
 vrf instance VRF_CORE_3
 vrf instance VRF_CORE_4
 
@@ -289,7 +289,7 @@ interface Vlan20
 
 ```
 lf03/04
-```
+```bash
 vrf instance VRF_CORE_3
 vrf instance VRF_CORE_4
 
@@ -335,6 +335,58 @@ interface Vlan40
    vrf VRF_CORE_4
    ip address virtual 192.168.4.100/24
 
+```
+
+Также настроим линки на blf и bgp в сторону fw
+
+
+blf01
+```bash
+int et 4
+no switchport
+mtu 9100
+ip address 10.99.241.8/31 
+description 99-fw01 G1/0/0
+no shut
+
+int et 6
+no switchport
+mtu 9100
+ip address 10.99.242.8/31 
+description 99-fw02 G1/0/0
+no shut
+
+router bgp 65099
+neighbor FW-UNDERLAY peer group
+   neighbor FW-UNDERLAY remote-as 65099
+   neighbor FW-UNDERLAY timers 3 9
+   neighbor FW-UNDERLAY send-community
+   neighbor 10.99.241.9 peer group FW-UNDERLAY
+   neighbor 10.99.242.9 peer group FW-UNDERLAY
+```
+blf02
+```bash
+int et 4
+no switchport
+mtu 9100
+ip address 10.99.241.10/31 
+description 99-fw01 G1/0/1
+no shut
+
+int et 6
+no switchport
+mtu 9100
+ip address 10.99.242.10/31 
+description 99-fw02 G1/0/1
+no shut
+
+router bgp 65099
+neighbor FW-UNDERLAY peer group
+   neighbor FW-UNDERLAY remote-as 65099
+   neighbor FW-UNDERLAY timers 3 9
+   neighbor FW-UNDERLAY send-community
+   neighbor 10.99.241.11 peer group FW-UNDERLAY
+   neighbor 10.99.242.11 peer group FW-UNDERLAY
 ```
 
 ### 99-blf1 (Border Leaf 1)
