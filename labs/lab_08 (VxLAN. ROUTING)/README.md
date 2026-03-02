@@ -24,13 +24,11 @@
 | 99-blf1     | -                | Ethernet3 | 99-esx1       | Ethernet1   | Server Trunk        |
 | 99-blf1     | 10.99.241.8/31   | Ethernet4 | 99-fw01       | GI1/0/0     | to fw01             |
 | 99-blf1     | -                | Ethernet5 | 99-esx2       | Ethernet2   | Server Trunk        |
-| 99-blf1     | 10.99.242.8/31   | Ethernet6 | 99-fw02       | GI1/0/0     | to fw02             |
 | 99-blf2     | 10.99.241.2/31   | Ethernet1 | 99-sp1        | Ethernet2   | to Spine1           |
 | 99-blf2     | 10.99.242.2/31   | Ethernet2 | 99-sp2        | Ethernet2   | to Spine2           |
 | 99-blf2     | -                | Ethernet3 | 99-esx1       | Ethernet1   | Server Trunk        |
-| 99-blf2     | 10.99.241.10/31  | Ethernet4 | 99-fw01       | GI1/0/1     | to fw01             |
 | 99-blf2     | -                | Ethernet5 | 99-esx2       | Ethernet2   | Server Trunk        |
-| 99-blf2     | 10.99.242.10/31  | Ethernet6 | 99-fw02       | GI1/0/1     | to fw02             |
+| 99-blf2     | 10.99.242.8/31   | Ethernet4 | 99-fw02       | GI1/0/1     | to fw02             |
 | 99-lf3      | 10.99.241.4/31   | Ethernet1 | 99-sp1        | Ethernet3   | to Spine1           |
 | 99-lf3      | 10.99.242.4/31   | Ethernet2 | 99-sp2        | Ethernet3   | to Spine2           |
 | 99-lf3      | -                | Ethernet3 | 99-esx3       | Ethernet1   | Server Trunk        |
@@ -117,7 +115,7 @@
 Для начала настроим доступ по ssh с blf поскольку нормальный доступ на хувиках в лабе не заработал, потому что после включения нужно прожать кнопку энтер чтоб устройство загрузилось, а в ssh режиме этого сделать не выходит.
 
 
-```
+```bash
 system-config
 sysname 99-fw01
 
@@ -147,7 +145,7 @@ aaa
 q
 save 
 ```
-```
+```bash
 system-config
 sysname 99-fw02
 
@@ -181,7 +179,7 @@ save
 
 ## Поднимем HRP
 99-fw01
-```
+```bash
 interface Eth-Trunk23
 ip address 10.99.241.12 255.255.255.254
 description HRP LINK to 99-fw02
@@ -202,7 +200,7 @@ hrp standby config enable
 hrp interface Eth-Trunk23 remote 10.99.241.13
 ```
 99-fw02
-```
+```bash
 interface Eth-Trunk23
 ip address 10.99.241.13 255.255.255.254
 description HRP LINK to 99-fw01
@@ -225,7 +223,7 @@ hrp interface Eth-Trunk23 remote 10.99.241.12
 
 ```
 Проверим:
-```
+```bash
 HRP_S<99-fw02>disp hrp state
  Role: standby, peer: active
  Running priority: 45000, peer: 45000
@@ -349,12 +347,6 @@ ip address 10.99.241.8/31
 description 99-fw01 G1/0/0
 no shut
 
-int et 6
-no switchport
-mtu 9100
-ip address 10.99.242.8/31 
-description 99-fw02 G1/0/0
-no shut
 
 router bgp 65099
 neighbor FW-UNDERLAY peer group
@@ -362,31 +354,108 @@ neighbor FW-UNDERLAY peer group
    neighbor FW-UNDERLAY timers 3 9
    neighbor FW-UNDERLAY send-community
    neighbor 10.99.241.9 peer group FW-UNDERLAY
-   neighbor 10.99.242.9 peer group FW-UNDERLAY
+   
+   address-family ipv4
+      neighbor FW-UNDERLAY activate
+
 ```
 blf02
 ```bash
 int et 4
 no switchport
 mtu 9100
-ip address 10.99.241.10/31 
-description 99-fw01 G1/0/1
-no shut
-
-int et 6
-no switchport
-mtu 9100
-ip address 10.99.242.10/31 
+ip address 10.99.242.8/31 
 description 99-fw02 G1/0/1
 no shut
+
 
 router bgp 65099
 neighbor FW-UNDERLAY peer group
    neighbor FW-UNDERLAY remote-as 65099
    neighbor FW-UNDERLAY timers 3 9
    neighbor FW-UNDERLAY send-community
-   neighbor 10.99.241.11 peer group FW-UNDERLAY
-   neighbor 10.99.242.11 peer group FW-UNDERLAY
+   neighbor 10.99.242.9 peer group FW-UNDERLAY
+   
+   address-family ipv4
+      neighbor FW-UNDERLAY activate
+
+```
+
+### Настройка маршрутизации на фаерволле
+```
+ip vpn-instance VRF_CORE_1
+ route-distinguisher 65099:101
+ vpn-target 65099:101 import-extcommunity
+ vpn-target 65099:101 export-extcommunity
+
+ip vpn-instance VRF_CORE_2
+ route-distinguisher 65099:102
+ vpn-target 65099:102 import-extcommunity
+ vpn-target 65099:102 export-extcommunity
+
+ip vpn-instance VRF_CORE_3
+ route-distinguisher 65099:103
+ vpn-target 65099:103 import-extcommunity
+ vpn-target 65099:103 export-extcommunity
+
+ip vpn-instance VRF_CORE_4
+ route-distinguisher 65099:104
+ vpn-target 65099:104 import-extcommunity
+ vpn-target 65099:104 export-extcommunity
+
+interface GigabitEthernet1/0/0
+ description P2P_to_BLF_for_BGP
+ ip address 10.99.241.9 31
+
+ interface GigabitEthernet1/0/0.10
+ description Gateway_for_VRF_CORE_1_VLAN10
+ ip binding vpn-instance VRF_CORE_1
+ vlan-type dot1q 10
+ ip address 192.168.1.252 255.255.255.0
+ vrrp vrid 10 virtual-ip 192.168.1.254 active 
+
+ interface GigabitEthernet1/0/0.20
+ description Gateway_for_VRF_CORE_2_VLAN20
+ ip binding vpn-instance VRF_CORE_2
+ vlan-type dot1q 20
+ ip address 192.168.2.252 255.255.255.0
+ vrrp vrid 20 virtual-ip 192.168.2.254 active
+
+interface GigabitEthernet1/0/0.30
+ description Gateway_for_VRF_CORE_3_VLAN30
+ ip binding vpn-instance VRF_CORE_3
+ vlan-type dot1q 30
+ ip address 192.168.3.252 255.255.255.0
+ vrrp vrid 30 virtual-ip 192.168.3.254 active
+
+interface GigabitEthernet1/0/0.40
+ description Gateway_for_VRF_CORE_4_VLAN40
+ ip binding vpn-instance VRF_CORE_4
+ vlan-type dot1q 40
+ ip address 192.168.4.252 255.255.255.0
+ vrrp vrid 40 virtual-ip 192.168.4.254 active
+
+
+bgp 65099
+ router-id 10.99.241.9
+ peer 10.99.241.8 as-number 65099
+ peer 10.99.241.8 timer keepalive 3 hold 9
+
+ipv4-family vpnv4
+  policy vpn-target
+  peer 10.99.241.8 enable
+
+  ipv4-family vpn-instance VRF_CORE_1
+  import-route direct
+ 
+ ipv4-family vpn-instance VRF_CORE_2
+  import-route direct
+ 
+ ipv4-family vpn-instance VRF_CORE_3
+  import-route direct
+ 
+ ipv4-family vpn-instance VRF_CORE_4
+  import-route direct
 ```
 
 ### 99-blf1 (Border Leaf 1)
