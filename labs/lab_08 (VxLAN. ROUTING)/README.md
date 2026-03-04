@@ -391,12 +391,12 @@ router bgp 65099
       route-target import evpn 65099:101
       route-target export evpn 65099:101
       router-id 10.99.1.4
-      neighbor 10.99.1.2 remote-as 65098
-      neighbor 10.99.1.2 next-hop-self
-      neighbor 10.99.1.2 update-source Ethernet4.10
-      neighbor 10.99.1.2 route-map DEFAULT in 
+      neighbor 10.99.1.1 remote-as 65098
+      neighbor 10.99.1.1 next-hop-self
+      neighbor 10.99.1.1 update-source Ethernet4.10
+      neighbor 10.99.1.1 route-map DEFAULT in 
       address-family ipv4
-         neighbor 10.99.1.2 activate
+         neighbor 10.99.1.1 activate
          redistribute connected
 
 vrf VRF_CORE_2
@@ -404,12 +404,12 @@ vrf VRF_CORE_2
       route-target import evpn 65099:102
       route-target export evpn 65099:102
       router-id 10.99.2.4
-      neighbor 10.99.2.2 remote-as 65098
-      neighbor 10.99.2.2 next-hop-self
-      neighbor 10.99.2.2 update-source Ethernet4.20
-      neighbor 10.99.2.2 route-map DEFAULT in 
+      neighbor 10.99.2.1 remote-as 65098
+      neighbor 10.99.2.1 next-hop-self
+      neighbor 10.99.2.1 update-source Ethernet4.20
+      neighbor 10.99.2.1 route-map DEFAULT in 
       address-family ipv4
-         neighbor 10.99.2.2 activate
+         neighbor 10.99.2.1 activate
          redistribute connected
 
 vrf VRF_CORE_3
@@ -417,12 +417,12 @@ vrf VRF_CORE_3
       route-target import evpn 65099:103
       route-target export evpn 65099:103
       router-id 10.99.3.4
-      neighbor 10.99.3.2 remote-as 65098
-      neighbor 10.99.3.2 next-hop-self
-      neighbor 10.99.3.2 update-source Ethernet4.30
-      neighbor 10.99.3.2 route-map DEFAULT in 
+      neighbor 10.99.3.1 remote-as 65098
+      neighbor 10.99.3.1 next-hop-self
+      neighbor 10.99.3.1 update-source Ethernet4.30
+      neighbor 10.99.3.1 route-map DEFAULT in 
       address-family ipv4
-         neighbor 10.99.3.2 activate
+         neighbor 10.99.3.1 activate
          redistribute connected
 
 
@@ -431,12 +431,12 @@ vrf VRF_CORE_4
       route-target import evpn 65099:104
       route-target export evpn 65099:104
       router-id 10.99.4.4
-      neighbor 10.99.4.2 remote-as 65098
-      neighbor 10.99.4.2 next-hop-self
-      neighbor 10.99.4.2 update-source Ethernet4.40
-      neighbor 10.99.4.2 route-map DEFAULT in 
+      neighbor 10.99.4.1 remote-as 65098
+      neighbor 10.99.4.1 next-hop-self
+      neighbor 10.99.4.1 update-source Ethernet4.40
+      neighbor 10.99.4.1 route-map DEFAULT in 
       address-family ipv4
-         neighbor 10.99.4.2 activate
+         neighbor 10.99.4.1 activate
          redistribute connected
     
 
@@ -455,11 +455,11 @@ int et4.20
 encapsulation dot1q vlan 20
 vrf VRF_CORE_2
 ip address 10.99.2.5/29
-int et4.20
+int et4.30
 encapsulation dot1q vlan 30
 vrf VRF_CORE_3
 ip address 10.99.3.5/29
-int et4.10
+int et4.40
 encapsulation dot1q vlan 40
 vrf VRF_CORE_4
 ip address 10.99.4.5/29
@@ -470,12 +470,12 @@ router bgp 65099
       route-target import evpn 65099:101
       route-target export evpn 65099:101
       router-id 10.99.1.5
-      neighbor 10.99.1.3 remote-as 65098
-      neighbor 10.99.1.3 next-hop-self
-      neighbor 10.99.1.3 update-source Ethernet4.10
-      neighbor 10.99.1.3 route-map DEFAULT in 
+      neighbor 10.99.1.1 remote-as 65098
+      neighbor 10.99.1.1 next-hop-self
+      neighbor 10.99.1.1 update-source Ethernet4.10
+      neighbor 10.99.1.1 route-map DEFAULT in 
       address-family ipv4
-         neighbor 10.99.1.3 activate
+         neighbor 10.99.1.1 activate
          redistribute connected
 
 vrf VRF_CORE_2
@@ -483,12 +483,12 @@ vrf VRF_CORE_2
       route-target import evpn 65099:102
       route-target export evpn 65099:102
       router-id 10.99.2.5
-      neighbor 10.99.2.3 remote-as 65098
-      neighbor 10.99.2.3 next-hop-self
-      neighbor 10.99.2.3 update-source Ethernet4.20
-      neighbor 10.99.2.3 route-map DEFAULT in 
+      neighbor 10.99.2.1 remote-as 65098
+      neighbor 10.99.2.1 next-hop-self
+      neighbor 10.99.2.1 update-source Ethernet4.20
+      neighbor 10.99.2.1 route-map DEFAULT in 
       address-family ipv4
-         neighbor 10.99.2.3 activate
+         neighbor 10.99.2.1 activate
          redistribute connected
 
 vrf VRF_CORE_3
@@ -496,12 +496,12 @@ vrf VRF_CORE_3
       route-target import evpn 65099:103
       route-target export evpn 65099:103
       router-id 10.99.3.5
-      neighbor 10.99.3.3 remote-as 65098
-      neighbor 10.99.3.3 next-hop-self
-      neighbor 10.99.3.3 update-source Ethernet4.30
-      neighbor 10.99.3.3 route-map DEFAULT in 
+      neighbor 10.99.3.1 remote-as 65098
+      neighbor 10.99.3.1 next-hop-self
+      neighbor 10.99.3.1 update-source Ethernet4.30
+      neighbor 10.99.3.1 route-map DEFAULT in 
       address-family ipv4
-         neighbor 10.99.3.3 activate
+         neighbor 10.99.3.1 activate
          redistribute connected
 
 
@@ -510,12 +510,12 @@ vrf VRF_CORE_4
       route-target import evpn 65099:104
       route-target export evpn 65099:104
       router-id 10.99.4.5
-      neighbor 10.99.4.3 remote-as 65098
-      neighbor 10.99.4.3 next-hop-self
-      neighbor 10.99.4.3 update-source Ethernet4.40
-      neighbor 10.99.4.3 route-map DEFAULT in 
+      neighbor 10.99.4.1 remote-as 65098
+      neighbor 10.99.4.1 next-hop-self
+      neighbor 10.99.4.1 update-source Ethernet4.40
+      neighbor 10.99.4.1 route-map DEFAULT in 
       address-family ipv4
-         neighbor 10.99.4.3 activate
+         neighbor 10.99.4.1 activate
          redistribute connected
 ```
 
