@@ -22,13 +22,13 @@
 | 99-blf1     | 10.99.241.0/31   | Ethernet1 | 99-sp1        | Ethernet1   | to Spine1           |
 | 99-blf1     | 10.99.242.0/31   | Ethernet2 | 99-sp2        | Ethernet1   | to Spine2           |
 | 99-blf1     | -                | Ethernet3 | 99-esx1       | Ethernet1   | Server Trunk        |
-| 99-blf1     | 10.99.241.8/31   | Ethernet4 | 99-fw01       | GI1/0/0     | to fw01             |
+| 99-blf1     | -                | Ethernet4 | 99-fw01       | GI1/0/0     | to fw01             |
 | 99-blf1     | -                | Ethernet5 | 99-esx2       | Ethernet2   | Server Trunk        |
 | 99-blf2     | 10.99.241.2/31   | Ethernet1 | 99-sp1        | Ethernet2   | to Spine1           |
 | 99-blf2     | 10.99.242.2/31   | Ethernet2 | 99-sp2        | Ethernet2   | to Spine2           |
 | 99-blf2     | -                | Ethernet3 | 99-esx1       | Ethernet1   | Server Trunk        |
 | 99-blf2     | -                | Ethernet5 | 99-esx2       | Ethernet2   | Server Trunk        |
-| 99-blf2     | 10.99.242.8/31   | Ethernet4 | 99-fw02       | GI1/0/1     | to fw02             |
+| 99-blf2     | -                | Ethernet4 | 99-fw02       | GI1/0/1     | to fw02             |
 | 99-lf3      | 10.99.241.4/31   | Ethernet1 | 99-sp1        | Ethernet3   | to Spine1           |
 | 99-lf3      | 10.99.242.4/31   | Ethernet2 | 99-sp2        | Ethernet3   | to Spine2           |
 | 99-lf3      | -                | Ethernet3 | 99-esx3       | Ethernet1   | Server Trunk        |
@@ -37,7 +37,7 @@
 | 99-lf4      | 10.99.242.6/31   | Ethernet2 | 99-sp2        | Ethernet4   | to Spine2           |
 | 99-lf4      | -                | Ethernet3 | 99-esx3       | Ethernet2   | Server Trunk        |
 | 99-lf4      | -                | Ethernet4 | 99-esx4       | Ethernet1   | Server Trunk        |
-| 99-fw01     | 10.99.242.12/31  | GI1/0/2   | 99-fw02       | GI1/0/2     | HRP LINK            |
+| 99-fw01     | 10.99.242.12/31  |Eth-Trunk23| 99-fw02       |Eth-Trunk23  | HRP LINK            |
 
 ### Loopback адреса для BGP Underlay (Сеть 10.99.243.0/24)
 
@@ -50,6 +50,8 @@
 | 99-sp1      | 10.99.243.11/32   | BGP Router-ID        |
 | 99-sp2      | 10.99.243.22/32   | BGP Router-ID        |
 
+
+
 ### Loopback адреса для VXLAN NVE (Сеть 10.99.244.0/24)
 
 | Device Name | Loopback1 Address | Description          |
@@ -58,6 +60,31 @@
 | 99-blf2     | 10.99.244.2/32    | VTEP Source          |
 | 99-lf3      | 10.99.244.3/32    | VTEP Source          |
 | 99-lf4      | 10.99.244.4/32    | VTEP Source          |
+
+### P2P адреса для VRF (Сеть 10.99.1.0/24)
+
+| Device Name | Loopback0 Address | VRF         |
+|-------------|-------------------|-------------|
+| 99-fw01     | 10.99.1.2/29      | VRF_CORE_1  |
+| 99-fw02     | 10.99.1.3/29      | VRF_CORE_1  |
+| 99-fw vip   | 10.99.1.1/29      | VRF_CORE_1  |
+| 99-blf1     | 10.99.1.4/29      | VRF_CORE_1  |
+| 99-blf2     | 10.99.1.5/29      | VRF_CORE_1  |
+| 99-fw01     | 10.99.2.2/29      | VRF_CORE_2  |
+| 99-fw02     | 10.99.2.3/29      | VRF_CORE_2  |
+| 99-fw vip   | 10.99.2.1/29      | VRF_CORE_2  |
+| 99-blf1     | 10.99.2.4/29      | VRF_CORE_2  |
+| 99-blf2     | 10.99.2.5/29      | VRF_CORE_2  |
+| 99-fw01     | 10.99.3.2/29      | VRF_CORE_3  |
+| 99-fw02     | 10.99.3.3/29      | VRF_CORE_3  |
+| 99-fw vip   | 10.99.3.1/29      | VRF_CORE_3  |
+| 99-blf1     | 10.99.3.4/29      | VRF_CORE_3  |
+| 99-blf2     | 10.99.3.5/29      | VRF_CORE_3  |
+| 99-fw01     | 10.99.4.2/29      | VRF_CORE_4  |
+| 99-fw02     | 10.99.4.3/29      | VRF_CORE_4  |
+| 99-fw vip   | 10.99.4.1/29      | VRF_CORE_4  |
+| 99-blf1     | 10.99.4.4/29      | VRF_CORE_4  |
+| 99-blf2     | 10.99.4.5/29      | VRF_CORE_4  |
 
 ### MGMT адреса (Сеть 10.99.245.0/24)
 
@@ -79,10 +106,10 @@
 
 | VLAN | Описание          | L2 VNI | Anycast Gateway   | Leaf с настроенным VNI |
 |------|-------------------|--------|-------------------|------------------------|
-| 10   | VLAN10   | 10010  | 192.168.1.100/24  | 99-blf1, 99-blf2 VRF_CORE1 |
-| 20   | VLAN20   | 10020  | 192.168.2.100/24  | 99-blf1, 99-blf2 VRF_CORE2 |
-| 30   | VLAN30   | 10030  | 192.168.3.100/24  | 99-lf3, 99-lf4 VRF_CORE3 |
-| 40   | VLAN40   | 10040  | 192.168.4.100/24  | 99-lf3, 99-lf4 VRF_CORE4 |
+| 10   | VLAN10   | 10010  | 192.168.1.254/24  | 99-blf1, 99-blf2 VRF_CORE1 |
+| 20   | VLAN20   | 10020  | 192.168.2.254/24  | 99-blf1, 99-blf2 VRF_CORE2 |
+| 30   | VLAN30   | 10030  | 192.168.3.254/24  | 99-lf3, 99-lf4 VRF_CORE3 |
+| 40   | VLAN40   | 10040  | 192.168.4.254/24  | 99-lf3, 99-lf4 VRF_CORE4 |
 
 | VLAN | VR VIP Gateway    |   Адреса на нодах 99-fw01/02   |
 |------|-------------------|--------------------------------|
@@ -236,7 +263,7 @@ HRP_S<99-fw02>disp hrp state
 
 ### Настройка VRF на фабрике 
 --------------------------------------------------------------------------------------------------------
-Подправим конфиг на лифах - вынесем каждую подсеть 192.168.N.0/24 в свой VRF и добавим роутинг в менеджмент сети
+Подправим конфиг на лифах - вынесем каждую подсеть 192.168.N.0/24 в свой VRF 
 
 blf01/02
 ```bash
@@ -267,23 +294,19 @@ vrf VRF_CORE_4
          redistribute connected
 ex
 ex
-ip route vrf VRF_CORE_1 0.0.0.0/0 192.168.1.254
-ip route vrf VRF_CORE_2 0.0.0.0/0 192.168.2.254
-ip route vrf VRF_CORE_3 0.0.0.0/0 192.168.3.254
-ip route vrf VRF_CORE_4 0.0.0.0/0 192.168.4.254
 ip route vrf MGMT 0.0.0.0/0 10.99.245.254
 
 interface Vlan10
    description Vlan10
    mtu 9100
    vrf VRF_CORE_1
-   ip address virtual 192.168.1.100/24
+   ip address virtual 192.168.1.254/24
 ex
 interface Vlan20
    description Vlan20
    mtu 9100
    vrf VRF_CORE_2
-   ip address virtual 192.168.2.100/24
+   ip address virtual 192.168.2.254/24
 
 ```
 lf03/04
@@ -315,23 +338,19 @@ vrf VRF_CORE_4
          redistribute connected
 ex
 ex
-ip route vrf VRF_CORE_1 0.0.0.0/0 192.168.1.254
-ip route vrf VRF_CORE_2 0.0.0.0/0 192.168.2.254
-ip route vrf VRF_CORE_3 0.0.0.0/0 192.168.3.254
-ip route vrf VRF_CORE_4 0.0.0.0/0 192.168.4.254
 ip route vrf MGMT 0.0.0.0/0 10.99.245.254
 
 interface Vlan30
    description Vlan30
    mtu 9100
    vrf VRF_CORE_3
-   ip address virtual 192.168.3.100/24
+   ip address virtual 192.168.3.254/24
 ex
 interface Vlan40
    description Vlan40
    mtu 9100
    vrf VRF_CORE_4
-   ip address virtual 192.168.4.100/24
+   ip address virtual 192.168.4.254/24
 
 ```
 
@@ -342,120 +361,138 @@ blf01
 ```bash
 int et 4
 no switchport
-mtu 9100
-ip address 10.99.241.8/31 
 description 99-fw01 G1/0/0
 no shut
 
 
-router bgp 65099
-neighbor FW-UNDERLAY peer group
-   neighbor FW-UNDERLAY remote-as 65099
-   neighbor FW-UNDERLAY timers 3 9
-   neighbor FW-UNDERLAY send-community
-   neighbor 10.99.241.9 peer group FW-UNDERLAY
-   
-   address-family ipv4
-      neighbor FW-UNDERLAY activate
+
 
 ```
 blf02
 ```bash
 int et 4
 no switchport
-mtu 9100
-ip address 10.99.242.8/31 
 description 99-fw02 G1/0/1
 no shut
 
 
-router bgp 65099
-neighbor FW-UNDERLAY peer group
-   neighbor FW-UNDERLAY remote-as 65099
-   neighbor FW-UNDERLAY timers 3 9
-   neighbor FW-UNDERLAY send-community
-   neighbor 10.99.242.9 peer group FW-UNDERLAY
-   
-   address-family ipv4
-      neighbor FW-UNDERLAY activate
-
 ```
 
-### Настройка маршрутизации на фаерволле
+### Настройка линков и маршрутизации на фаерволле
+fw01
 ```bash
-ip vpn-instance VRF_CORE_1
- route-distinguisher 65099:101
- vpn-target 65099:101 import-extcommunity
- vpn-target 65099:101 export-extcommunity
-
-ip vpn-instance VRF_CORE_2
- route-distinguisher 65099:102
- vpn-target 65099:102 import-extcommunity
- vpn-target 65099:102 export-extcommunity
-
-ip vpn-instance VRF_CORE_3
- route-distinguisher 65099:103
- vpn-target 65099:103 import-extcommunity
- vpn-target 65099:103 export-extcommunity
-
-ip vpn-instance VRF_CORE_4
- route-distinguisher 65099:104
- vpn-target 65099:104 import-extcommunity
- vpn-target 65099:104 export-extcommunity
 
 interface GigabitEthernet1/0/0
- description P2P_to_BLF_for_BGP
- ip address 10.99.241.9 31
-
- interface GigabitEthernet1/0/0.10
- description Gateway_for_VRF_CORE_1_VLAN10
- ip binding vpn-instance VRF_CORE_1
+ description 99blf01-Et4
+ undo shutdown
+ service-manage ping permit
+#
+interface GigabitEthernet1/0/0.10
  vlan-type dot1q 10
- ip address 192.168.1.252 255.255.255.0
- vrrp vrid 10 virtual-ip 192.168.1.254 active 
-
- interface GigabitEthernet1/0/0.20
- description Gateway_for_VRF_CORE_2_VLAN20
- ip binding vpn-instance VRF_CORE_2
+ description Gateway_for_VRF_CORE_1_VLAN10
+ ip address 10.99.1.2 255.255.255.248
+ vrrp vrid 10 virtual-ip 10.99.1.1 active
+ service-manage ping permit
+#
+interface GigabitEthernet1/0/0.20
  vlan-type dot1q 20
- ip address 192.168.2.252 255.255.255.0
- vrrp vrid 20 virtual-ip 192.168.2.254 active
-
+ description Gateway_for_VRF_CORE_2_VLAN20
+ ip address 10.99.2.2 255.255.255.248
+ vrrp vrid 20 virtual-ip 10.99.2.1 active
+ service-manage ping permit
+#
 interface GigabitEthernet1/0/0.30
- description Gateway_for_VRF_CORE_3_VLAN30
- ip binding vpn-instance VRF_CORE_3
  vlan-type dot1q 30
- ip address 192.168.3.252 255.255.255.0
- vrrp vrid 30 virtual-ip 192.168.3.254 active
-
+ description Gateway_for_VRF_CORE_3_VLAN30
+ ip address 10.99.3.2 255.255.255.248
+ vrrp vrid 30 virtual-ip 10.99.3.1 active
+ service-manage ping permit
+#
 interface GigabitEthernet1/0/0.40
- description Gateway_for_VRF_CORE_4_VLAN40
- ip binding vpn-instance VRF_CORE_4
  vlan-type dot1q 40
- ip address 192.168.4.252 255.255.255.0
- vrrp vrid 40 virtual-ip 192.168.4.254 active
+ description Gateway_for_VRF_CORE_4_VLAN40
+ ip address 10.99.4.2 255.255.255.248
+ vrrp vrid 30 virtual-ip 10.99.4.1 active
+ service-manage ping permit
 
-
-bgp 65099
- router-id 10.99.241.9
- peer 10.99.241.8 as-number 65099
- peer 10.99.241.8 timer keepalive 3 hold 9
-
-ipv4-family vpnv4
-  policy vpn-target
-  peer 10.99.241.8 enable
-
-  ipv4-family vpn-instance VRF_CORE_1
-  import-route direct
+bgp 65098
+router id 10.99.245.252
+ peer 10.99.1.4 as-number 65099
+ peer 10.99.1.4 timer keepalive 3 hold 9
+ peer 10.99.2.4 as-number 65099
+ peer 10.99.2.4 timer keepalive 3 hold 9
+ peer 10.99.3.4 as-number 65099
+ peer 10.99.3.4 timer keepalive 3 hold 9
+ peer 10.99.4.4 as-number 65099
+ peer 10.99.4.4 timer keepalive 3 hold 9
  
- ipv4-family vpn-instance VRF_CORE_2
-  import-route direct
+ ipv4-family unicast
+  import-route static
+  peer 10.99.1.4 enable
+  peer 10.99.2.4 enable
+  peer 10.99.3.4 enable
+  peer 10.99.1.4 enable
+q
+q
+ip route-static 0.0.0.0 0 NULL 0
+
+```
+fw02
+```bash
+
+interface GigabitEthernet1/0/0
+ description 99blf02-Et4
+ undo shutdown
+ service-manage ping permit
+#
+interface GigabitEthernet1/0/0.10
+ vlan-type dot1q 10
+ description Gateway_for_VRF_CORE_1_VLAN10
+ ip address 10.99.1.3 255.255.255.248
+ vrrp vrid 10 virtual-ip 10.99.1.1 standby
+ service-manage ping permit
+#
+interface GigabitEthernet1/0/0.20
+ vlan-type dot1q 20
+ description Gateway_for_VRF_CORE_2_VLAN20
+ ip address 10.99.2.3 255.255.255.248
+ vrrp vrid 20 virtual-ip 10.99.2.1 standby
+ service-manage ping permit
+#
+interface GigabitEthernet1/0/0.30
+ vlan-type dot1q 30
+ description Gateway_for_VRF_CORE_3_VLAN30
+ ip address 10.99.3.3 255.255.255.248
+ vrrp vrid 30 virtual-ip 10.99.3.1 standby
+ service-manage ping permit
+#
+interface GigabitEthernet1/0/0.40
+ vlan-type dot1q 40
+ description Gateway_for_VRF_CORE_4_VLAN40
+ ip address 10.99.4.3 255.255.255.248
+ vrrp vrid 30 virtual-ip 10.99.4.1 standby
+ service-manage ping permit
+
+bgp 65098
+router id 10.99.245.253
+ peer 10.99.1.5 as-number 65099
+ peer 10.99.1.5 timer keepalive 3 hold 9
+ peer 10.99.2.5 as-number 65099
+ peer 10.99.2.5 timer keepalive 3 hold 9
+ peer 10.99.3.5 as-number 65099
+ peer 10.99.3.5 timer keepalive 3 hold 9
+ peer 10.99.4.5 as-number 65099
+ peer 10.99.4.5 timer keepalive 3 hold 9
  
- ipv4-family vpn-instance VRF_CORE_3
-  import-route direct
- 
- ipv4-family vpn-instance VRF_CORE_4
-  import-route direct
+ ipv4-family unicast
+  import-route static
+  peer 10.99.1.5 enable
+  peer 10.99.2.5 enable
+  peer 10.99.3.5 enable
+  peer 10.99.1.5 enable
+q
+q
+ip route-static 0.0.0.0 0 NULL 0
 ```
 
 ### 99-blf1 (Border Leaf 1)
