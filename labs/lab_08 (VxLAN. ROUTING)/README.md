@@ -315,8 +315,6 @@ vrf instance VRF_CORE_3
 vrf instance VRF_CORE_4
 
 ip routing vrf MGMT
-ip routing vrf VRF_CORE_1
-ip routing vrf VRF_CORE_2
 ip routing vrf VRF_CORE_3
 ip routing vrf VRF_CORE_4
 
@@ -354,8 +352,15 @@ interface Vlan40
 
 ```
 
-Также настроим линки на blf и bgp в сторону fw
+### Настройка линков и маршрутизации на blf01/02
 
+общее
+```bash
+ip prefix-list DEFAULT
+ seq 10 permit 0.0.0.0/0
+route-map DEFAULT
+ match ip address prefix-list DEFAULT
+ ```
 
 blf01
 ```bash
@@ -363,22 +368,107 @@ int et 4
 no switchport
 description 99-fw01 G1/0/0
 no shut
+int et4.10
+encapsulation dot1q vlan 10
+vrf VRF_CORE_1
+ip address 10.99.1.4/24
+int et4.20
+encapsulation dot1q vlan 20
+vrf VRF_CORE_2
+ip address 10.99.2.4/24
+int et4.30
+encapsulation dot1q vlan 30
+vrf VRF_CORE_3
+ip address 10.99.3.4/24
+int et4.40
+encapsulation dot1q vlan 40
+vrf VRF_CORE_4
+ip address 10.99.4.4/24
+
+router bgp 65099
+ vrf VRF_CORE_1
+      rd 65099:101
+      route-target import evpn 65099:101
+      route-target export evpn 65099:101
+      router-id 10.99.1.4
+      neighbor 10.99.1.2 remote-as 65098
+      neighbor 10.99.1.2 next-hop-self
+      neighbor 10.99.1.2 update-source Ethernet4.10
+      neighbor 10.99.1.2 route-map DEFAULT in 
+      address-family ipv4
+         neighbor 10.99.1.2 activate
+         redistribute connected
+
+vrf VRF_CORE_2
+      rd 65099:102
+      route-target import evpn 65099:102
+      route-target export evpn 65099:102
+      router-id 10.99.2.4
+      neighbor 10.99.2.2 remote-as 65098
+      neighbor 10.99.2.2 next-hop-self
+      neighbor 10.99.2.2 update-source Ethernet4.20
+      neighbor 10.99.2.2 route-map DEFAULT in 
+      address-family ipv4
+         neighbor 10.99.2.2 activate
+         redistribute connected
+
+vrf VRF_CORE_3
+      rd 65099:103
+      route-target import evpn 65099:103
+      route-target export evpn 65099:103
+      router-id 10.99.3.4
+      neighbor 10.99.3.2 remote-as 65098
+      neighbor 10.99.3.2 next-hop-self
+      neighbor 10.99.3.2 update-source Ethernet4.30
+      neighbor 10.99.3.2 route-map DEFAULT in 
+      address-family ipv4
+         neighbor 10.99.3.2 activate
+         redistribute connected
 
 
-
+vrf VRF_CORE_4
+      rd 65099:104
+      route-target import evpn 65099:104
+      route-target export evpn 65099:104
+      router-id 10.99.4.4
+      neighbor 10.99.4.2 remote-as 65098
+      neighbor 10.99.4.2 next-hop-self
+      neighbor 10.99.4.2 update-source Ethernet4.40
+      neighbor 10.99.4.2 route-map DEFAULT in 
+      address-family ipv4
+         neighbor 10.99.4.2 activate
+         redistribute connected
+    
 
 ```
 blf02
 ```bash
 int et 4
 no switchport
-description 99-fw02 G1/0/1
+description 99-fw01 G1/0/0
 no shut
+int et4.10
+encapsulation dot1q vlan 10
+vrf VRF_CORE_1
+ip address 10.99.1.5/24
+int et4.20
+encapsulation dot1q vlan 20
+vrf VRF_CORE_2
+ip address 10.99.2.5/24
+int et4.20
+encapsulation dot1q vlan 30
+vrf VRF_CORE_3
+ip address 10.99.3.5/24
+int et4.10
+encapsulation dot1q vlan 40
+vrf VRF_CORE_4
+ip address 10.99.4.5/24
 
 
 ```
 
 ### Настройка линков и маршрутизации на фаерволле
+
 fw01
 ```bash
 
@@ -493,6 +583,25 @@ router id 10.99.245.253
 q
 q
 ip route-static 0.0.0.0 0 NULL 0
+```
+общее
+добавим наши сабинтерфейсы в любую зону поскольку трафик будет ходить между ними  и сделаем широкое правило 10.99.0.0/21 на 10.99.0.0/21 чтоб поднялось bgp
+```bash
+security-policy
+   rule name Underlay
+   source-address 10.99.0.0 21
+   destination-address 10.99.0.0 21
+   action permit
+
+   firewall zont trust 
+   add interface GigabitEthernet0/0/0
+ add interface Eth-Trunk23
+ add interface GigabitEthernet1/0/0.10
+ add interface GigabitEthernet1/0/0
+ add interface GigabitEthernet1/0/0.40
+ add interface GigabitEthernet1/0/0.30
+ add interface GigabitEthernet1/0/0.20
+
 ```
 
 ### 99-blf1 (Border Leaf 1)
