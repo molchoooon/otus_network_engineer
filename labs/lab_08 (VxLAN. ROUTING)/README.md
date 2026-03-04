@@ -371,19 +371,19 @@ no shut
 int et4.10
 encapsulation dot1q vlan 10
 vrf VRF_CORE_1
-ip address 10.99.1.4/24
+ip address 10.99.1.4/29
 int et4.20
 encapsulation dot1q vlan 20
 vrf VRF_CORE_2
-ip address 10.99.2.4/24
+ip address 10.99.2.4/29
 int et4.30
 encapsulation dot1q vlan 30
 vrf VRF_CORE_3
-ip address 10.99.3.4/24
+ip address 10.99.3.4/29
 int et4.40
 encapsulation dot1q vlan 40
 vrf VRF_CORE_4
-ip address 10.99.4.4/24
+ip address 10.99.4.4/29
 
 router bgp 65099
  vrf VRF_CORE_1
@@ -450,21 +450,73 @@ no shut
 int et4.10
 encapsulation dot1q vlan 10
 vrf VRF_CORE_1
-ip address 10.99.1.5/24
+ip address 10.99.1.5/29
 int et4.20
 encapsulation dot1q vlan 20
 vrf VRF_CORE_2
-ip address 10.99.2.5/24
+ip address 10.99.2.5/29
 int et4.20
 encapsulation dot1q vlan 30
 vrf VRF_CORE_3
-ip address 10.99.3.5/24
+ip address 10.99.3.5/29
 int et4.10
 encapsulation dot1q vlan 40
 vrf VRF_CORE_4
-ip address 10.99.4.5/24
+ip address 10.99.4.5/29
+
+router bgp 65099
+ vrf VRF_CORE_1
+      rd 65099:101
+      route-target import evpn 65099:101
+      route-target export evpn 65099:101
+      router-id 10.99.1.5
+      neighbor 10.99.1.3 remote-as 65098
+      neighbor 10.99.1.3 next-hop-self
+      neighbor 10.99.1.3 update-source Ethernet4.10
+      neighbor 10.99.1.3 route-map DEFAULT in 
+      address-family ipv4
+         neighbor 10.99.1.3 activate
+         redistribute connected
+
+vrf VRF_CORE_2
+      rd 65099:102
+      route-target import evpn 65099:102
+      route-target export evpn 65099:102
+      router-id 10.99.2.5
+      neighbor 10.99.2.3 remote-as 65098
+      neighbor 10.99.2.3 next-hop-self
+      neighbor 10.99.2.3 update-source Ethernet4.20
+      neighbor 10.99.2.3 route-map DEFAULT in 
+      address-family ipv4
+         neighbor 10.99.2.3 activate
+         redistribute connected
+
+vrf VRF_CORE_3
+      rd 65099:103
+      route-target import evpn 65099:103
+      route-target export evpn 65099:103
+      router-id 10.99.3.5
+      neighbor 10.99.3.3 remote-as 65098
+      neighbor 10.99.3.3 next-hop-self
+      neighbor 10.99.3.3 update-source Ethernet4.30
+      neighbor 10.99.3.3 route-map DEFAULT in 
+      address-family ipv4
+         neighbor 10.99.3.3 activate
+         redistribute connected
 
 
+vrf VRF_CORE_4
+      rd 65099:104
+      route-target import evpn 65099:104
+      route-target export evpn 65099:104
+      router-id 10.99.4.5
+      neighbor 10.99.4.3 remote-as 65098
+      neighbor 10.99.4.3 next-hop-self
+      neighbor 10.99.4.3 update-source Ethernet4.40
+      neighbor 10.99.4.3 route-map DEFAULT in 
+      address-family ipv4
+         neighbor 10.99.4.3 activate
+         redistribute connected
 ```
 
 ### Настройка линков и маршрутизации на фаерволле
@@ -518,6 +570,7 @@ router id 10.99.245.252
  
  ipv4-family unicast
   import-route static
+  default-route imported
   peer 10.99.1.4 enable
   peer 10.99.2.4 enable
   peer 10.99.3.4 enable
@@ -576,6 +629,7 @@ router id 10.99.245.253
  
  ipv4-family unicast
   import-route static
+  default-route imported
   peer 10.99.1.5 enable
   peer 10.99.2.5 enable
   peer 10.99.3.5 enable
