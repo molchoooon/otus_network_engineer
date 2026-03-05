@@ -2681,6 +2681,7 @@ Vlan30         192.168.3.1/24    up         up                   1500
 ```
 
 ### 1. Permit 192.168.2.0/24 <-> 192.168.3.0/24
+```
 99-esx3#ping 192.168.2.1 source 192.168.3.1
 PING 192.168.2.1 (192.168.2.1) 72(100) bytes of data.
 80 bytes from 192.168.2.1: icmp_seq=1 ttl=59 time=72.5 ms
@@ -2692,8 +2693,10 @@ PING 192.168.2.1 (192.168.2.1) 72(100) bytes of data.
 --- 192.168.2.1 ping statistics ---
 5 packets transmitted, 5 received, 0% packet loss, time 44ms
 rtt min/avg/max/mdev = 43.307/58.205/72.542/10.561 ms, pipe 5, ipg/ewma 11.074/64.595 ms
+```
 
 ### 2. Permit 192.168.1.0/24 <-> 192.168.4.0/24
+```
 99-esx1(config)#ping 192.168.4.1 source 192.168.1.1
 PING 192.168.4.1 (192.168.4.1) 72(100) bytes of data.
 80 bytes from 192.168.4.1: icmp_seq=1 ttl=60 time=83.0 ms
@@ -2705,8 +2708,10 @@ PING 192.168.4.1 (192.168.4.1) 72(100) bytes of data.
 --- 192.168.4.1 ping statistics ---
 5 packets transmitted, 5 received, 0% packet loss, time 44ms
 rtt min/avg/max/mdev = 54.259/68.560/83.099/10.071 ms, pipe 5, ipg/ewma 11.201/75.099 ms
+```
 
 ### 3. Permit Permit 192.168.3.0/24 -> 192.168.1.1/32 Правило открыто только в одну сторону 
+```
 99-esx3#ping 192.168.1.1
 PING 192.168.1.1 (192.168.1.1) 72(100) bytes of data.
 80 bytes from 192.168.1.1: icmp_seq=1 ttl=60 time=39.9 ms
@@ -2725,13 +2730,16 @@ PING 192.168.3.1 (192.168.3.1) from 192.168.1.1 : 72(100) bytes of data.
 
 --- 192.168.3.1 ping statistics ---
 5 packets transmitted, 0 received, 100% packet loss, time 44ms
+```
 
 ### 4. Deny any <-> any
+```
 ping 192.168.4.1 source 192.168.3.1
 PING 192.168.4.1 (192.168.4.1) from 192.168.3.1 : 72(100) bytes of data.
 
 --- 192.168.4.1 ping statistics ---
 5 packets transmitted, 0 received, 100% packet loss, time 47ms
+```
 
 Также глянем на трассировки чтоб убедиться что трафик ходит через фаерволл
 ```
