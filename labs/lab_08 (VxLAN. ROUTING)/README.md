@@ -380,13 +380,15 @@ interface Vlan40
 <details>
 <summary>Настройка линков и маршрутизации на blf01/02 </summary>
 
-общее
+Создадим сразу Роут мапу чтоб зафильтровать маршруты с Фаерволлов. На них нет разделения по VRF и полетит лишняя маршрутная информация.
 ```bash
 ip prefix-list DEFAULT
  seq 10 permit 0.0.0.0/0
 route-map DEFAULT
  match ip address prefix-list DEFAULT
  ```
+
+ Далее перейдем к настройке линков.
 
 blf01
 ```bash
