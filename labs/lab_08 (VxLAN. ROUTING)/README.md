@@ -653,23 +653,8 @@ router id 10.99.245.252
   import-route static
   default-route imported
   peer blf01 enable
-  peer 10.99.1.1 enable
-  peer 10.99.1.1 group blf01
-  peer 10.99.2.1 enable
-  peer 10.99.2.1 group blf01
-  peer 10.99.3.1 enable
-  peer 10.99.3.1 group blf01
-  peer 10.99.4.1 enable
-  peer 10.99.4.1 group blf01
   peer blf02 enable
-  peer 10.99.1.2 enable
-  peer 10.99.1.2 group blf02
-  peer 10.99.2.2 enable
-  peer 10.99.2.2 group blf02
-  peer 10.99.3.2 enable
-  peer 10.99.3.2 group blf02
-  peer 10.99.4.2 enable
-  peer 10.99.4.2 group blf02
+ 
 
 q
 q
@@ -731,47 +716,50 @@ router id 10.99.245.253
   import-route static
   default-route imported
   peer blf01 enable
-  peer 10.99.1.1 enable
-  peer 10.99.1.1 group blf01
-  peer 10.99.2.1 enable
-  peer 10.99.2.1 group blf01
-  peer 10.99.3.1 enable
-  peer 10.99.3.1 group blf01
-  peer 10.99.4.1 enable
-  peer 10.99.4.1 group blf01
   peer blf02 enable
-  peer 10.99.1.2 enable
-  peer 10.99.1.2 group blf02
-  peer 10.99.2.2 enable
-  peer 10.99.2.2 group blf02
-  peer 10.99.3.2 enable
-  peer 10.99.3.2 group blf02
-  peer 10.99.4.2 enable
-  peer 10.99.4.2 group blf02
+ 
 
 q
 q
 ip route-static 0.0.0.0 0 NULL 0
 ```
 общее
-добавим наши сабинтерфейсы в любую зону поскольку трафик будет ходить между ними  и сделаем широкое правило 10.99.0.0/21 на 10.99.0.0/21 чтоб поднялось bgp
+добавим наши сабинтерфейсы по разным зонам и сделаем правил для теста и широкое правило 10.99.0.0/21 на 10.99.0.0/21 чтоб поднялось bgp
+<details>
+<summary>Нажмите, чтобы увидеть спойлер</summary>
 ```bash
 security-policy
-   rule name Underlay
-   source-address 10.99.0.0 21
-   destination-address 10.99.0.0 21
-   action permit
+ rule name Underlay
+  source-address 10.99.0.0 21
+  source-address 10.99.241.0 24
+  destination-address 10.99.0.0 21
+  destination-address 10.99.241.0 24
+  action permit
+ rule name VRF_10_30
+  source-zone dmz
+  destination-zone trust
+  source-address 192.168.3.0 24
+  destination-address 192.168.1.1 32
+  action permit
 
-   firewall zont trust 
-   add interface GigabitEthernet0/0/0
+
+firewall zone trust
+ set priority 85
+ add interface GigabitEthernet0/0/0
  add interface Eth-Trunk23
  add interface GigabitEthernet1/0/0.10
  add interface GigabitEthernet1/0/0
  add interface GigabitEthernet1/0/0.40
+
+firewall zone dmz
+ set priority 50
+ add interface GigabitEthernet1/0/1
  add interface GigabitEthernet1/0/0.30
  add interface GigabitEthernet1/0/0.20
 
 ```
+</details>
+
 
 ### 99-blf1 (Border Leaf 1)
 ```bash
