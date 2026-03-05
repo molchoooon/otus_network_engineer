@@ -609,6 +609,11 @@ vrf VRF_CORE_4
 
 ### Настройка линков и маршрутизации на фаерволле
 
+Настроим пиринги, и сделаем дефолтный статик для анонсов на фабрику
+
+<details>
+<summary>Конфиг</summary>
+
 fw01
 ```bash
 
@@ -734,6 +739,8 @@ q
 q
 ip route-static 0.0.0.0 0 NULL 0
 ```
+</details>
+
 fw1/2
 Добавим наши сабинтерфейсы по разным зонам и сделаем правил для теста и широкое правило 10.99.0.0/21 на 10.99.0.0/21 чтоб поднялось bgp
 
@@ -773,733 +780,415 @@ firewall zone dmz
 ```
 </details>
 
+В целом все, теперь наши VRF получают дефолты от фаерволлов.
+Плюс правилам мы разграничили определенные направления трафика между VRF
+1. Permit 192.168.2.0/24 <-> 192.168.3.0/24
+2. Permit 192.168.1.0/24 <-> 192.168.4.0/24
+3. Permit Permit 192.168.3.0/24 -> 192.168.1.1/32
+4. Deny any <-> any
+
+
+### Общие конфиги
+<details>
+<summary>Конфиги </summary>
+
+### 99-fw01 
+
+<details>
+<summary>FW01 </summary>
+
+```bash
+router id 10.99.245.252
+#
+undo telnet server enable
+undo telnet ipv6 server enable
+#
+clock timezone UTC add 00:00:00
+#
+ hrp enable
+ hrp interface Eth-Trunk23 remote 10.99.241.13
+ hrp standby config enable
+ hrp adjust bgp-cost enable 10
+ hrp track interface Eth-Trunk23
+#
+manager-user admin
+password cipher @%@%RqS9%jPme(=~B>N'q<F-QjAt,%-6KExumX]iVOO,O-}NjAwQ@%@%
+service-type ssh
+level 15
+#
+interface Eth-Trunk23
+ description HRP LINK to 99-fw02
+ ip address 10.99.241.12 255.255.255.254
+ service-manage http permit
+ service-manage https permit
+ service-manage ping permit
+ service-manage ssh permit
+ service-manage snmp permit
+ service-manage telnet permit
+ service-manage netconf permit
+#
+interface GigabitEthernet0/0/0
+ undo shutdown
+ ip binding vpn-instance default
+ ip address 10.99.245.252 255.255.255.0
+ service-manage http permit
+ service-manage https permit
+ service-manage ping permit
+ service-manage ssh permit
+ service-manage snmp permit
+ service-manage telnet permit
+ service-manage netconf permit
+#
+interface GigabitEthernet1/0/0
+ description 99blf01-Et4
+ undo shutdown
+ service-manage ping permit
+#
+interface GigabitEthernet1/0/0.10
+ vlan-type dot1q 10
+ description Gateway_for_VRF_CORE_1_VLAN10
+ ip address 10.99.1.0 255.255.255.254
+ service-manage ping permit
+#
+interface GigabitEthernet1/0/0.20
+ vlan-type dot1q 20
+ description Gateway_for_VRF_CORE_2_VLAN20
+ ip address 10.99.2.0 255.255.255.254
+ service-manage ping permit
+#
+interface GigabitEthernet1/0/0.30
+ vlan-type dot1q 30
+ description Gateway_for_VRF_CORE_3_VLAN30
+ ip address 10.99.3.0 255.255.255.254
+ service-manage ping permit
+#
+interface GigabitEthernet1/0/0.40
+ vlan-type dot1q 40
+ description Gateway_for_VRF_CORE_4_VLAN40
+ ip address 10.99.4.0 255.255.255.254
+ service-manage ping permit
+#
+interface GigabitEthernet1/0/1
+ description 99blf02-Et4
+ undo shutdown
+#
+interface GigabitEthernet1/0/2
+ description HRP LINK to 99-fw02
+ undo shutdown
+ eth-trunk 23
+#
+interface GigabitEthernet1/0/3
+ description HRP LINK to 99-fw02
+ undo shutdown
+ eth-trunk 23
+#
+interface GigabitEthernet1/0/4
+ undo shutdown
+#
+interface Virtual-if0
+#
+interface NULL0
+#
+firewall zone local
+ set priority 100
+#
+firewall zone trust
+ set priority 85
+ add interface GigabitEthernet0/0/0
+ add interface Eth-Trunk23
+ add interface GigabitEthernet1/0/0.10
+ add interface GigabitEthernet1/0/0
+ add interface GigabitEthernet1/0/0.40
+#
+firewall zone untrust
+ set priority 5
+#
+firewall zone dmz
+ set priority 50
+ add interface GigabitEthernet1/0/1
+ add interface GigabitEthernet1/0/0.30
+ add interface GigabitEthernet1/0/0.20
+
+bgp 65098
+ group blf01 external
+ peer blf01 as-number 65099
+ peer blf01 timer keepalive 3 hold 9
+ peer 10.99.1.1 as-number 65099
+ peer 10.99.1.1 group blf01
+ peer 10.99.2.1 as-number 65099
+ peer 10.99.2.1 group blf01
+ peer 10.99.3.1 as-number 65099
+ peer 10.99.3.1 group blf01
+ peer 10.99.4.1 as-number 65099
+ peer 10.99.4.1 group blf01
+ group blf02 external
+ peer blf02 as-number 65099
+ peer blf02 ebgp-max-hop 10
+ peer blf02 timer keepalive 3 hold 9
+ peer 10.99.1.2 as-number 65099
+ peer 10.99.1.2 group blf02
+ peer 10.99.2.2 as-number 65099
+ peer 10.99.2.2 group blf02
+ peer 10.99.3.2 as-number 65099
+ peer 10.99.3.2 group blf02
+ peer 10.99.4.2 as-number 65099
+ peer 10.99.4.2 group blf02
+ #
+ ipv4-family unicast
+  undo synchronization
+  default-route imported
+  import-route static
+  peer blf01 enable
+  peer 10.99.1.1 enable
+  peer 10.99.1.1 group blf01
+  peer 10.99.2.1 enable
+  peer 10.99.2.1 group blf01
+  peer 10.99.3.1 enable
+  peer 10.99.3.1 group blf01
+  peer 10.99.4.1 enable
+  peer 10.99.4.1 group blf01
+  peer blf02 enable
+  peer 10.99.1.2 enable
+  peer 10.99.1.2 group blf02
+  peer 10.99.2.2 enable
+  peer 10.99.2.2 group blf02
+  peer 10.99.3.2 enable
+  peer 10.99.3.2 group blf02
+  peer 10.99.4.2 enable
+  peer 10.99.4.2 group blf02
+#
+ip route-static 0.0.0.0 0.0.0.0 NULL0
+#
+undo ssh server compatible-ssh1x enable
+stelnet server enable
+ssh authentication-type default password
+#
+user-interface con 0
+ authentication-mode aaa
+user-interface vty 0 4
+ authentication-mode aaa
+ protocol inbound ssh
+user-interface vty 16 20
+
+security-policy
+ rule name Underlay
+  source-address 10.99.0.0 21
+  source-address 10.99.241.0 24
+  destination-address 10.99.0.0 21
+  destination-address 10.99.241.0 24
+  action permit
+ rule name VRF_10_30
+  source-zone dmz
+  destination-zone trust
+  source-address 192.168.3.0 24
+  destination-address 192.168.1.1 32
+  action permit
+#
+
+ ```
+ </details>
+
+ ### 99-fw02 
+<details>
+<summary>FW02 </summary>
+
+```bash
+router id 10.99.245.253
+#
+ hrp enable
+ hrp standby-device
+ hrp interface Eth-Trunk23 remote 10.99.241.12
+ hrp standby config enable
+ hrp adjust bgp-cost enable 20
+ hrp track interface Eth-Trunk23
+#
+ip vpn-instance default
+ ipv4-family
+
+#
+interface Eth-Trunk23
+ description HRP LINK to 99-fw01
+ ip address 10.99.241.13 255.255.255.254
+ service-manage http permit
+ service-manage https permit
+ service-manage ping permit
+ service-manage ssh permit
+ service-manage snmp permit
+ service-manage telnet permit
+ service-manage netconf permit
+#
+interface GigabitEthernet0/0/0
+ undo shutdown
+ ip binding vpn-instance default
+ ip address 10.99.245.253 255.255.255.0
+ service-manage http permit
+ service-manage https permit
+ service-manage ping permit
+ service-manage ssh permit
+ service-manage snmp permit
+ service-manage telnet permit
+ service-manage netconf permit
+#
+interface GigabitEthernet1/0/0
+ description 99blf02-Et4
+ undo shutdown
+ ip address 10.99.242.9 255.255.255.254
+ service-manage ping permit
+#
+interface GigabitEthernet1/0/0.10
+ vlan-type dot1q 10
+ description Gateway_for_VRF_CORE_1_VLAN10
+ ip address 10.99.1.3 255.255.255.254
+ service-manage ping permit
+#
+interface GigabitEthernet1/0/0.20
+ vlan-type dot1q 20
+ description Gateway_for_VRF_CORE_2_VLAN20
+ ip address 10.99.2.3 255.255.255.254
+ service-manage ping permit
+#
+interface GigabitEthernet1/0/0.30
+ vlan-type dot1q 30
+ description Gateway_for_VRF_CORE_3_VLAN30
+ ip address 10.99.3.3 255.255.255.254
+ service-manage ping permit
+#
+interface GigabitEthernet1/0/0.40
+ vlan-type dot1q 40
+ description Gateway_for_VRF_CORE_4_VLAN40
+ ip address 10.99.4.3 255.255.255.254
+ service-manage ping permit
+#
+interface GigabitEthernet1/0/1
+ undo shutdown
+ ip address 10.99.242.11 255.255.255.254
+#
+interface GigabitEthernet1/0/2
+ description HRP LINK to 99-fw01
+ undo shutdown
+ eth-trunk 23
+#
+interface GigabitEthernet1/0/3
+ description HRP LINK to 99-fw01
+ undo shutdown
+ eth-trunk 23
+#
+interface GigabitEthernet1/0/4
+ undo shutdown
+#
+interface Virtual-if0
+#
+interface NULL0
+#
+firewall zone local
+ set priority 100
+#
+firewall zone trust
+ set priority 85
+ add interface GigabitEthernet0/0/0
+ add interface Eth-Trunk23
+ add interface GigabitEthernet1/0/0.10
+ add interface GigabitEthernet1/0/0
+ add interface GigabitEthernet1/0/0.40
+#
+firewall zone untrust
+ set priority 5
+#
+firewall zone dmz
+ set priority 50
+ add interface GigabitEthernet1/0/1
+ add interface GigabitEthernet1/0/0.30
+ add interface GigabitEthernet1/0/0.20
+#
+l2tp-group default-lns
+#
+bgp 65098
+ group blf01 external
+ peer blf01 as-number 65099
+ peer blf01 ebgp-max-hop 10
+ peer blf01 timer keepalive 3 hold 9
+ peer 10.99.1.1 as-number 65099
+ peer 10.99.1.1 group blf01
+ peer 10.99.2.1 as-number 65099
+ peer 10.99.2.1 group blf01
+ peer 10.99.3.1 as-number 65099
+ peer 10.99.3.1 group blf01
+ peer 10.99.4.1 as-number 65099
+ peer 10.99.4.1 group blf01
+ group blf02 external
+ peer blf02 as-number 65099
+ peer blf02 timer keepalive 3 hold 9
+ peer 10.99.1.2 as-number 65099
+ peer 10.99.1.2 group blf02
+ peer 10.99.2.2 as-number 65099
+ peer 10.99.2.2 group blf02
+ peer 10.99.3.2 as-number 65099
+ peer 10.99.3.2 group blf02
+ peer 10.99.4.2 as-number 65099
+ peer 10.99.4.2 group blf02
+ #
+ ipv4-family unicast
+  undo synchronization
+  default-route imported
+  import-route static
+  peer blf01 enable
+  peer 10.99.1.1 enable
+  peer 10.99.1.1 group blf01
+  peer 10.99.2.1 enable
+  peer 10.99.2.1 group blf01
+  peer 10.99.3.1 enable
+  peer 10.99.3.1 group blf01
+  peer 10.99.4.1 enable
+  peer 10.99.4.1 group blf01
+  peer blf02 enable
+  peer 10.99.1.2 enable
+  peer 10.99.1.2 group blf02
+  peer 10.99.2.2 enable
+  peer 10.99.2.2 group blf02
+  peer 10.99.3.2 enable
+  peer 10.99.3.2 group blf02
+  peer 10.99.4.2 enable
+  peer 10.99.4.2 group blf02
+#
+ip route-static 0.0.0.0 0.0.0.0 NULL0
+#
+security-policy
+ rule name Underlay
+  source-address 10.99.0.0 21
+  source-address 10.99.241.0 24
+  source-address 10.99.242.0 24
+  destination-address 10.99.0.0 21
+  destination-address 10.99.241.0 24
+  destination-address 10.99.242.0 24
+  action permit
+ rule name VRF_10_30
+  source-zone dmz
+  destination-zone trust
+  source-address 192.168.3.0 24
+  destination-address 192.168.1.1 32
+  action permit
+
+ ```
+</details>
 
 ### 99-blf1 (Border Leaf 1)
 ```bash
-configure terminal
-hostname 99-blf1
-
-ip routing
-service routing protocols model multi-agent
-ip virtual-router mac-address 0000.0000.0001
-
-vrf instance VRF_CORE_1
-vrf instance VRF_CORE_2
-
-vrf instance MGMT
- ip routing 
-
-interface Management 1
-vrf MGMT
-ip address 10.99.245.1/24
-
-ip routing
-ip routing VRF_CORE_1
-ip routing VRF_CORE_2
-
-vlan 4094
-name MLAG-PEERLINK
-trunk group MLAG-PEERLINK
-
-Int Po78
-descr MLAG_PEERLINK
-switchport mode trunk
-switchport trunk group MLAG-PEERLINK
-spanning-tree link-type point-to-point
-
-int Vlan4094
-no autostate
-ip address 10.99.246.1/30
-
-mlag configuration
-   domain-id 12
-   local-interface Vlan4094
-   peer-address 10.99.246.2
-   peer-address heartbeat 10.99.245.2 vrf MGMT
-   peer-link Port-Channel78
-   dual-primary detection delay 1 action errdisable all-interfaces
-
-
-int et 7
-description Po78 lf2
-   channel-group 78 mode active
-int et 8
-description Po78 lf2
-   channel-group 78 mode active
-
-
-vlan 10
-   name VLAN10
-
-interface Ethernet1
-   description to-99-sp1-Eth1
-   no switchport
-   mtu 9100
-   ip address 10.99.241.0/31
-   
-
-interface Ethernet2
-   description to-99-sp2-Eth1
-   no switchport
-   mtu 9100
-   ip address 10.99.242.0/31
-   
-
-interface Ethernet3
-   description to-99-esx1-Eth1
-   mtu 9100
-   switchport trunk allowed vlan 10,20
-   switchport mode trunk
-   channel-group 3 mode active
-
-interface Ethernet5
-   description 99-esx2-eth2
-   mtu 9100
-   speed forced 10000full
-   switchport trunk allowed vlan 10,20
-   switchport mode trunk
-   channel-group 5 mode active
-
-
-interface Port-Channel3
-   description 99-esx1
-   mtu 9100
-   switchport trunk allowed vlan 10,20
-   switchport mode trunk
-   mlag 3
-!
-interface Port-Channel5
-   mtu 9100
-   switchport trunk allowed vlan 10,20
-   switchport mode trunk
-   mlag 5
-
-
-
-interface Vlan10
-   description Vlan10
-   mtu 9100
-   vrf VRF_CORE_1
-   ip address virtual 192.168.1.254/24
-   
-  interface Vlan20
-   description Vlan20
-   mtu 9100
-   vrf VRF_CORE_2
-   ip address virtual 192.168.2.254/24 
-
-
-interface Loopback0
-   description Router-ID
-   ip address 10.99.243.1/32
-
-interface Loopback1
-   description VTEP-Source
-   ip address 10.99.244.1/32
-
-interface Vxlan1
-   description VXLAN-Tunnel-Endpoint
-   no shutdown
-   vxlan source-interface Loopback1
-   vxlan learn-restrict any
-   vxlan vlan 10 vni 10010
-   vxlan vrf VRF_CORE_1 vni 10001
-   vxlan vrf VRF_CORE_2 vni 10002   
-  
-router bgp 65099
-   router-id 10.99.243.1
-   no bgp default ipv4-unicast
-   timers bgp 3 9
-   maximum-paths 10 ecmp 10
-
-   neighbor SPINE-UNDERLAY peer group
-   neighbor SPINE-UNDERLAY remote-as 65099
-   neighbor SPINE-UNDERLAY timers 3 9
-   neighbor SPINE-UNDERLAY send-community
-   neighbor SPINE-UNDERLAY bfd interval 300 min-rx 300 multiplier 3
-   neighbor 10.99.241.1 peer group SPINE-UNDERLAY
-   neighbor 10.99.242.1 peer group SPINE-UNDERLAY
-
-   neighbor 10.99.246.1 remote-as 65099
-   neighbor 10.99.246.1 next-hop-self
-
-   neighbor SPINE-EVPN peer group
-   neighbor SPINE-EVPN remote-as 65099
-   neighbor SPINE-EVPN update-source Loopback0
-   neighbor SPINE-EVPN ebgp-multihop 2
-   neighbor SPINE-EVPN send-community extended
-   neighbor 10.99.243.11 peer group SPINE-EVPN
-   neighbor 10.99.243.22 peer group SPINE-EVPN
-
-   vlan 10
-     rd auto
-     route-target both 65099:10010
-     redistribute learned
-
-   address-family ipv4
-      neighbor SPINE-UNDERLAY activate
-      network 10.99.243.1/32
-      network 10.99.244.1/32
-      neighbor 10.99.246.1 activate
-
-   
-   address-family evpn
-      neighbor SPINE-EVPN activate
-   
-
-vrf VRF_CORE_1
-      
-      rd 65099:101
-      route-target import evpn 65099:101
-      route-target export evpn 65099:101
-      address-family ipv4
-      redistribute connected
-
- vrf VRF_CORE_2
-      rd 65099:102
-      route-target import evpn 65099:102
-      route-target export evpn 65099:102
-      address-family ipv4
-      redistribute connected
-
-
 
  ```
 
  ### 99-blf2 (Border Leaf 2)
  ```bash
- configure terminal
-hostname 99-blf2
 
-ip routing
-service routing protocols model multi-agent
-ip virtual-router mac-address 0000.0000.0001
-
-vrf instance VRF_CORE_1
-vrf instance VRF_CORE_2
-
-ip routing vrf VRF_CORE_1
-ip routing vrf VRF_CORE_2
-
-vrf instance MGMT
- ip routing 
-
-interface Management 1
-vrf MGMT
-ip address 10.99.245.2/24
-
-vlan 4094
-name MLAG-PEERLINK
-trunk group MLAG-PEERLINK
-
-Int Po78
-descr MLAG_PEERLINK
-switchport mode trunk
-switchport trunk group MLAG-PEERLINK
-spanning-tree link-type point-to-point
-
-int Vlan4094
-no autostate
-ip address 10.99.246.2/30
-
-mlag configuration
-   domain-id 12
-   local-interface Vlan4094
-   peer-address 10.99.246.1
-   peer-address heartbeat 10.99.245.1 vrf MGMT
-   peer-link Port-Channel78
-   dual-primary detection delay 1 action errdisable all-interfaces
-
-
-int eEthernet 7
-description Po78 lf2
-   channel-group 78 mode active
-int eEthernet 8
-description Po78 lf2
-   channel-group 78 mode active
-
-vlan 10
-   name VLAN10
-
-vlan 20
-   name VLAN20
-
-interface Ethernet1
-   description to-99-sp1-Eth2
-   no switchport
-   mtu 9100
-   ip address 10.99.241.2/31
-
-interface Ethernet2
-   description to-99-sp2-Eth2
-   no switchport
-   mtu 9100
-   ip address 10.99.242.2/31
-
-interface Ethernet3
-   description to-99-esx1-Eth1
-   mtu 9100
-   switchport trunk allowed vlan 10,20
-   switchport mode trunk
-   channel-group 3 mode active
-   
-interface Ethernet5
-   description 99-esx2-eth2
-   mtu 9100
-   speed forced 10000full
-   switchport trunk allowed vlan 10,20
-   switchport mode trunk
-   channel-group 5 mode active
-
-interface Port-Channel3
-   description 99-esx1
-   mtu 9100
-   switchport trunk allowed vlan 10,20
-   switchport mode trunk
-   mlag 3
-
-interface Port-Channel5
-   mtu 9100
-   switchport trunk allowed vlan 10,20
-   switchport mode trunk
-   mlag 5
-
-
-interface Vlan10
-   description Vlan10
-   mtu 9100
-   vrf VRF_CORE_1
-   ip address virtual 192.168.1.254/24
-
-interface Vlan20
-   description Vlan20
-   mtu 9100
-   vrf VRF_CORE_2
-   ip address virtual 192.168.2.254/24
-
-interface Loopback0
-   description Router-ID
-   ip address 10.99.243.2/32
-
-interface Loopback1
-   description VTEP-Source
-   ip address 10.99.244.1/32
-
-interface Vxlan1
-   description VXLAN-Tunnel-Endpoint
-   no shutdown
-   vxlan source-interface Loopback1
-   vxlan learn-restrict any
-   vxlan vlan 10 vni 10010
-   vxlan vlan 20 vni 10020
-   vxlan vrf VRF_CORE_1 vni 10001
-   vxlan vrf VRF_CORE_2 vni 10002
-
-router bgp 65099
-   router-id 10.99.243.2
-   no bgp default ipv4-unicast
-   timers bgp 3 9
-   maximum-paths 10 ecmp 10
-
-   neighbor SPINE-UNDERLAY peer group
-   neighbor SPINE-UNDERLAY remote-as 65099
-   neighbor SPINE-UNDERLAY timers 3 9
-   neighbor SPINE-UNDERLAY send-community
-   neighbor SPINE-UNDERLAY bfd interval 300 min-rx 300 multiplier 3
-   neighbor 10.99.241.3 peer group SPINE-UNDERLAY
-   neighbor 10.99.242.3 peer group SPINE-UNDERLAY
-
-   neighbor 10.99.246.2 remote-as 65099
-   neighbor 10.99.246.2 next-hop-self
-
-   neighbor SPINE-EVPN peer group
-   neighbor SPINE-EVPN remote-as 65099
-   neighbor SPINE-EVPN update-source Loopback0
-   neighbor SPINE-EVPN ebgp-multihop 2
-   neighbor SPINE-EVPN send-community extended
-   neighbor 10.99.243.11 peer group SPINE-EVPN
-   neighbor 10.99.243.22 peer group SPINE-EVPN
-
-   vlan 10
-      rd auto
-      route-target both 65099:10010
-      redistribute learned
-
-   address-family ipv4
-      neighbor SPINE-UNDERLAY activate
-      network 10.99.243.2/32
-      network 10.99.244.2/32
-      neighbor 10.99.246.2 activate
-
-   address-family evpn
-      neighbor SPINE-EVPN activate
-
-
-vrf VRF_CORE_1
-   rd 65099:101
-   route-target import evpn 65099:101
-   route-target export evpn 65099:101
-   
-   address-family ipv4
-      redistribute connected
-
-vrf VRF_CORE_2
-   rd 65099:102
-   route-target import evpn 65099:102
-   route-target export evpn 65099:102
-   
-   address-family ipv4
-      redistribute connected
  ```
 ### 99-lf3 (Leaf 3)
 ```bash
 
-hostname 99-lf3
-!
-spanning-tree mode mstp
-!
-vlan 10
-   name VLAN10
-!
-vlan 20
-   name VLAN20
-!
-vlan 30
-   name VLAN30
-!
-vlan 40
-   name VLAN40
-!
-vrf instance MGMT
-!
-vrf instance VRF_CORE_1
-!
-vrf instance VRF_CORE_2
-!
-interface Port-Channel3
-   switchport trunk allowed vlan 30
-   switchport mode trunk
-   !
-   evpn ethernet-segment
-      identifier 0000:0000:0000:0000:3403
-      designated-forwarder election algorithm preference 100
-      route-target import 00:00:00:00:34:03
-   lacp system-id 0000.0000.3403
-!
-interface Port-Channel4
-   switchport trunk allowed vlan 40
-   switchport mode trunk
-   !
-   evpn ethernet-segment
-      identifier 0000:0000:0000:0000:3404
-      designated-forwarder election algorithm preference 100
-      route-target import 00:00:00:00:34:04
-   lacp system-id 0000.0000.3404
-!
-interface Ethernet1
-   description to-99-sp1-Eth3
-   mtu 9100
-   no switchport
-   ip address 10.99.241.4/31
-!
-interface Ethernet2
-   description to-99-sp2-Eth3
-   mtu 9100
-   no switchport
-   ip address 10.99.242.4/31
-!
-interface Ethernet3
-   description to esx3 int et 1
-   mtu 9100
-   switchport trunk allowed vlan 30
-   switchport mode trunk
-   channel-group 3 mode active
-!
-interface Ethernet4
-   description to esx4 et1
-   mtu 9100
-   switchport trunk allowed vlan 40
-   switchport mode trunk
-   channel-group 4 mode active
-!
-interface Ethernet5
-!
-interface Ethernet6
-!
-interface Ethernet7
-!
-interface Ethernet8
-!
-interface Loopback0
-   description Router-ID
-   ip address 10.99.243.3/32
-!
-interface Loopback1
-   description VTEP-Source
-   ip address 10.99.244.3/32
-!
-interface Management1
-   vrf MGMT
-   ip address 10.99.245.3/24
-!
-interface Vlan30
-   description Server-Network-3
-   mtu 9100
-   vrf VRF_CORE_2
-   ip address virtual 192.168.3.254/24
-!
-interface Vlan40
-   description Vlan40
-   mtu 9100
-   vrf VRF_CORE_1
-   ip address virtual 192.168.4.254/24
-!
-interface Vxlan1
-   description VXLAN-Tunnel-Endpoint
-   vxlan source-interface Loopback1
-   vxlan udp-port 4789
-   vxlan vlan 30 vni 10030
-   vxlan vlan 40 vni 10040
-   vxlan vrf VRF_CORE_1 vni 10001
-   vxlan vrf VRF_CORE_2 vni 10002
-   vxlan learn-restrict any
-!
-ip virtual-router mac-address 00:00:00:00:00:01
-!
-ip routing
-no ip routing vrf MGMT
-ip routing vrf VRF_CORE_1
-ip routing vrf VRF_CORE_2
-!
-router bgp 65099
-   router-id 10.99.243.3
-   no bgp default ipv4-unicast
-   timers bgp 3 9
-   maximum-paths 10 ecmp 10
-   neighbor SPINE-EVPN peer group
-   neighbor SPINE-EVPN remote-as 65099
-   neighbor SPINE-EVPN update-source Loopback0
-   neighbor SPINE-EVPN ebgp-multihop 2
-   neighbor SPINE-EVPN send-community extended
-   neighbor SPINE-UNDERLAY peer group
-   neighbor SPINE-UNDERLAY remote-as 65099
-   neighbor SPINE-UNDERLAY bfd
-   neighbor SPINE-UNDERLAY timers 3 9
-   neighbor SPINE-UNDERLAY send-community
-   neighbor 10.99.241.5 peer group SPINE-UNDERLAY
-   neighbor 10.99.242.5 peer group SPINE-UNDERLAY
-   neighbor 10.99.243.11 peer group SPINE-EVPN
-   neighbor 10.99.243.22 peer group SPINE-EVPN
-   !
-   vlan 30
-      rd auto
-      route-target both 65099:10030
-      redistribute learned
-   !
-   vlan 40
-      rd auto
-      route-target both 65099:10040
-      redistribute learned
-   !
-   address-family evpn
-      neighbor SPINE-EVPN activate
-   !
-   address-family ipv4
-      neighbor SPINE-UNDERLAY activate
-      network 10.99.243.3/32
-      network 10.99.244.3/32
-   !
-   vrf VRF_CORE_1
-      rd 65099:101
-      route-target import evpn 65099:101
-      route-target export evpn 65099:101
-      !
-      address-family ipv4
-         redistribute connected
-   !
-   vrf VRF_CORE_2
-      rd 65099:102
-      route-target import evpn 65099:102
-      route-target export evpn 65099:102
-      !
-      address-family ipv4
-         redistribute connected
 
  ```
 
  ### 99-lf4 (Leaf 4)
 ```bash
 
-hostname 99-lf4
-!
-spanning-tree mode mstp
-!
-vlan 10
-   name VLAN10
-!
-vlan 20
-   name VLAN20
-!
-vlan 30
-   name VLAN30
-!
-vlan 40
-   name vlan40
-!
-vrf instance MGMT
-!
-vrf instance VRF_CORE_1
-!
-vrf instance VRF_CORE_2
-!
-interface Port-Channel3
-   switchport trunk allowed vlan 30
-   switchport mode trunk
-   !
-   evpn ethernet-segment
-      identifier 0000:0000:0000:0000:3403
-      designated-forwarder election algorithm preference 90
-      route-target import 00:00:00:00:34:03
-   lacp system-id 0000.0000.3403
-!
-interface Port-Channel4
-   switchport trunk allowed vlan 40
-   switchport mode trunk
-   !
-   evpn ethernet-segment
-      identifier 0000:0000:0000:0000:3404
-      designated-forwarder election algorithm preference 100
-      route-target import 00:00:00:00:34:04
-   lacp system-id 0000.0000.3404
-!
-interface Ethernet1
-   description to-99-sp1-Eth4
-   mtu 9100
-   no switchport
-   ip address 10.99.241.6/31
-!
-interface Ethernet2
-   description to-99-sp2-Eth4
-   mtu 9100
-   no switchport
-   ip address 10.99.242.6/31
-!
-interface Ethernet3
-   description to esx3 int et2
-   mtu 9100
-   switchport trunk allowed vlan 30
-   switchport mode trunk
-   channel-group 3 mode active
-!
-interface Ethernet4
-   description to esx4 int et 2
-   mtu 9100
-   switchport trunk allowed vlan 40
-   switchport mode trunk
-   channel-group 4 mode active
-!
-interface Ethernet5
-!
-interface Ethernet6
-!
-interface Ethernet7
-!
-interface Ethernet8
-!
-interface Loopback0
-   description Router-ID
-   ip address 10.99.243.4/32
-!
-interface Loopback1
-   description VTEP-Source
-   ip address 10.99.244.4/32
-!
-interface Management1
-   vrf MGMT
-   ip address 10.99.245.4/24
-!
-interface Vlan30
-   description Server-Network-3
-   mtu 9100
-   vrf VRF_CORE_2
-   ip address virtual 192.168.3.254/24
-!
-interface Vlan40
-   description Vlan40
-   mtu 9100
-   vrf VRF_CORE_1
-   ip address virtual 192.168.4.254/24
-!
-interface Vxlan1
-   description VXLAN-Tunnel-Endpoint
-   vxlan source-interface Loopback1
-   vxlan udp-port 4789
-   vxlan vlan 30 vni 10030
-   vxlan vlan 40 vni 10040
-   vxlan vrf VRF_CORE_1 vni 10001
-   vxlan vrf VRF_CORE_2 vni 10002
-   vxlan learn-restrict any
-!
-ip virtual-router mac-address 00:00:00:00:00:01
-!
-ip routing
-no ip routing vrf MGMT
-ip routing vrf VRF_CORE_1
-ip routing vrf VRF_CORE_2
-!
-router bgp 65099
-   router-id 10.99.243.4
-   no bgp default ipv4-unicast
-   timers bgp 3 9
-   maximum-paths 10 ecmp 10
-   neighbor SPINE-EVPN peer group
-   neighbor SPINE-EVPN remote-as 65099
-   neighbor SPINE-EVPN update-source Loopback0
-   neighbor SPINE-EVPN ebgp-multihop 2
-   neighbor SPINE-EVPN send-community extended
-   neighbor SPINE-UNDERLAY peer group
-   neighbor SPINE-UNDERLAY remote-as 65099
-   neighbor SPINE-UNDERLAY bfd
-   neighbor SPINE-UNDERLAY timers 3 9
-   neighbor SPINE-UNDERLAY send-community
-   neighbor 10.99.241.7 peer group SPINE-UNDERLAY
-   neighbor 10.99.242.7 peer group SPINE-UNDERLAY
-   neighbor 10.99.243.11 peer group SPINE-EVPN
-   neighbor 10.99.243.22 peer group SPINE-EVPN
-   !
-   vlan 30
-      rd auto
-      route-target both 65099:10030
-      redistribute learned
-   !
-   vlan 40
-      rd auto
-      route-target both 65099:10040
-      redistribute learned
-   !
-   address-family evpn
-      neighbor SPINE-EVPN activate
-   !
-   address-family ipv4
-      neighbor SPINE-UNDERLAY activate
-      network 10.99.243.4/32
-      network 10.99.244.4/32
-   !
-   vrf VRF_CORE_1
-      rd 65099:101
-      route-target import evpn 65099:101
-      route-target export evpn 65099:101
-      !
-      address-family ipv4
-         redistribute connected
-   !
-   vrf VRF_CORE_2
-      rd 65099:102
-      route-target import evpn 65099:102
-      route-target export evpn 65099:102
-      !
-      address-family ipv4
-         redistribute connected
 
 
  ```
@@ -1691,7 +1380,7 @@ ip route 0.0.0.0/0 192.168.1.254
 
  ```
 ### 99-esx2 (ESX 2)
-```
+```bash
  hostname 99-esx2
  spanning-tree mode mstp
  vlan 10,20
@@ -1730,6 +1419,8 @@ ip routing vrf VRF_CORE_2
 ip route vrf VRF_CORE_1 0.0.0.0/0 192.168.1.254
 ip route vrf VRF_CORE_2 0.0.0.0/0 192.168.2.254
 ```
+</details>
+
 ---
 
 ## Проверка IP связности
