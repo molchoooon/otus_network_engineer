@@ -65,26 +65,22 @@
 
 | Device Name | Loopback0 Address | VRF         |
 |-------------|-------------------|-------------|
-| 99-fw01     | 10.99.1.2/29      | VRF_CORE_1  |
-| 99-fw02     | 10.99.1.3/29      | VRF_CORE_1  |
-| 99-fw vip   | 10.99.1.1/29      | VRF_CORE_1  |
-| 99-blf1     | 10.99.1.4/29      | VRF_CORE_1  |
-| 99-blf2     | 10.99.1.5/29      | VRF_CORE_1  |
-| 99-fw01     | 10.99.2.2/29      | VRF_CORE_2  |
-| 99-fw02     | 10.99.2.3/29      | VRF_CORE_2  |
-| 99-fw vip   | 10.99.2.1/29      | VRF_CORE_2  |
-| 99-blf1     | 10.99.2.4/29      | VRF_CORE_2  |
-| 99-blf2     | 10.99.2.5/29      | VRF_CORE_2  |
-| 99-fw01     | 10.99.3.2/29      | VRF_CORE_3  |
-| 99-fw02     | 10.99.3.3/29      | VRF_CORE_3  |
-| 99-fw vip   | 10.99.3.1/29      | VRF_CORE_3  |
-| 99-blf1     | 10.99.3.4/29      | VRF_CORE_3  |
-| 99-blf2     | 10.99.3.5/29      | VRF_CORE_3  |
-| 99-fw01     | 10.99.4.2/29      | VRF_CORE_4  |
-| 99-fw02     | 10.99.4.3/29      | VRF_CORE_4  |
-| 99-fw vip   | 10.99.4.1/29      | VRF_CORE_4  |
-| 99-blf1     | 10.99.4.4/29      | VRF_CORE_4  |
-| 99-blf2     | 10.99.4.5/29      | VRF_CORE_4  |
+| 99-fw01     | 10.99.1.0/31      | VRF_CORE_1  |
+| 99-fw02     | 10.99.1.3/31      | VRF_CORE_1  |
+| 99-blf1     | 10.99.1.1/31      | VRF_CORE_1  |
+| 99-blf2     | 10.99.1.2/31      | VRF_CORE_1  |
+| 99-fw01     | 10.99.2.0/31      | VRF_CORE_2  |
+| 99-fw02     | 10.99.2.3/31      | VRF_CORE_2  |
+| 99-blf1     | 10.99.2.1/31      | VRF_CORE_2  |
+| 99-blf2     | 10.99.2.2/31      | VRF_CORE_2  |
+| 99-fw01     | 10.99.3.0/31      | VRF_CORE_3  |
+| 99-fw02     | 10.99.3.3/31      | VRF_CORE_3  |
+| 99-blf1     | 10.99.3.1/31      | VRF_CORE_3  |
+| 99-blf2     | 10.99.3.2/31      | VRF_CORE_3  |
+| 99-fw01     | 10.99.4.0/31      | VRF_CORE_4  |
+| 99-fw02     | 10.99.4.3/31      | VRF_CORE_4  |
+| 99-blf1     | 10.99.4.1/31      | VRF_CORE_4  |
+| 99-blf2     | 10.99.4.2/31      | VRF_CORE_4  |
 
 ### MGMT адреса (Сеть 10.99.245.0/24)
 
@@ -205,6 +201,7 @@ save
 Все, теперь мы можем зайти на них с любого из наших свичей по ssh или по http на менеджмент адрес 
 
 ## Поднимем HRP
+при настройке HRP зададим руками значения MED для эктив стендбай ноды, чтоб в дальнейшем на фабрике выбирался дефолт с активной ноды
 99-fw01
 ```bash
 interface Eth-Trunk23
@@ -225,6 +222,9 @@ add int Eth-Trunk23
 hrp enable
 hrp standby config enable
 hrp interface Eth-Trunk23 remote 10.99.241.13
+hrp track interface Eth-Trunk 23
+hrp adjust bgp-cost enable 10
+
 ```
 99-fw02
 ```bash
@@ -247,6 +247,8 @@ hrp enable
 hrp standby config enable
 hrp standby-device
 hrp interface Eth-Trunk23 remote 10.99.241.12
+hrp track interface Eth-Trunk 23
+hrp adjust bgp-cost enable 20
 
 ```
 Проверим:
@@ -263,7 +265,7 @@ HRP_S<99-fw02>disp hrp state
 
 ### Настройка VRF на фабрике 
 --------------------------------------------------------------------------------------------------------
-Подправим конфиг на лифах - вынесем каждую подсеть 192.168.N.0/24 в свой VRF 
+Подправим конфиг на лифах - вынесем каждую подсеть 192.168.N.0/24 в свой VRF и добавим 3/4 VRF на 1/2 blf для настройки связности их с фаерволлом
 
 blf01/02
 ```bash
@@ -276,10 +278,16 @@ ip routing vrf VRF_CORE_2
 ip routing vrf VRF_CORE_3
 ip routing vrf VRF_CORE_4
 
+int vxlan1
+   vxlan vrf VRF_CORE_1 vni 10001
+   vxlan vrf VRF_CORE_2 vni 10002
+   vxlan vrf VRF_CORE_3 vni 10003
+   vxlan vrf VRF_CORE_4 vni 10004
+
 
 router bgp 65099
 vrf VRF_CORE_3
-      rd 65099:103
+      rd 65099:1031  ( rd 65099:1032 для второго лифа)
       route-target import evpn 65099:103
       route-target export evpn 65099:103
            address-family ipv4
@@ -287,7 +295,7 @@ vrf VRF_CORE_3
 ex
 ex
 vrf VRF_CORE_4
-      rd 65099:104
+      rd 65099:1041 ( rd 65099:1042 для второго лифа)
       route-target import evpn 65099:104
       route-target export evpn 65099:104
       address-family ipv4
@@ -321,7 +329,7 @@ ip routing vrf VRF_CORE_4
 
 router bgp 65099
 vrf VRF_CORE_3
-      rd 65099:103
+      rd 65099:1033 /1034
       route-target import evpn 65099:103
       route-target export evpn 65099:103
            address-family ipv4
@@ -329,8 +337,8 @@ vrf VRF_CORE_3
 ex
 ex
 vrf VRF_CORE_4
-      rd 65099:104
-      route-target import evpn 65099:104
+      rd 65099:1044 /1044
+      route-target import evpn 65099:104 
       route-target export evpn 65099:104
       address-family ipv4
          redistribute connected
@@ -353,6 +361,9 @@ interface Vlan40
 ```
 
 ### Настройка линков и маршрутизации на blf01/02
+В идеале нужно коммутировать каждый фаерволл двумя линками к каждому blf, но на аристах осталось всего 2 порта один из которых запланирован под мультисайт, потому пришлось скоммутировать одним линком.
+Но для того чтоб не было путанницы с двумя разными дефолтами на каждом blf настроим по два пиринга с каждого фаерволла до блифов.
+Для того чтоб блифы могли заанонсить нормально друг другу p2p сети с фаерволлом внутри VRF поменяем айпи vtepа на втором лифе на 10.99.244.2 - в противном случае маршруты не инсталлятся в таблицу. Либо можно оставить общий Vtep но придется тогда строить пиринг внутри VRF между блифами по пирлинку, что выглядит хуже.
 
 общее
 ```bash
@@ -368,75 +379,110 @@ int et 4
 no switchport
 description 99-fw01 G1/0/0
 no shut
-int et4.10
-encapsulation dot1q vlan 10
-vrf VRF_CORE_1
-ip address 10.99.1.4/29
-int et4.20
-encapsulation dot1q vlan 20
-vrf VRF_CORE_2
-ip address 10.99.2.4/29
-int et4.30
-encapsulation dot1q vlan 30
-vrf VRF_CORE_3
-ip address 10.99.3.4/29
-int et4.40
-encapsulation dot1q vlan 40
-vrf VRF_CORE_4
-ip address 10.99.4.4/29
+interface Ethernet4.10
+   encapsulation dot1q vlan 10
+   vrf VRF_CORE_1
+   ip address 10.99.1.1/31
+!
+interface Ethernet4.20
+   encapsulation dot1q vlan 20
+   vrf VRF_CORE_2
+   ip address 10.99.2.1/31
+!
+interface Ethernet4.30
+   encapsulation dot1q vlan 30
+   vrf VRF_CORE_3
+   ip address 10.99.3.1/31
+!
+interface Ethernet4.40
+   encapsulation dot1q vlan 40
+   vrf VRF_CORE_4
+   ip address 10.99.4.1/31
 
 router bgp 65099
  vrf VRF_CORE_1
-      rd 65099:101
+      rd 65099:1011
       route-target import evpn 65099:101
       route-target export evpn 65099:101
-      router-id 10.99.1.4
-      neighbor 10.99.1.1 remote-as 65098
-      neighbor 10.99.1.1 next-hop-self
-      neighbor 10.99.1.1 update-source Ethernet4.10
-      neighbor 10.99.1.1 route-map DEFAULT in 
+      router-id 10.99.1.1
+      neighbor 10.99.1.0 remote-as 65098
+      neighbor 10.99.1.0 next-hop-self
+      neighbor 10.99.1.0 update-source Ethernet4.10
+      neighbor 10.99.1.0 route-map DEFAULT in
+      neighbor 10.99.1.3 remote-as 65098
+      neighbor 10.99.1.3 next-hop-self
+      neighbor 10.99.1.3 update-source Ethernet4.10
+      neighbor 10.99.1.3 ebgp-multihop 10
+      neighbor 10.99.1.3 route-map DEFAULT in
+      !
       address-family ipv4
-         neighbor 10.99.1.1 activate
+         neighbor 10.99.1.0 activate
+         neighbor 10.99.1.3 activate
+         network 10.99.1.0/31
          redistribute connected
 
+
 vrf VRF_CORE_2
-      rd 65099:102
+      rd 65099:1021
       route-target import evpn 65099:102
       route-target export evpn 65099:102
-      router-id 10.99.2.4
-      neighbor 10.99.2.1 remote-as 65098
-      neighbor 10.99.2.1 next-hop-self
-      neighbor 10.99.2.1 update-source Ethernet4.20
-      neighbor 10.99.2.1 route-map DEFAULT in 
+      router-id 10.99.2.1
+      neighbor 10.99.2.0 remote-as 65098
+      neighbor 10.99.2.0 next-hop-self
+      neighbor 10.99.2.0 update-source Ethernet4.20
+      neighbor 10.99.2.0 route-map DEFAULT in
+      neighbor 10.99.2.3 remote-as 65098
+      neighbor 10.99.2.3 next-hop-self
+      neighbor 10.99.2.3 update-source Ethernet4.20
+      neighbor 10.99.2.3 ebgp-multihop 10
+      neighbor 10.99.2.3 route-map DEFAULT in
+      !
       address-family ipv4
-         neighbor 10.99.2.1 activate
+         neighbor 10.99.2.0 activate
+         neighbor 10.99.2.3 activate
+         network 10.99.2.0/31
          redistribute connected
 
 vrf VRF_CORE_3
-      rd 65099:103
+      rd 65099:1031
       route-target import evpn 65099:103
       route-target export evpn 65099:103
-      router-id 10.99.3.4
-      neighbor 10.99.3.1 remote-as 65098
-      neighbor 10.99.3.1 next-hop-self
-      neighbor 10.99.3.1 update-source Ethernet4.30
-      neighbor 10.99.3.1 route-map DEFAULT in 
+      router-id 10.99.3.1
+      neighbor 10.99.3.0 remote-as 65098
+      neighbor 10.99.3.0 next-hop-self
+      neighbor 10.99.3.0 update-source Ethernet4.30
+      neighbor 10.99.3.0 route-map DEFAULT in
+      neighbor 10.99.3.3 remote-as 65098
+      neighbor 10.99.3.3 next-hop-self
+      neighbor 10.99.3.3 update-source Ethernet4.30
+      neighbor 10.99.3.3 ebgp-multihop 10
+      neighbor 10.99.3.3 route-map DEFAULT in
+      !
       address-family ipv4
-         neighbor 10.99.3.1 activate
+         neighbor 10.99.3.0 activate
+         neighbor 10.99.3.3 activate
+         network 10.99.3.0/31
          redistribute connected
 
-
 vrf VRF_CORE_4
-      rd 65099:104
+      rd 65099:1041
       route-target import evpn 65099:104
       route-target export evpn 65099:104
-      router-id 10.99.4.4
-      neighbor 10.99.4.1 remote-as 65098
-      neighbor 10.99.4.1 next-hop-self
-      neighbor 10.99.4.1 update-source Ethernet4.40
-      neighbor 10.99.4.1 route-map DEFAULT in 
+      router-id 10.99.4.1
+      neighbor 10.99.4.0 remote-as 65098
+      neighbor 10.99.4.0 next-hop-self
+      neighbor 10.99.4.0 update-source Ethernet4.40
+      neighbor 10.99.4.0 route-map DEFAULT in
+      neighbor 10.99.4.3 remote-as 65098
+      neighbor 10.99.4.3 next-hop-self
+      neighbor 10.99.4.3 update-source Ethernet4.40
+      neighbor 10.99.4.3 ebgp-multihop 10
+      neighbor 10.99.4.3 route-map DEFAULT in
+      !
       address-family ipv4
-         neighbor 10.99.4.1 activate
+         neighbor 10.99.4.0 activate
+         neighbor 10.99.4.3 activate
+         network 10.99.4.0/31
          redistribute connected
     
 
@@ -450,72 +496,103 @@ no shut
 int et4.10
 encapsulation dot1q vlan 10
 vrf VRF_CORE_1
-ip address 10.99.1.5/29
+ip address 10.99.1.2/31
 int et4.20
 encapsulation dot1q vlan 20
 vrf VRF_CORE_2
-ip address 10.99.2.5/29
+ip address 10.99.2.2/31
 int et4.30
 encapsulation dot1q vlan 30
 vrf VRF_CORE_3
-ip address 10.99.3.5/29
+ip address 10.99.3.2/31
 int et4.40
 encapsulation dot1q vlan 40
 vrf VRF_CORE_4
-ip address 10.99.4.5/29
+ip address 10.99.4.2/31
 
 router bgp 65099
  vrf VRF_CORE_1
-      rd 65099:101
+      rd 65099:1012
       route-target import evpn 65099:101
       route-target export evpn 65099:101
-      router-id 10.99.1.5
-      neighbor 10.99.1.1 remote-as 65098
-      neighbor 10.99.1.1 next-hop-self
-      neighbor 10.99.1.1 update-source Ethernet4.10
-      neighbor 10.99.1.1 route-map DEFAULT in 
+      router-id 10.99.1.2
+      neighbor 10.99.1.0 remote-as 65098
+      neighbor 10.99.1.0 next-hop-self
+      neighbor 10.99.1.0 update-source Ethernet4.10
+      neighbor 10.99.1.0 ebgp-multihop 10
+      neighbor 10.99.1.0 route-map DEFAULT in
+      neighbor 10.99.1.3 remote-as 65098
+      neighbor 10.99.1.3 next-hop-self
+      neighbor 10.99.1.3 update-source Ethernet4.10
+      neighbor 10.99.1.3 route-map DEFAULT in
+      !
       address-family ipv4
-         neighbor 10.99.1.1 activate
+         neighbor 10.99.1.0 activate
+         neighbor 10.99.1.3 activate
+         network 10.99.1.2/31
          redistribute connected
 
 vrf VRF_CORE_2
-      rd 65099:102
+      rd 65099:1022
       route-target import evpn 65099:102
       route-target export evpn 65099:102
-      router-id 10.99.2.5
-      neighbor 10.99.2.1 remote-as 65098
-      neighbor 10.99.2.1 next-hop-self
-      neighbor 10.99.2.1 update-source Ethernet4.20
-      neighbor 10.99.2.1 route-map DEFAULT in 
+      router-id 10.99.2.2
+      neighbor 10.99.2.0 remote-as 65098
+      neighbor 10.99.2.0 next-hop-self
+      neighbor 10.99.2.0 update-source Ethernet4.20
+      neighbor 10.99.2.0 ebgp-multihop 10
+      neighbor 10.99.2.0 route-map DEFAULT in
+      neighbor 10.99.2.3 remote-as 65098
+      neighbor 10.99.2.3 next-hop-self
+      neighbor 10.99.2.3 update-source Ethernet4.20
+      neighbor 10.99.2.3 route-map DEFAULT in
+      !
       address-family ipv4
-         neighbor 10.99.2.1 activate
+         neighbor 10.99.2.0 activate
+         neighbor 10.99.2.3 activate
+         network 10.99.2.2/31
          redistribute connected
 
 vrf VRF_CORE_3
-      rd 65099:103
+      rd 65099:1032
       route-target import evpn 65099:103
       route-target export evpn 65099:103
-      router-id 10.99.3.5
-      neighbor 10.99.3.1 remote-as 65098
-      neighbor 10.99.3.1 next-hop-self
-      neighbor 10.99.3.1 update-source Ethernet4.30
-      neighbor 10.99.3.1 route-map DEFAULT in 
+      router-id 10.99.3.2
+      neighbor 10.99.3.0 remote-as 65098
+      neighbor 10.99.3.0 next-hop-self
+      neighbor 10.99.3.0 update-source Ethernet4.30
+      neighbor 10.99.3.0 ebgp-multihop 10
+      neighbor 10.99.3.0 route-map DEFAULT in
+      neighbor 10.99.3.3 remote-as 65098
+      neighbor 10.99.3.3 next-hop-self
+      neighbor 10.99.3.3 update-source Ethernet4.30
+      neighbor 10.99.3.3 route-map DEFAULT in
+      !
       address-family ipv4
-         neighbor 10.99.3.1 activate
+         neighbor 10.99.3.0 activate
+         neighbor 10.99.3.3 activate
+         network 10.99.3.2/31
          redistribute connected
 
-
 vrf VRF_CORE_4
-      rd 65099:104
+      rd 65099:1042
       route-target import evpn 65099:104
       route-target export evpn 65099:104
-      router-id 10.99.4.5
-      neighbor 10.99.4.1 remote-as 65098
-      neighbor 10.99.4.1 next-hop-self
-      neighbor 10.99.4.1 update-source Ethernet4.40
-      neighbor 10.99.4.1 route-map DEFAULT in 
+      router-id 10.99.4.2
+      neighbor 10.99.4.0 remote-as 65098
+      neighbor 10.99.4.0 next-hop-self
+      neighbor 10.99.4.0 update-source Ethernet4.40
+      neighbor 10.99.4.0 ebgp-multihop 10
+      neighbor 10.99.4.0 route-map DEFAULT in
+      neighbor 10.99.4.3 remote-as 65098
+      neighbor 10.99.4.3 next-hop-self
+      neighbor 10.99.4.3 update-source Ethernet4.40
+      neighbor 10.99.4.3 route-map DEFAULT in
+      !
       address-family ipv4
-         neighbor 10.99.4.1 activate
+         neighbor 10.99.4.0 activate
+         neighbor 10.99.4.3 activate
+         network 10.99.4.2/31
          redistribute connected
 ```
 
@@ -532,49 +609,68 @@ interface GigabitEthernet1/0/0
 interface GigabitEthernet1/0/0.10
  vlan-type dot1q 10
  description Gateway_for_VRF_CORE_1_VLAN10
- ip address 10.99.1.2 255.255.255.248
- vrrp vrid 10 virtual-ip 10.99.1.1 active
+ ip address 10.99.1.0 255.255.255.254
  service-manage ping permit
 #
 interface GigabitEthernet1/0/0.20
  vlan-type dot1q 20
  description Gateway_for_VRF_CORE_2_VLAN20
- ip address 10.99.2.2 255.255.255.248
- vrrp vrid 20 virtual-ip 10.99.2.1 active
+ ip address 10.99.2.0 255.255.255.254
  service-manage ping permit
 #
 interface GigabitEthernet1/0/0.30
  vlan-type dot1q 30
  description Gateway_for_VRF_CORE_3_VLAN30
- ip address 10.99.3.2 255.255.255.248
- vrrp vrid 30 virtual-ip 10.99.3.1 active
+ ip address 10.99.3.0 255.255.255.254
  service-manage ping permit
 #
 interface GigabitEthernet1/0/0.40
  vlan-type dot1q 40
  description Gateway_for_VRF_CORE_4_VLAN40
- ip address 10.99.4.2 255.255.255.248
- vrrp vrid 30 virtual-ip 10.99.4.1 active
+ ip address 10.99.4.0 255.255.255.254
  service-manage ping permit
 
 bgp 65098
 router id 10.99.245.252
- peer 10.99.1.4 as-number 65099
- peer 10.99.1.4 timer keepalive 3 hold 9
- peer 10.99.2.4 as-number 65099
- peer 10.99.2.4 timer keepalive 3 hold 9
- peer 10.99.3.4 as-number 65099
- peer 10.99.3.4 timer keepalive 3 hold 9
- peer 10.99.4.4 as-number 65099
- peer 10.99.4.4 timer keepalive 3 hold 9
- 
+ group blf01 external
+ peer blf01 as-number 65099
+ peer blf01 timer keepalive 3 hold 9
+ peer 10.99.1.1 group blf01
+ peer 10.99.2.1 group blf01
+ peer 10.99.3.1 group blf01
+ peer 10.99.4.1 group blf01
+ group blf02 external
+ peer blf02 as-number 65099
+ peer blf02 timer keepalive 3 hold 9
+ peer blf02 ebgp-max-hop 10
+ peer 10.99.1.2 group blf02
+ peer 10.99.2.2 group blf02
+ peer 10.99.3.2 group blf02
+ peer 10.99.4.2 group blf02
+
+
  ipv4-family unicast
   import-route static
   default-route imported
-  peer 10.99.1.4 enable
-  peer 10.99.2.4 enable
-  peer 10.99.3.4 enable
-  peer 10.99.1.4 enable
+  peer blf01 enable
+  peer 10.99.1.1 enable
+  peer 10.99.1.1 group blf01
+  peer 10.99.2.1 enable
+  peer 10.99.2.1 group blf01
+  peer 10.99.3.1 enable
+  peer 10.99.3.1 group blf01
+  peer 10.99.4.1 enable
+  peer 10.99.4.1 group blf01
+  peer blf02 enable
+  peer 10.99.1.2 enable
+  peer 10.99.1.2 group blf02
+  peer 10.99.2.2 enable
+  peer 10.99.2.2 group blf02
+  peer 10.99.3.2 enable
+  peer 10.99.3.2 group blf02
+  peer 10.99.4.2 enable
+  peer 10.99.4.2 group blf02
+
 q
 q
 ip route-static 0.0.0.0 0 NULL 0
@@ -591,49 +687,68 @@ interface GigabitEthernet1/0/0
 interface GigabitEthernet1/0/0.10
  vlan-type dot1q 10
  description Gateway_for_VRF_CORE_1_VLAN10
- ip address 10.99.1.3 255.255.255.248
- vrrp vrid 10 virtual-ip 10.99.1.1 standby
+ ip address 10.99.1.3 255.255.255.254
  service-manage ping permit
 #
 interface GigabitEthernet1/0/0.20
  vlan-type dot1q 20
  description Gateway_for_VRF_CORE_2_VLAN20
- ip address 10.99.2.3 255.255.255.248
- vrrp vrid 20 virtual-ip 10.99.2.1 standby
+ ip address 10.99.2.3 255.255.255.254
  service-manage ping permit
 #
 interface GigabitEthernet1/0/0.30
  vlan-type dot1q 30
  description Gateway_for_VRF_CORE_3_VLAN30
- ip address 10.99.3.3 255.255.255.248
- vrrp vrid 30 virtual-ip 10.99.3.1 standby
+ ip address 10.99.3.3 255.255.255.254
  service-manage ping permit
 #
 interface GigabitEthernet1/0/0.40
  vlan-type dot1q 40
  description Gateway_for_VRF_CORE_4_VLAN40
- ip address 10.99.4.3 255.255.255.248
- vrrp vrid 30 virtual-ip 10.99.4.1 standby
+ ip address 10.99.4.3 255.255.255.254
  service-manage ping permit
 
 bgp 65098
 router id 10.99.245.253
- peer 10.99.1.5 as-number 65099
- peer 10.99.1.5 timer keepalive 3 hold 9
- peer 10.99.2.5 as-number 65099
- peer 10.99.2.5 timer keepalive 3 hold 9
- peer 10.99.3.5 as-number 65099
- peer 10.99.3.5 timer keepalive 3 hold 9
- peer 10.99.4.5 as-number 65099
- peer 10.99.4.5 timer keepalive 3 hold 9
- 
+ group blf01 external
+ peer blf01 as-number 65099
+ peer blf01 timer keepalive 3 hold 9
+ peer blf01 ebgp-max-hop 10
+ peer 10.99.1.1 group blf01
+ peer 10.99.2.1 group blf01
+ peer 10.99.3.1 group blf01
+ peer 10.99.4.1 group blf01
+ group blf02 external
+ peer blf02 as-number 65099
+ peer blf02 timer keepalive 3 hold 9
+ peer 10.99.1.2 group blf02
+ peer 10.99.2.2 group blf02
+ peer 10.99.3.2 group blf02
+ peer 10.99.4.2 group blf02
+
+
  ipv4-family unicast
   import-route static
   default-route imported
-  peer 10.99.1.5 enable
-  peer 10.99.2.5 enable
-  peer 10.99.3.5 enable
-  peer 10.99.1.5 enable
+  peer blf01 enable
+  peer 10.99.1.1 enable
+  peer 10.99.1.1 group blf01
+  peer 10.99.2.1 enable
+  peer 10.99.2.1 group blf01
+  peer 10.99.3.1 enable
+  peer 10.99.3.1 group blf01
+  peer 10.99.4.1 enable
+  peer 10.99.4.1 group blf01
+  peer blf02 enable
+  peer 10.99.1.2 enable
+  peer 10.99.1.2 group blf02
+  peer 10.99.2.2 enable
+  peer 10.99.2.2 group blf02
+  peer 10.99.3.2 enable
+  peer 10.99.3.2 group blf02
+  peer 10.99.4.2 enable
+  peer 10.99.4.2 group blf02
+
 q
 q
 ip route-static 0.0.0.0 0 NULL 0
