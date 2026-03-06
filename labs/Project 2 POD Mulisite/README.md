@@ -1,10 +1,11 @@
-# Лабораторная работа:  Реализовать передачу суммарных префиксов через EVPN route-type 5
+# Проектная работа:  Реализовать связность двух ЦОД с применением дизайна Close topology Multisite
 
 ## Задание
-1. Разместить каждый Vlan ( 10,20,30,40) в своем VRF
-2. Затерминировать VRF на Фаерволле
-3. Собрать отказоустойчивый кластер USG 6000
-4. Настроить маршрутизацию между VRF через фаерволл
+1. Настроить 2 POD POD-99 POD-199 
+2. Настроить DCI связность
+3. Сделать один растянутый влан под требования заказчика для L2 связности ВМ Заказчика между подами ( Vlan 99)
+4. Настроить два  VRF в POD -199 - VRF13(изолированный), VRF14 - затерминировать VRF14 на фаерволлах POD99 для связности с VRF POD99
+
 
 ---
 
@@ -14,7 +15,7 @@
 Добавим в IP-план линки до фаерволлов, и адреса для пиринга с ними
 
 ## IP-план (Address Plan) 
-
+## POD-99
 <details>
 <summary>IP Plan </summary>
 
@@ -64,7 +65,7 @@
 | 99-lf3      | 10.99.244.3/32    | VTEP Source          |
 | 99-lf4      | 10.99.244.4/32    | VTEP Source          |
 
-### P2P адреса для VRF 
+### P2P адреса для VRF (Сеть 10.99.1.0/24)
 
 | Device Name | Loopback0 Address | VRF         |
 |-------------|-------------------|-------------|
@@ -127,6 +128,124 @@
 | 99-esx4     | Eth1 → 99-lf4 Eth5    Po1   | Vlan40 (SVI для VLAN40)                        | 192.168.4.1/24    | 192.168.4.254  |
 
 </details>
+
+## POD-199
+<details>
+<summary>IP Plan </summary>
+
+### Underlay сеть (Fabric Links - Point-to-Point /31 из сети 10.199.241.0/24)
+
+| Device Name | IP Address/Маска | Port      | Remote Device | Remote Port | Description         |
+|-------------|------------------|-----------|---------------|-------------|---------------------|
+| 99-blf1     | 10.99.241.0/31   | Ethernet1 | 99-sp1        | Ethernet1   | to Spine1           |
+| 99-blf1     | 10.99.242.0/31   | Ethernet2 | 99-sp2        | Ethernet1   | to Spine2           |
+| 99-blf1     | -                | Ethernet3 | 99-esx1       | Ethernet1   | Server Trunk        |
+| 99-blf1     | -                | Ethernet4 | 99-fw01       | GI1/0/0     | to fw01             |
+| 99-blf1     | -                | Ethernet5 | 99-esx2       | Ethernet2   | Server Trunk        |
+| 99-blf2     | 10.99.241.2/31   | Ethernet1 | 99-sp1        | Ethernet2   | to Spine1           |
+| 99-blf2     | 10.99.242.2/31   | Ethernet2 | 99-sp2        | Ethernet2   | to Spine2           |
+| 99-blf2     | -                | Ethernet3 | 99-esx1       | Ethernet1   | Server Trunk        |
+| 99-blf2     | -                | Ethernet5 | 99-esx2       | Ethernet2   | Server Trunk        |
+| 99-blf2     | -                | Ethernet4 | 99-fw02       | GI1/0/1     | to fw02             |
+| 99-lf3      | 10.99.241.4/31   | Ethernet1 | 99-sp1        | Ethernet3   | to Spine1           |
+| 99-lf3      | 10.99.242.4/31   | Ethernet2 | 99-sp2        | Ethernet3   | to Spine2           |
+| 99-lf3      | -                | Ethernet3 | 99-esx3       | Ethernet1   | Server Trunk        |
+| 99-lf3      | -                | Ethernet4 | 99-esx4       | Ethernet2   | Server Trunk        |
+| 99-lf4      | 10.99.241.6/31   | Ethernet1 | 99-sp1        | Ethernet4   | to Spine1           |
+| 99-lf4      | 10.99.242.6/31   | Ethernet2 | 99-sp2        | Ethernet4   | to Spine2           |
+| 99-lf4      | -                | Ethernet3 | 99-esx3       | Ethernet2   | Server Trunk        |
+| 99-lf4      | -                | Ethernet4 | 99-esx4       | Ethernet1   | Server Trunk        |
+| 99-fw01     | 10.99.242.12/31  |Eth-Trunk23| 99-fw02       |Eth-Trunk23  | HRP LINK            |
+
+### Loopback адреса для BGP Underlay (Сеть 10.99.243.0/24)
+
+| Device Name | Loopback0 Address | Description          |
+|-------------|-------------------|----------------------|
+| 99-blf1     | 10.99.243.1/32    | BGP Router-ID        |
+| 99-blf2     | 10.99.243.2/32    | BGP Router-ID        |
+| 99-lf3      | 10.99.243.3/32    | BGP Router-ID        |
+| 99-lf4      | 10.99.243.4/32    | BGP Router-ID        |
+| 99-sp1      | 10.99.243.11/32   | BGP Router-ID        |
+| 99-sp2      | 10.99.243.22/32   | BGP Router-ID        |
+
+
+
+### Loopback адреса для VXLAN NVE (Сеть 10.99.244.0/24)
+
+| Device Name | Loopback1 Address | Description          |
+|-------------|-------------------|----------------------|
+| 199-lf1     | 10.199.244.1/32   | VTEP Source          |
+| 199-lf2     | 10.199.244.1/32   | VTEP Source          |
+| 199-bgw1    | 10.199.244.3/32   | VTEP Source          |
+| 199-bgw2    | 10.199.244.4/32   | VTEP Source          |
+
+### MGMT адреса (Сеть 10.99.245.0/24)
+
+| Device Name | Loopback0 Address | Description   |
+|-------------|-------------------|---------------|
+| 99-blf1     | 10.99.245.1/32    | Mgmt ip       |
+| 99-blf2     | 10.99.245.2/32    | Mgmt ip       |
+| 99-lf3      | 10.99.245.3/32    | Mgmt ip       |
+| 99-lf4      | 10.99.245.4/32    | Mgmt ip       |
+| 99-sp1      | 10.99.245.11/32   | Mgmt ip       |
+| 99-sp2      | 10.99.245.22/32   | Mgmt ip       |
+| 99-fw01     | 10.99.245.252/32  | Mgmt ip       |
+| 99-fw02     | 10.99.245.253/32  | Mgmt ip       |
+| 99-fw       | 10.99.245.254/32  | VIP GW        |
+
+
+### P2P адреса для VRF 
+
+| Device Name | Loopback0 Address | VRF         |
+|-------------|-------------------|-------------|
+| 99-fw01     | 10.99.1.0/31      | VRF_CORE_1  |
+| 99-fw02     | 10.99.1.3/31      | VRF_CORE_1  |
+| 99-blf1     | 10.99.1.1/31      | VRF_CORE_1  |
+| 99-blf2     | 10.99.1.2/31      | VRF_CORE_1  |
+| 99-fw01     | 10.99.2.0/31      | VRF_CORE_2  |
+| 99-fw02     | 10.99.2.3/31      | VRF_CORE_2  |
+| 99-blf1     | 10.99.2.1/31      | VRF_CORE_2  |
+| 99-blf2     | 10.99.2.2/31      | VRF_CORE_2  |
+| 99-fw01     | 10.99.3.0/31      | VRF_CORE_3  |
+| 99-fw02     | 10.99.3.3/31      | VRF_CORE_3  |
+| 99-blf1     | 10.99.3.1/31      | VRF_CORE_3  |
+| 99-blf2     | 10.99.3.2/31      | VRF_CORE_3  |
+| 99-fw01     | 10.99.4.0/31      | VRF_CORE_4  |
+| 99-fw02     | 10.99.4.3/31      | VRF_CORE_4  |
+| 99-blf1     | 10.99.4.1/31      | VRF_CORE_4  |
+| 99-blf2     | 10.99.4.2/31      | VRF_CORE_4  |
+
+
+
+
+### EVPN L2-домены (VLAN ↔ VNI Mapping)
+
+| VLAN | Описание          | L2 VNI | Anycast Gateway   | Leaf с настроенным VNI |
+|------|-------------------|--------|-------------------|------------------------|
+| 10   | VLAN10   | 10010  | 192.168.1.254/24  | 99-blf1, 99-blf2 VRF_CORE1 |
+| 20   | VLAN20   | 10020  | 192.168.2.254/24  | 99-blf1, 99-blf2 VRF_CORE2 |
+| 30   | VLAN30   | 10030  | 192.168.3.254/24  | 99-lf3, 99-lf4 VRF_CORE3 |
+| 40   | VLAN40   | 10040  | 192.168.4.254/24  | 99-lf3, 99-lf4 VRF_CORE4 |
+
+
+
+### Конфигурация "ESXi" устройств 
+
+| ESXi Device | Физические порты (Trunk) | Виртуальные интерфейсы (SVI)                     | IP Address/Маска   | Gateway         |
+|-------------|--------------------------|------------------------------------------------|-------------------|-----------------|
+| 99-esx1     | Eth1 → 99-blf1 Eth3   Po1   | Vlan10 (SVI для VLAN10)                        | 192.168.1.1/24    | 192.168.1.254  |
+| 99-esx1     | Eth2 → 99-blf2 Eth3   Po1   | Vlan10 (SVI для VLAN10)                        | 192.168.1.1/24    | 192.168.1.254  |
+| 99-esx2     | Eth1 → 99-blf1 Eth5   Po2  | Vlan10 (SVI для VLAN10)                        | 192.168.1.2/24    | 192.168.1.254   |
+| 99-esx2     | Eth1 → 99-blf2 Eth5    Po2   | Vlan20 (SVI для VLAN20)                        | 192.168.2.1/24    | 192.168.2.254   |
+| 99-esx2     | Eth1 → 99-blf1 Eth5   Po2  | Vlan10 (SVI для VLAN10)                        | 192.168.1.2/24    | 192.168.1.254   |
+| 99-esx2     | Eth1 → 99-blf2 Eth5    Po2   | Vlan20 (SVI для VLAN20)                        | 192.168.2.1/24    | 192.168.2.254   |
+| 99-esx3     | Eth1 → 99-lf3 Eth3   Po1   | Vlan30 (SVI для VLAN30)                        | 192.168.3.1/24    | 192.168.3.254   |
+| 99-esx3     | Eth1 → 99-lf4 Eth3   Po1    | Vlan30 (SVI для VLAN30)                        | 192.168.3.1/24    | 192.168.3.254   |
+| 99-esx4     | Eth1 → 99-lf3 Eth5    Po1   | Vlan40 (SVI для VLAN40)                        | 192.168.4.1/24    | 192.168.4.254   |
+| 99-esx4     | Eth1 → 99-lf4 Eth5    Po1   | Vlan40 (SVI для VLAN40)                        | 192.168.4.1/24    | 192.168.4.254  |
+
+</details>
+
 
 ---
 
