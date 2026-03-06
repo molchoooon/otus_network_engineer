@@ -2772,3 +2772,51 @@ traceroute to 192.168.4.1 (192.168.4.1), 30 hops max, 60 byte packets
 99-esx1#
 
 ```
+
+Также любопытный момент, если посмотреть vxlan vni , то увидим, что каждый vni под vrf все равно мапится с вланом, но на каждом свиче это разные вланы, то есть единого L2 все же нет.
+
+```
+99-lf3#sh vxlan vni
+VNI to VLAN Mapping for Vxlan1
+VNI         VLAN       Source       Interface           802.1Q Tag
+----------- ---------- ------------ ------------------- ----------
+10030       30         static       Ethernet3           30
+                                    Port-Channel3       30
+                                    Vxlan1              30
+10040       40         static       Ethernet4           40
+                                    Port-Channel4       40
+                                    Vxlan1              40
+
+VNI to dynamic VLAN Mapping for Vxlan1
+VNI         VLAN       VRF              Source
+----------- ---------- ---------------- ------------
+10001       4094       VRF_CORE_1       evpn
+10002       4093       VRF_CORE_2       evpn
+10003       4091       VRF_CORE_3       evpn
+10004       4092       VRF_CORE_4       evpn
+
+99-blf1# sh vxlan vni
+VNI to VLAN Mapping for Vxlan1
+VNI         VLAN       Source       Interface           802.1Q Tag
+----------- ---------- ------------ ------------------- ----------
+10010       10         static       Ethernet3           10
+                                    Ethernet5           10
+                                    Port-Channel3       10
+                                    Port-Channel5       10
+                                    Vxlan1              10
+10020       20         static       Ethernet3           20
+                                    Ethernet5           20
+                                    Port-Channel3       20
+                                    Port-Channel5       20
+                                    Vxlan1              20
+
+VNI to dynamic VLAN Mapping for Vxlan1
+VNI         VLAN       VRF              Source
+----------- ---------- ---------------- ------------
+10001       4079       VRF_CORE_1       evpn
+10002       4084       VRF_CORE_2       evpn
+10003       4081       VRF_CORE_3       evpn
+10004       4080       VRF_CORE_4       evpn
+
+```
+
