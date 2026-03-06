@@ -2666,6 +2666,41 @@ AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Li
 99-blf1#
 
 ```
+Проверим маршруты на фаерволле
+```
+HRP_M<99-fw01>disp ip routing-table
+Route Flags: R - relay, D - download to fib
+------------------------------------------------------------------------------
+Routing Tables: Public
+         Destinations : 23       Routes : 23
+
+Destination/Mask    Proto   Pre  Cost      Flags NextHop         Interface
+
+        0.0.0.0/0   Static  60   0           D   0.0.0.0         NULL0
+      10.99.1.0/31  Direct  0    0           D   10.99.1.0       GigabitEthernet1/0/0.10
+      10.99.1.0/32  Direct  0    0           D   127.0.0.1       GigabitEthernet1/0/0.10
+      10.99.1.2/31  EBGP    255  0           D   10.99.1.1       GigabitEthernet1/0/0.10
+      10.99.2.0/31  Direct  0    0           D   10.99.2.0       GigabitEthernet1/0/0.20
+      10.99.2.0/32  Direct  0    0           D   127.0.0.1       GigabitEthernet1/0/0.20
+      10.99.2.2/31  EBGP    255  0           D   10.99.2.1       GigabitEthernet1/0/0.20
+      10.99.3.0/31  Direct  0    0           D   10.99.3.0       GigabitEthernet1/0/0.30
+      10.99.3.0/32  Direct  0    0           D   127.0.0.1       GigabitEthernet1/0/0.30
+      10.99.3.2/31  EBGP    255  0           D   10.99.3.1       GigabitEthernet1/0/0.30
+      10.99.4.0/31  Direct  0    0           D   10.99.4.0       GigabitEthernet1/0/0.40
+      10.99.4.0/32  Direct  0    0           D   127.0.0.1       GigabitEthernet1/0/0.40
+      10.99.4.2/31  EBGP    255  0           D   10.99.4.1       GigabitEthernet1/0/0.40
+   10.99.241.12/31  Direct  0    0           D   10.99.241.12    Eth-Trunk23
+   10.99.241.12/32  Direct  0    0           D   127.0.0.1       Eth-Trunk23
+      127.0.0.0/8   Direct  0    0           D   127.0.0.1       InLoopBack0
+      127.0.0.1/32  Direct  0    0           D   127.0.0.1       InLoopBack0
+    192.168.1.0/24  EBGP    255  0           D   10.99.1.1       GigabitEthernet1/0/0.10
+    192.168.2.0/24  EBGP    255  0           D   10.99.2.1       GigabitEthernet1/0/0.20
+    192.168.3.0/24  EBGP    255  0           D   10.99.3.1       GigabitEthernet1/0/0.30
+    192.168.3.1/32  EBGP    255  0           D   10.99.3.1       GigabitEthernet1/0/0.30
+    192.168.4.0/24  EBGP    255  0           D   10.99.4.1       GigabitEthernet1/0/0.40
+    192.168.4.1/32  EBGP    255  0           D   10.99.4.1       GigabitEthernet1/0/0.40
+
+```
 
 
 ## 2. Проверка межсерверной связности между VM 
