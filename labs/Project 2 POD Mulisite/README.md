@@ -135,38 +135,45 @@
 
 ### Underlay сеть (Fabric Links - Point-to-Point /31 из сети 10.199.241.0/24)
 
-| Device Name | IP Address/Маска | Port      | Remote Device | Remote Port | Description         |
-|-------------|------------------|-----------|---------------|-------------|---------------------|
-| 99-blf1     | 10.99.241.0/31   | Ethernet1 | 99-sp1        | Ethernet1   | to Spine1           |
-| 99-blf1     | 10.99.242.0/31   | Ethernet2 | 99-sp2        | Ethernet1   | to Spine2           |
-| 99-blf1     | -                | Ethernet3 | 99-esx1       | Ethernet1   | Server Trunk        |
-| 99-blf1     | -                | Ethernet4 | 99-fw01       | GI1/0/0     | to fw01             |
-| 99-blf1     | -                | Ethernet5 | 99-esx2       | Ethernet2   | Server Trunk        |
-| 99-blf2     | 10.99.241.2/31   | Ethernet1 | 99-sp1        | Ethernet2   | to Spine1           |
-| 99-blf2     | 10.99.242.2/31   | Ethernet2 | 99-sp2        | Ethernet2   | to Spine2           |
-| 99-blf2     | -                | Ethernet3 | 99-esx1       | Ethernet1   | Server Trunk        |
-| 99-blf2     | -                | Ethernet5 | 99-esx2       | Ethernet2   | Server Trunk        |
-| 99-blf2     | -                | Ethernet4 | 99-fw02       | GI1/0/1     | to fw02             |
-| 99-lf3      | 10.99.241.4/31   | Ethernet1 | 99-sp1        | Ethernet3   | to Spine1           |
-| 99-lf3      | 10.99.242.4/31   | Ethernet2 | 99-sp2        | Ethernet3   | to Spine2           |
-| 99-lf3      | -                | Ethernet3 | 99-esx3       | Ethernet1   | Server Trunk        |
-| 99-lf3      | -                | Ethernet4 | 99-esx4       | Ethernet2   | Server Trunk        |
-| 99-lf4      | 10.99.241.6/31   | Ethernet1 | 99-sp1        | Ethernet4   | to Spine1           |
-| 99-lf4      | 10.99.242.6/31   | Ethernet2 | 99-sp2        | Ethernet4   | to Spine2           |
-| 99-lf4      | -                | Ethernet3 | 99-esx3       | Ethernet2   | Server Trunk        |
-| 99-lf4      | -                | Ethernet4 | 99-esx4       | Ethernet1   | Server Trunk        |
-| 99-fw01     | 10.99.242.12/31  |Eth-Trunk23| 99-fw02       |Eth-Trunk23  | HRP LINK            |
+| Device Name | IP Address/Маска | Port        | Remote Device | Remote Port | Description         |
+|-------------|------------------|-------------|---------------|-------------|---------------------|
+| 199-lf01    | 10.199.241.0/31  | Ethernet1/1 | 199-sp01      | Ethernet1/1 | to Spine1           |
+| 199-lf01    | 10.199.242.0/31  | Ethernet1/2 | 199-sp02      | Ethernet1/2 | to Spine2           |
+| 199-lf01    | -                | Ethernet1/3 | 199-lf02      | Ethernet1/3 | 199-lf02 Po34       |
+| 199-lf01    | -                | Ethernet1/4 | 199-lf02      | Ethernet1/4 | 199-lf02 Po34       |
+| 199-lf01    | -                | Ethernet1/5 | 199-esx1      | Ethernet1   | 199-esx1 et1        |
+| 199-lf01    | -                | Ethernet1/6 | 199-esx2      | Ethernet2   | 199-esx2 et1        | 
+| 199-lf02    | 10.199.241.2/31  | Ethernet1/1 | 199-sp01      | Ethernet1/1 | to Spine1           |
+| 199-lf02    | 10.199.242.2/31  | Ethernet1/2 | 199-sp02      | Ethernet1/2 | to Spine2           |
+| 199-lf02    | -                | Ethernet1/3 | 199-lf01      | Ethernet1/3 | 199-lf01 Po34       |
+| 199-lf02    | -                | Ethernet1/4 | 199-lf01      | Ethernet1/4 | 199-lf01 Po34       |
+| 199-lf02    | -                | Ethernet1/5 | 199-esx1      | Ethernet1   | 199-esx1 et1        |
+| 199-lf02    | -                | Ethernet1/6 | 199-esx2      | Ethernet2   | 199-esx2 et1        | 
+| 199-bgw1    | 10.99.241.2/31   | Ethernet1/6 | 199-sp1       | Ethernet2   | to Spine1           |
+| 199-lf02     | 10.99.242.2/31   | Ethernet2 | 99-sp2        | Ethernet2   | to Spine2           |
+| 199-lf02     | -                | Ethernet3 | 99-esx1       | Ethernet1   | Server Trunk        |
+| 199-lf02     | -                | Ethernet5 | 99-esx2       | Ethernet2   | Server Trunk        |
+| 199-lf2     | -                | Ethernet4 | 99-fw02       | GI1/0/1     | to fw02             |
+| 199-bgw1      | 10.99.241.4/31   | Ethernet1 | 99-sp1        | Ethernet3   | to Spine1           |
+| 199-bgw2      | 10.99.242.4/31   | Ethernet2 | 99-sp2        | Ethernet3   | to Spine2           |
+| 199-lf3      | -                | Ethernet3 | 99-esx3       | Ethernet1   | Server Trunk        |
+| 199-lf3      | -                | Ethernet4 | 99-esx4       | Ethernet2   | Server Trunk        |
+| 199-lf4      | 10.99.241.6/31   | Ethernet1 | 99-sp1        | Ethernet4   | to Spine1           |
+| 199-lf4      | 10.99.242.6/31   | Ethernet2 | 99-sp2        | Ethernet4   | to Spine2           |
+| 199-lf4      | -                | Ethernet3 | 99-esx3       | Ethernet2   | Server Trunk        |
+| 199-lf4      | -                | Ethernet4 | 99-esx4       | Ethernet1   | Server Trunk        |
+| 199-fw01     | 10.99.242.12/31  |Eth-Trunk23| 99-fw02       |Eth-Trunk23  | HRP LINK            |
 
 ### Loopback адреса для BGP Underlay (Сеть 10.99.243.0/24)
 
 | Device Name | Loopback0 Address | Description          |
 |-------------|-------------------|----------------------|
-| 99-blf1     | 10.99.243.1/32    | BGP Router-ID        |
-| 99-blf2     | 10.99.243.2/32    | BGP Router-ID        |
-| 99-lf3      | 10.99.243.3/32    | BGP Router-ID        |
-| 99-lf4      | 10.99.243.4/32    | BGP Router-ID        |
-| 99-sp1      | 10.99.243.11/32   | BGP Router-ID        |
-| 99-sp2      | 10.99.243.22/32   | BGP Router-ID        |
+| 199-lf1     | 10.199.243.1/32    | BGP Router-ID        |
+| 199-lf2     | 10.199.243.2/32    | BGP Router-ID        |
+| 199-bgw1    | 10.199.243.3/32    | BGP Router-ID        |
+| 199-bgw2    | 10.199.243.4/32    | BGP Router-ID        |
+| 199-sp1     | 10.199.243.11/32   | BGP Router-ID        |
+| 199-sp2     | 10.199.243.22/32   | BGP Router-ID        |
 
 
 
@@ -183,15 +190,13 @@
 
 | Device Name | Loopback0 Address | Description   |
 |-------------|-------------------|---------------|
-| 99-blf1     | 10.99.245.1/32    | Mgmt ip       |
-| 99-blf2     | 10.99.245.2/32    | Mgmt ip       |
-| 99-lf3      | 10.99.245.3/32    | Mgmt ip       |
-| 99-lf4      | 10.99.245.4/32    | Mgmt ip       |
-| 99-sp1      | 10.99.245.11/32   | Mgmt ip       |
-| 99-sp2      | 10.99.245.22/32   | Mgmt ip       |
-| 99-fw01     | 10.99.245.252/32  | Mgmt ip       |
-| 99-fw02     | 10.99.245.253/32  | Mgmt ip       |
-| 99-fw       | 10.99.245.254/32  | VIP GW        |
+| 199-lf1     | 10.199.245.1/32   | Mgmt ip       |
+| 199-lf2     | 10.199.245.2/32   | Mgmt ip       |
+| 199-bgw2    | 10.199.245.3/32   | Mgmt ip       |
+| 199-bgw2    | 10.199.245.4/32   | Mgmt ip       |
+| 199-sp1     | 10.199.245.11/32  | Mgmt ip       |
+| 199-sp2     | 10.199.245.22/32  | Mgmt ip       |
+
 
 
 ### P2P адреса для VRF 
