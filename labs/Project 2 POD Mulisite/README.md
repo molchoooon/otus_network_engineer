@@ -207,6 +207,7 @@
 |------|-------------------|--------|-------------------|------------------------|
 | 13   | VLAN13   | 19913  | 192.168.13.254/24  | 199-lf01, 199-lf02 VRF_CORE1 |
 | 14   | VLAN14   | 19914  | 192.168.14.254/24  | 199-lf01, 199-lf02 VRF_CORE2 |
+| 99   | VLAN99   | 19999  | -                  | 199-lf01, 199-lf02      |
 
 
 ### Конфигурация "ESXi" устройств 
@@ -2578,6 +2579,220 @@ ip route vrf VRF_CORE_2 0.0.0.0/0 192.168.2.254
 ```
 </details>
 </details>
+
+### POD199
+<details>
+<summary>POD-199 </summary>
+
+ ### 199-lf01 (Leaf 01)
+
+<details>
+<summary>199-lf01 </summary>
+
+configure terminal
+hostname 199-lf01
+
+feature udld
+feature lacp
+feature vpc
+feature lldp
+feature bfd
+feature interface-vlan
+feature vn-segment-vlan-based
+feature ospf
+feature bgp
+feature nv overlay
+nv overlay evpn
+feature ngoam
+
+clock timezone MSK 3 0
+
+vlan 13
+  name VLAN13
+  vn-segment 19913
+vlan 14
+  name VLAN14
+  vn-segment 19914
+vlan 99
+  name VLAN99
+  vn-segment 19999
+
+vrf context VRF_13
+  vni 19913
+  rd auto
+  address-family ipv4 unicast
+    route-target import 65199:19913
+    route-target import 65199:19913 evpn
+    route-target export 65199:19913
+    route-target export 65199:19913 evpn
+
+vrf context VRF_14
+  vni 19914
+  rd auto
+  address-family ipv4 unicast
+    route-target import 65199:19914
+    route-target import 65199:19914 evpn
+    route-target export 65199:19914
+    route-target export 65199:19914 evpn
+
+interface mgmt0
+  description OOB_Management
+  vrf member management
+  ip address 10.199.245.1/24
+
+vpc domain 1
+  role priority 200
+  peer-keepalive destination 10.199.245.2 source 10.199.245.1 vrf management
+  peer-gateway
+  peer-switch
+  auto-recovery reload-delay 600
+  ip arp synchronize
+  ipv6 nd synchronize
+
+udld aggressive
+
+interface port-channel34
+  description 199-lf02_Po34
+  switchport
+  switchport mode trunk
+  switchport trunk allowed vlan all
+  spanning-tree port type network
+  vpc peer-link
+  no shutdown
+
+
+interface Ethernet1/3
+  description to 199-lf02 Eth1/3 (Po34)
+  switchport mode trunk
+  switchport trunk allowed vlan all
+  channel-group 34 mode active
+  udld aggressive
+  no shutdown
+
+interface Ethernet1/4
+  description to 199-lf02 Eth1/4 (Po34)
+  switchport mode trunk
+  switchport trunk allowed vlan all
+  channel-group 34 mode active
+  udld aggressive
+  no shutdown
+
+  interface Ethernet1/1
+  description to 199-sp01 Eth1/1
+  no switchport
+  ip address 10.199.241.0/31
+  no shutdown
+  mtu 9216
+
+interface Ethernet1/2
+  description to 199-sp02 Eth1/1
+  no switchport
+  ip address 10.199.242.0/31
+  no shutdown
+  mtu 9216
+ 
+</details>
+
+### 199-lf02 (Leaf 02)
+
+<details>
+<summary>199-lf02 </summary>
+
+configure terminal
+hostname 199-lf02
+
+feature udld
+feature lacp
+feature vpc
+feature lldp
+feature bfd
+feature interface-vlan
+feature vn-segment-vlan-based
+feature ospf
+feature bgp
+feature nv overlay
+nv overlay evpn
+feature ngoam
+
+clock timezone MSK 3 0
+
+vlan 13
+  name VLAN13
+  vn-segment 19913
+vlan 14
+  name VLAN14
+  vn-segment 19914
+vlan 99
+  name VLAN99
+  vn-segment 19999
+
+vrf context VRF_13
+  vni 19913
+  rd auto
+  address-family ipv4 unicast
+    route-target import 65199:19913
+    route-target import 65199:19913 evpn
+    route-target export 65199:19913
+    route-target export 65199:19913 evpn
+
+vrf context VRF_14
+  vni 19914
+  rd auto
+  address-family ipv4 unicast
+    route-target import 65199:19914
+    route-target import 65199:19914 evpn
+    route-target export 65199:19914
+    route-target export 65199:19914 evpn
+
+interface mgmt0
+  description OOB_Management
+  vrf member management
+  ip address 10.199.245.2/24
+
+vpc domain 1
+  role priority 300
+  peer-keepalive destination 10.199.245.1 source 10.199.245.2 vrf management
+  peer-gateway
+  peer-switch
+  auto-recovery reload-delay 600
+  ip arp synchronize
+  ipv6 nd synchronize
+
+udld aggressive
+
+interface port-channel34
+  description 199-lf01_Po34
+  switchport
+  switchport mode trunk
+  switchport trunk allowed vlan all
+  spanning-tree port type network
+  vpc peer-link
+  no shutdown
+
+ interface Ethernet1/3
+  description to 199-lf01 Eth1/3 (Po34)
+  switchport mode trunk
+  switchport trunk allowed vlan all
+  channel-group 34 mode active
+  udld aggressive
+  no shutdown
+
+interface Ethernet1/4
+  description to 199-lf01 Eth1/4 (Po34)
+  switchport mode trunk
+  switchport trunk allowed vlan all
+  channel-group 34 mode active
+  udld aggressive
+  no shutdown 
+
+</details>
+
+</details>
+
+
+
+
+
 
 ---
 
