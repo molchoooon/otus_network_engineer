@@ -2618,6 +2618,9 @@ vlan 99
   name VLAN99
   vn-segment 19999
 
+fabric forwarding anycast-gateway-mac 0000.0199.0001
+
+
 vrf context VRF_13
   vni 19913
   rd auto
@@ -2691,6 +2694,88 @@ interface Ethernet1/2
   ip address 10.199.242.0/31
   no shutdown
   mtu 9216
+
+interface port-channel5
+  description to 199-esx1_Po1
+  switchport
+  switchport mode trunk
+  switchport trunk allowed vlan 13,14,99
+  spanning-tree port type edge trunk
+  mtu 9216
+  vpc 5
+  no shutdown
+
+interface Ethernet1/5
+  description to 199-esx1_Eth1
+  switchport mode trunk
+  switchport trunk allowed vlan 13,14,99
+  channel-group 5 mode active
+  mtu 9216
+  udld aggressive
+  no shutdown
+
+ interface port-channel6
+  description to 199-esx2_Po1
+  switchport
+  switchport mode trunk
+  switchport trunk allowed vlan 13,14,99
+  spanning-tree port type edge trunk
+  mtu 9216
+  vpc 6
+  no shutdown 
+
+interface Ethernet1/6
+  description to 199-esx2_Eth1
+  switchport mode trunk
+  switchport trunk allowed vlan 13,14,99
+  mtu 9216
+  channel-group 6 mode active
+  no shutdown 
+
+interface Vlan13
+  description VLAN13
+  mtu 9216
+  no shutdown
+  vrf member VRF_13
+  no ip redirects
+  ip address 192.168.13.254/24
+  no ipv6 redirects
+  fabric forwarding mode anycast-gateway
+
+interface Vlan14
+  description VLAN14
+  mtu 9216
+  no shutdown
+  vrf member VRF_14
+  no ip redirects
+  ip address 192.168.14.254/24
+  no ipv6 redirects
+  fabric forwarding mode anycast-gateway
+
+interface Vlan99
+  description VLAN99
+  mtu 9216
+  no shutdown
+
+interface loopback0
+  description BGP_Router-ID
+  ip address 10.199.243.1/32
+
+interface loopback1
+  description VTEP_Source
+  ip address 10.199.244.1/32
+  ip address 10.199.244.12/32 secondary
+
+interface nve1
+  no shutdown
+  description VXLAN_Tunnel
+  host-reachability protocol bgp
+  advertise virtual-rmac
+  source-interface loopback1
+  member vni 19999
+    ingress-replication protocol bgp
+
+
  ``` 
  
 </details>
@@ -2728,6 +2813,9 @@ vlan 14
 vlan 99
   name VLAN99
   vn-segment 19999
+
+fabric forwarding anycast-gateway-mac 0000.0199.0001
+
 
 vrf context VRF_13
   vni 19913
@@ -2787,6 +2875,99 @@ interface Ethernet1/4
   channel-group 34 mode active
   udld aggressive
   no shutdown 
+
+interface Ethernet1/1
+  description to 199-sp01 Eth1/2
+  no switchport
+  ip address 10.199.241.2/31
+  no shutdown
+
+interface Ethernet1/2
+  description to 199-sp02 Eth1/2
+  no switchport
+  ip address 10.199.242.2/31
+  no shutdown
+
+interface port-channel5
+  description to 199-esx1_Po1
+  switchport
+  switchport mode trunk
+  switchport trunk allowed vlan 13,14,99
+  spanning-tree port type edge trunk
+  mtu 9216
+  vpc 5
+  no shutdown
+
+interface Ethernet1/5
+  description to 199-esx1_Eth1
+  switchport mode trunk
+  switchport trunk allowed vlan 13,14,99
+  channel-group 5 mode active
+  mtu 9216
+  udld aggressive
+  no shutdown
+
+ interface port-channel6
+  description to 199-esx2_Po1
+  switchport
+  switchport mode trunk
+  switchport trunk allowed vlan 13,14,99
+  spanning-tree port type edge trunk
+  mtu 9216
+  vpc 6
+  no shutdown 
+
+ interface Ethernet1/6
+  description to 199-esx2_Eth2
+  switchport mode trunk
+  switchport trunk allowed vlan 13,14,99
+  mtu 9216
+  channel-group 6 mode active
+  no shutdown 
+
+interface Vlan13
+  description VLAN13
+  mtu 9216
+  no shutdown
+  vrf member VRF_13
+  no ip redirects
+  ip address 192.168.13.254/24
+  no ipv6 redirects
+  fabric forwarding mode anycast-gateway
+
+interface Vlan14
+  description VLAN14
+  mtu 9216
+  no shutdown
+  vrf member VRF_14
+  no ip redirects
+  ip address 192.168.14.254/24
+  no ipv6 redirects
+  fabric forwarding mode anycast-gateway
+
+interface Vlan99
+  description VLAN99
+  mtu 9216
+  no shutdown
+
+interface loopback0
+  description BGP_Router-ID
+  ip address 10.199.243.2/32
+
+interface loopback1
+  description VTEP_Source
+  ip address 10.199.244.2/32
+  ip address 10.199.244.12/32 secondary
+
+
+interface nve1
+  no shutdown
+  description VXLAN_Tunnel
+  host-reachability protocol bgp
+  advertise virtual-rmac
+  source-interface loopback1
+  member vni 19999
+    ingress-replication protocol bgp
 
 ```
 </details>
