@@ -2589,6 +2589,7 @@ ip route vrf VRF_CORE_2 0.0.0.0/0 192.168.2.254
 <details>
 <summary>199-lf01 </summary>
 
+```bash
 configure terminal
 hostname 199-lf01
 
@@ -2690,6 +2691,7 @@ interface Ethernet1/2
   ip address 10.199.242.0/31
   no shutdown
   mtu 9216
+ ``` 
  
 </details>
 
@@ -2698,6 +2700,7 @@ interface Ethernet1/2
 <details>
 <summary>199-lf02 </summary>
 
+```bash
 configure terminal
 hostname 199-lf02
 
@@ -2785,6 +2788,7 @@ interface Ethernet1/4
   udld aggressive
   no shutdown 
 
+```
 </details>
 
 </details>
