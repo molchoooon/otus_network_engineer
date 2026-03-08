@@ -2642,7 +2642,7 @@ interface mgmt0
 
 vpc domain 1
   role priority 200
-  peer-keepalive destination 10.199.245.2 source 10.199.245.1 vrf management
+  peer-keepalive destination 10.199.245.2 source 10.199.245.1 vrf management interval 1000 timeout 6 hold-timeout 3
   peer-gateway
   peer-switch
   auto-recovery reload-delay 600
@@ -2751,7 +2751,7 @@ interface mgmt0
 
 vpc domain 1
   role priority 300
-  peer-keepalive destination 10.199.245.1 source 10.199.245.2 vrf management
+  peer-keepalive destination 10.199.245.1 source 10.199.245.2 vrf management interval 1000 timeout 6 hold-timeout 3 
   peer-gateway
   peer-switch
   auto-recovery reload-delay 600
