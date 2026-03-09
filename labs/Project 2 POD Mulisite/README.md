@@ -2776,6 +2776,47 @@ interface nve1
     ingress-replication protocol bgp
 
 
+router bgp 65199
+  router-id 10.199.243.1
+  timers bgp 3 9
+  bestpath as-path multipath-relax
+  log-neighbor-changes
+  address-family ipv4 unicast
+    network 10.199.243.1/32
+    network 10.199.244.1/32
+    network 10.199.244.12/32
+    maximum-paths 8
+  address-family l2vpn evpn
+    maximum-paths 8
+    advertise-pip
+  template peer SPINE-OVERLAY
+    remote-as 65199
+    update-source loopback0
+    timers 6 18
+    address-family l2vpn evpn
+      send-community
+      send-community extended
+  template peer SPINE-UNDERLAY
+    remote-as 65199
+    timers 6 18
+    address-family ipv4 unicast
+      soft-reconfiguration inbound always
+  neighbor 10.199.241.1
+    inherit peer SPINE-UNDERLAY
+  neighbor 10.199.242.1
+    inherit peer SPINE-UNDERLAY
+  neighbor 10.199.243.11
+    inherit peer SPINE-OVERLAY
+  neighbor 10.199.243.22
+    inherit peer SPINE-OVERLAY
+  vrf VRF_13
+    log-neighbor-changes
+    address-family ipv4 unicast
+         maximum-paths 4
+  vrf VRF_14
+    log-neighbor-changes
+    address-family ipv4 unicast
+      maximum-paths 4
  ``` 
  
 </details>
@@ -2968,6 +3009,48 @@ interface nve1
   source-interface loopback1
   member vni 19999
     ingress-replication protocol bgp
+
+router bgp 65199
+  router-id 10.199.243.2
+  timers bgp 3 9
+  bestpath as-path multipath-relax
+  log-neighbor-changes
+  address-family ipv4 unicast
+    network 10.199.243.2/32
+    network 10.199.244.2/32
+    network 10.199.244.12/32
+    maximum-paths 8
+  address-family l2vpn evpn
+    maximum-paths 8
+    advertise-pip
+  template peer SPINE-OVERLAY
+    remote-as 65199
+    update-source loopback0
+    timers 6 18
+    address-family l2vpn evpn
+      send-community
+      send-community extended
+  template peer SPINE-UNDERLAY
+    remote-as 65199
+    timers 6 18
+    address-family ipv4 unicast
+      soft-reconfiguration inbound always
+  neighbor 10.199.241.3
+    inherit peer SPINE-UNDERLAY
+  neighbor 10.199.242.3
+    inherit peer SPINE-UNDERLAY
+  neighbor 10.199.243.11
+    inherit peer SPINE-OVERLAY
+  neighbor 10.199.243.22
+    inherit peer SPINE-OVERLAY
+  vrf VRF_13
+    log-neighbor-changes
+    address-family ipv4 unicast
+      maximum-paths 4
+  vrf VRF_14
+    log-neighbor-changes
+    address-family ipv4 unicast
+      maximum-paths 4
 
 ```
 </details>
