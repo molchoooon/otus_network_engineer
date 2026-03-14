@@ -2390,6 +2390,297 @@ router bgp 65199
 ```
 </details>
 
+### 199-sp01 (Spine 01)
+
+<details>
+<summary>199-sp01 </summary>
+
+```bash
+configure terminal
+hostname 199-sp01
+
+feature udld
+feature lldp
+feature bfd
+feature ospf
+feature bgp
+feature nv overlay
+nv overlay evpn
+feature ngoam
+
+clock timezone MSK 3 0
+
+interface mgmt0
+  description OOB_Management
+  vrf member management
+  ip address 10.199.245.11/24
+
+interface Ethernet1/1
+  description to 199-lf01 Eth1/1
+  no switchport
+  ip address 10.199.241.1/31
+  mtu 9216
+  no shutdown
+
+interface Ethernet1/2
+  description to 199-lf02 Eth1/1
+  no switchport
+  ip address 10.199.241.3/31
+  mtu 9216
+  no shutdown
+
+interface Ethernet1/3
+  description to 199-bgw1 Eth1
+  no switchport
+  ip address 10.199.241.5/31
+  mtu 9216
+  no shutdown
+
+interface Ethernet1/4
+  description to 199-bgw2 Eth1
+  no switchport
+  ip address 10.199.241.7/31
+  mtu 9216
+  no shutdown
+
+ interface loopback0
+  description BGP_Router-ID
+  ip address 10.199.243.11/32
+
+
+ router bgp 65199
+  router-id 10.199.243.11
+  timers bgp 3 9
+  bestpath as-path multipath-relax
+  log-neighbor-changes
+
+ address-family ipv4 unicast
+    network 10.199.243.11/32
+    maximum-paths 8
+
+ address-family l2vpn evpn
+    maximum-paths 8
+
+  template peer UNDERLAY
+    remote-as 65199
+    timers 6 18
+    address-family ipv4 unicast
+      route-reflector-client
+      next-hop-self
+      soft-reconfiguration inbound always 
+      
+ template peer OVERLAY
+    remote-as 65199
+    timers 6 18
+    address-family l2vpn evpn
+      route-reflector-client
+      send-community
+      send-community extended 
+
+ neighbor 10.199.241.0
+    description 199-lf01-underlay
+    inherit peer UNDERLAY
+  
+  neighbor 10.199.241.2
+    description 199-lf02-underlay
+    inherit peer UNDERLAY
+  
+  neighbor 10.199.241.4
+    description 199-bgw1-underlay
+    inherit peer UNDERLAY
+  
+  neighbor 10.199.241.6
+    description 199-bgw2-underlay
+    inherit peer UNDERLAY
+
+
+  neighbor 10.199.243.1
+    description 199-lf01-overlay
+    remote-as 65199
+    update-source loopback0
+    timers 6 18
+    address-family l2vpn evpn
+      route-reflector-client
+      send-community
+      send-community extended
+  
+  neighbor 10.199.243.2
+    description 199-lf02-overlay
+    remote-as 65199
+    update-source loopback0
+    timers 6 18
+    address-family l2vpn evpn
+      route-reflector-client
+      send-community
+      send-community extended
+  
+  neighbor 10.199.243.3
+    description 199-bgw1-overlay
+    remote-as 65199
+    update-source loopback0
+    timers 6 18
+    address-family l2vpn evpn
+      route-reflector-client
+      send-community
+      send-community extended
+  
+  neighbor 10.199.243.4
+    description 199-bgw2-overlay
+    remote-as 65199
+    update-source loopback0
+    timers 6 18
+    address-family l2vpn evpn
+      route-reflector-client
+      send-community
+      send-community extended                  
+```
+
+</details>
+
+### 199-sp02 (Spine 02)
+
+<details>
+<summary>199-sp02 </summary>
+
+```bash 
+configure terminal
+hostname 199-sp02
+
+feature udld
+feature lldp
+feature bfd
+feature ospf
+feature bgp
+feature nv overlay
+nv overlay evpn
+feature ngoam
+
+clock timezone MSK 3 0
+
+interface mgmt0
+  description OOB_Management
+  vrf member management
+  ip address 10.199.245.22/24
+
+interface Ethernet1/1
+  description to 199-lf01 Eth1/2
+  no switchport
+  ip address 10.199.242.1/31
+  mtu 9216
+  no shutdown
+
+interface Ethernet1/2
+  description to 199-lf02 Eth1/2
+  no switchport
+  ip address 10.199.242.3/31
+  mtu 9216
+  no shutdown
+
+interface Ethernet1/3
+  description to 199-bgw1 Eth2
+  no switchport
+  ip address 10.199.242.5/31
+  mtu 9216
+  no shutdown
+
+interface Ethernet1/4
+  description to 199-bgw2 Eth2
+  no switchport
+  ip address 10.199.242.7/31
+  mtu 9216
+  no shutdown
+
+interface loopback0
+  description BGP_Router-ID
+  ip address 10.199.243.22/32
+
+
+router bgp 65199
+  router-id 10.199.243.22
+  timers bgp 3 9
+  bestpath as-path multipath-relax
+  log-neighbor-changes
+
+  address-family ipv4 unicast
+    network 10.199.243.22/32
+    maximum-paths 8
+  address-family l2vpn evpn
+    maximum-paths 8
+
+ template peer UNDERLAY
+    remote-as 65199
+    timers 6 18
+    address-family ipv4 unicast
+      route-reflector-client
+      next-hop-self
+      soft-reconfiguration inbound always
+
+  template peer OVERLAY
+    remote-as 65199
+    timers 6 18
+    address-family l2vpn evpn
+      route-reflector-client
+      send-community
+      send-community extended
+
+  neighbor 10.199.242.0
+    description 199-lf01-underlay
+    inherit peer UNDERLAY
+  
+  neighbor 10.199.242.2
+    description 199-lf02-underlay
+    inherit peer UNDERLAY
+  
+  neighbor 10.199.242.4
+    description 199-bgw1-underlay
+    inherit peer UNDERLAY
+  
+  neighbor 10.199.242.6
+    description 199-bgw2-underlay
+    inherit peer UNDERLAY
+
+   neighbor 10.199.243.1
+    description 199-lf01-overlay
+    remote-as 65199
+    update-source loopback0
+    timers 6 18
+    address-family l2vpn evpn
+      route-reflector-client
+      send-community
+      send-community extended
+  
+  neighbor 10.199.243.2
+    description 199-lf02-overlay
+    remote-as 65199
+    update-source loopback0
+    timers 6 18
+    address-family l2vpn evpn
+      route-reflector-client
+      send-community
+      send-community extended
+  
+  neighbor 10.199.243.3
+    description 199-bgw1-overlay
+    remote-as 65199
+    update-source loopback0
+    timers 6 18
+    address-family l2vpn evpn
+      route-reflector-client
+      send-community
+      send-community extended
+  
+  neighbor 10.199.243.4
+    description 199-bgw2-overlay
+    remote-as 65199
+    update-source loopback0
+    timers 6 18
+    address-family l2vpn evpn
+      route-reflector-client
+      send-community
+      send-community extended          
+```
+</details>
+
 </details>
 
 
@@ -2402,36 +2693,54 @@ router bgp 65199
 ## Проверка IP связности
  ## 1. Проверка маршрутной информации
  ```
- 99-blf1#sh ip route vrf VRF_CORE_1
-B E      0.0.0.0/0 [200/0] via 10.99.1.0, Ethernet4.10
+ 199-sp02(config)# sh bgp ipv4 unicast summary
+BGP summary information for VRF default, address family IPv4 Unicast
+BGP router identifier 10.199.243.22, local AS number 65199
+BGP table version is 27, IPv4 Unicast config peers 4, capable peers 2
+6 network entries and 7 paths using 1640 bytes of memory
+BGP attribute entries [2/368], BGP AS path entries [0/0]
+BGP community entries [0/0], BGP clusterlist entries [0/0]
+6 received paths for inbound soft reconfiguration
+6 identical, 0 modified, 0 filtered received paths using 0 bytes
 
- C        10.99.1.0/31 is directly connected, Ethernet4.10
- B I      10.99.1.2/31 [200/0] via VTEP 10.99.244.2 VNI 10001 router-mac 50:00:00:cb:38:c2 local-interface Vxlan1
- C        192.168.1.0/24 is directly connected, Vlan10
+Neighbor        V    AS MsgRcvd MsgSent   TblVer  InQ OutQ Up/Down  State/PfxRcd
+10.199.242.0    4 65199      69      69       27    0    0 00:06:28 3
+10.199.242.2    4 65199      70      71       27    0    0 00:02:33 3
+10.199.242.4    4 65199       0       0        0    0    0 00:06:35 Idle
+10.199.242.6    4 65199       0       0        0    0    0 00:06:35 Idle
+199-sp02(config)#
+199-sp02(config)# sh bgp l2vpn evpn summary
+BGP summary information for VRF default, address family L2VPN EVPN
+BGP router identifier 10.199.243.22, local AS number 65199
+BGP table version is 9, L2VPN EVPN config peers 4, capable peers 2
+2 network entries and 2 paths using 504 bytes of memory
+BGP attribute entries [1/184], BGP AS path entries [0/0]
+BGP community entries [0/0], BGP clusterlist entries [0/0]
 
-99-blf1#sh ip route vrf VRF_CORE_2
+Neighbor        V    AS MsgRcvd MsgSent   TblVer  InQ OutQ Up/Down  State/PfxRcd
+10.199.243.1    4 65199      64      64        9    0    0 00:05:58 1
+10.199.243.2    4 65199      64      65        9    0    0 00:02:35 1
+10.199.243.3    4 65199       0       0        0    0    0 00:06:06 Idle
+10.199.243.4    4 65199       0       0        0    0    0 00:06:06 Idle
+199-sp02(config)#
+199-sp02(config)# ^C
+199-sp02(config)# sh bgp l2vpn evpn
+BGP routing table information for VRF default, address family L2VPN EVPN
+BGP table version is 9, Local Router ID is 10.199.243.22
+Status: s-suppressed, x-deleted, S-stale, d-dampened, h-history, *-valid, >-best
+Path type: i-internal, e-external, c-confed, l-local, a-aggregate, r-redist, I-i
+njected
+Origin codes: i - IGP, e - EGP, ? - incomplete, | - multipath, & - backup, 2 - b
+est2
 
-VRF: VRF_CORE_2
-Gateway of last resort:
- B E      0.0.0.0/0 [200/0] via 10.99.2.0, Ethernet4.20
+   Network            Next Hop            Metric     LocPrf     Weight Path
+Route Distinguisher: 10.199.243.1:32866
+*>i[3]:[0]:[32]:[10.199.244.12]/88
+                      10.199.244.12                     100          0 i
 
- C        10.99.2.0/31 is directly connected, Ethernet4.20
- B I      10.99.2.2/31 [200/0] via VTEP 10.99.244.2 VNI 10002 router-mac 50:00:00:cb:38:c2 local-interface Vxlan1
- C        192.168.2.0/24 is directly connected, Vlan20
-
-
-99-blf1#sh ip route vrf VRF_CORE_3
-
-VRF: VRF_CORE_3
-Gateway of last resort:
- B E      0.0.0.0/0 [200/0] via 10.99.3.0, Ethernet4.30
-
- C        10.99.3.0/31 is directly connected, Ethernet4.30
- B I      10.99.3.2/31 [200/0] via VTEP 10.99.244.2 VNI 10003 router-mac 50:00:00:cb:38:c2 local-interface Vxlan1
- B I      192.168.3.1/32 [200/0] via VTEP 10.99.244.3 VNI 10003 router-mac 50:00:00:f6:ad:37 local-interface Vxlan1
-                                 via VTEP 10.99.244.4 VNI 10003 router-mac 50:00:00:af:d3:f6 local-interface Vxlan1
- B I      192.168.3.0/24 [200/0] via VTEP 10.99.244.3 VNI 10003 router-mac 50:00:00:f6:ad:37 local-interface Vxlan1
-                                 via VTEP 10.99.244.4 VNI 10003 router-mac 50:00:00:af:d3:f6 local-interface Vxlan1
+Route Distinguisher: 10.199.243.2:32866
+*>i[3]:[0]:[32]:[10.199.244.12]/88
+                      10.199.244.12                     100          0 i
 
 
 ```
