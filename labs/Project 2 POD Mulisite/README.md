@@ -136,7 +136,7 @@
 <details>
 <summary>IP Plan </summary>
 
-### Underlay сеть (Fabric Links - Point-to-Point /31 из сети 10.199.241.0/24)
+### Underlay сеть (Fabric Links - Point-to-Point /31 из сети 10.199.241.0/24 10.199.242.0/24)
 
 | Device Name | IP Address/Маска | Port            | Remote Device | Remote Port | Description         |
 |-------------|------------------|-----------------|---------------|-------------|---------------------|
@@ -166,27 +166,27 @@
 | 199-sp02    | 10.199.242.7/31  | Ethernet1/4     | 199-bgw2      | Ethernet2   | to bgw2 Et2         |
 
 
-### Loopback адреса для BGP Underlay POD 199 (Сеть 10.99.243.0/24)
+### Loopback 0 адреса для BGP  POD 199 (Сеть 10.199.243.0/24)
 
 | Device Name | Loopback0 Address | Description          |
 |-------------|-------------------|----------------------|
-| 199-lf1     | 10.199.243.1/32    | BGP Router-ID        |
-| 199-lf2     | 10.199.243.2/32    | BGP Router-ID        |
-| 199-bgw1    | 10.199.243.3/32    | BGP Router-ID        |
-| 199-bgw2    | 10.199.243.4/32    | BGP Router-ID        |
-| 199-sp1     | 10.199.243.11/32   | BGP Router-ID        |
-| 199-sp2     | 10.199.243.22/32   | BGP Router-ID        |
+| 199-lf1     | 10.199.243.1/32   | BGP Router-ID        |
+| 199-lf2     | 10.199.243.2/32   | BGP Router-ID        |
+| 199-bgw1    | 10.199.243.33/32  | BGP Router-ID        |
+| 199-bgw2    | 10.199.243.44/32  | BGP Router-ID        |
+| 199-sp1     | 10.199.243.11/32  | BGP Router-ID        |
+| 199-sp2     | 10.199.243.22/32  | BGP Router-ID        |
 
 
 
-### Loopback адреса для VXLAN NVE POD 199 (Сеть 10.99.244.0/24)
+### Loopback адреса для VXLAN NVE POD 199 (Сеть 10.199.244.0/24)
 
 | Device Name | Loopback1 Address | Description          |
 |-------------|-------------------|----------------------|
 | 199-lf1     | 10.199.244.1/32   | VTEP Source          |
 | 199-lf2     | 10.199.244.1/32   | VTEP Source          |
-| 199-bgw1    | 10.199.244.3/32   | VTEP Source          |
-| 199-bgw2    | 10.199.244.4/32   | VTEP Source          |
+| 199-bgw1    | 10.199.244.33/32   | VTEP Source          |
+| 199-bgw2    | 10.199.244.34/32   | VTEP Source          |
 
 ### MGMT адреса (Сеть 10.199.245.0/24)
 
@@ -230,6 +230,38 @@
 </details>
 
 
+
+
+## DCI
+<details>
+<summary>IP Plan DCI </summary>
+### Underlay сеть (DCI Links - Point-to-Point /31 из сети 10.88.241.0/24 10.88.242.0/24)
+
+| Device Name | IP Address/Маска | Port            | Remote Device | Remote Port | Description         |
+|-------------|------------------|-----------------|---------------|-------------|---------------------|
+| 199-bgw1    | 10.88.241.0/31   | Ethernet3       | 99-blf01      | Ethernet6   | DCI 99-blf01        |
+| 199-bgw2    | 10.88.242.0/31   | Ethernet3       | 99-blf02      | Ethernet6   | DCI 99-blf02        |
+
+### Loopback 0 адреса для BGP  DCI (Сеть 10.88.243.0/24)
+
+| Device Name | Loopback0 Address | Description          |
+|-------------|-------------------|----------------------|
+| 99-blf01    | 10.88.243.1/32    | BGP Router-ID        |
+| 99-blf02    | 10.88.243.2/32    | BGP Router-ID        |
+| 199-bgw1    | 10.88.243.33/32   | BGP Router-ID        |
+| 199-bgw2    | 10.88.243.44/32   | BGP Router-ID        |
+
+### Loopback адреса для VXLAN NVE DCI (Сеть 10.88.244.0/24)
+
+| Device Name | Loopback1 Address | Description          |
+|-------------|-------------------|----------------------|
+| 99-blf01    | 10.88.244.1/32    | VTEP Source          |
+| 99-blf02    | 10.88.244.2/32    | VTEP Source          |
+| 99-blf01/02 | 10.88.244.12/32   | VTEP Source secondary|
+| 199-bgw1    | 10.88.244.33/32   | VTEP Source          |
+| 199-bgw2    | 10.88.244.34/32   | VTEP Source          |
+
+</details>
 ---
 
 ## Конфигурация 
@@ -2468,7 +2500,13 @@ interface Ethernet1/4
       route-reflector-client
       next-hop-self
       soft-reconfiguration inbound always 
-      
+
+  template peer UNDERLAY-EBGP
+    remote-as 65999
+    timers 6 18
+    address-family ipv4 unicast
+      soft-reconfiguration inbound always 
+
  template peer OVERLAY
     remote-as 65199
     timers 6 18
@@ -2476,6 +2514,14 @@ interface Ethernet1/4
       route-reflector-client
       send-community
       send-community extended 
+
+template peer OVERLAY-EBGP
+    remote-as 65999
+    timers 6 18
+    address-family l2vpn evpn
+      send-community
+      send-community extended
+
 
  neighbor 10.199.241.0
     description 199-lf01-underlay
@@ -2487,52 +2533,28 @@ interface Ethernet1/4
   
   neighbor 10.199.241.4
     description 199-bgw1-underlay
-    inherit peer UNDERLAY
+    inherit peer UNDERLAY-EBGP
   
   neighbor 10.199.241.6
     description 199-bgw2-underlay
-    inherit peer UNDERLAY
+    inherit peer UNDERLAY-EBGP
 
 
-  neighbor 10.199.243.1
+   neighbor 10.199.243.1
     description 199-lf01-overlay
-    remote-as 65199
-    update-source loopback0
-    timers 6 18
-    address-family l2vpn evpn
-      route-reflector-client
-      send-community
-      send-community extended
+    inherit peer OVERLAY
   
-  neighbor 10.199.243.2
+   neighbor 10.199.243.2
     description 199-lf02-overlay
-    remote-as 65199
-    update-source loopback0
-    timers 6 18
-    address-family l2vpn evpn
-      route-reflector-client
-      send-community
-      send-community extended
+    inherit peer OVERLAY
   
-  neighbor 10.199.243.3
+   neighbor 10.199.243.33
     description 199-bgw1-overlay
-    remote-as 65199
-    update-source loopback0
-    timers 6 18
-    address-family l2vpn evpn
-      route-reflector-client
-      send-community
-      send-community extended
+    inherit peer OVERLAY-EBGP
   
-  neighbor 10.199.243.4
+  neighbor 10.199.243.44
     description 199-bgw2-overlay
-    remote-as 65199
-    update-source loopback0
-    timers 6 18
-    address-family l2vpn evpn
-      route-reflector-client
-      send-community
-      send-community extended                  
+    inherit peer OVERLAY-EBGP                  
 ```
 
 </details>
@@ -2615,11 +2637,25 @@ router bgp 65199
       next-hop-self
       soft-reconfiguration inbound always
 
+    template peer UNDERLAY-EBGP
+    remote-as 65999
+    timers 6 18
+    address-family ipv4 unicast
+      soft-reconfiguration inbound always   
+
   template peer OVERLAY
     remote-as 65199
     timers 6 18
     address-family l2vpn evpn
       route-reflector-client
+      send-community
+      send-community extended
+   
+   template peer OVERLAY-EBGP
+    remote-as 65999
+    update-source loopback0
+    timers 6 18
+    address-family l2vpn evpn
       send-community
       send-community extended
 
@@ -2633,52 +2669,250 @@ router bgp 65199
   
   neighbor 10.199.242.4
     description 199-bgw1-underlay
-    inherit peer UNDERLAY
+    inherit peer UNDERLAY-EBGP
   
   neighbor 10.199.242.6
     description 199-bgw2-underlay
-    inherit peer UNDERLAY
-
+    inherit peer UNDERLAY-EBGP
+   
    neighbor 10.199.243.1
     description 199-lf01-overlay
-    remote-as 65199
-    update-source loopback0
-    timers 6 18
-    address-family l2vpn evpn
-      route-reflector-client
-      send-community
-      send-community extended
-  
-  neighbor 10.199.243.2
+    inherit peer OVERLAY
+
+   neighbor 10.199.243.2
     description 199-lf02-overlay
-    remote-as 65199
-    update-source loopback0
-    timers 6 18
-    address-family l2vpn evpn
-      route-reflector-client
-      send-community
-      send-community extended
-  
-  neighbor 10.199.243.3
+    inherit peer OVERLAY
+
+  neighbor 10.199.243.33
     description 199-bgw1-overlay
-    remote-as 65199
-    update-source loopback0
-    timers 6 18
-    address-family l2vpn evpn
-      route-reflector-client
-      send-community
-      send-community extended
+    inherit peer OVERLAY-EBGP
   
-  neighbor 10.199.243.4
+  neighbor 10.199.243.44
     description 199-bgw2-overlay
-    remote-as 65199
-    update-source loopback0
-    timers 6 18
-    address-family l2vpn evpn
-      route-reflector-client
-      send-community
-      send-community extended          
+    inherit peer OVERLAY-EBGP            
 ```
+</details>
+
+### 199-bgw01 (BGW 01)
+
+<details>
+<summary>199-bgw01 </summary>
+
+```bash
+hostname 199-bgw1
+spanning-tree mode mstp
+
+vlan 99
+   name VLAN99
+
+vrf instance VRF_13
+vrf instance VRF_14 
+vrf instance MGMT
+interface Ethernet1
+   description to-199-sp01-Eth1/3
+   mtu 9214
+   no switchport
+   ip address 10.199.241.4/31
+
+interface Ethernet2
+   description to-199-sp02-Eth1/3
+   mtu 9214
+   no switchport
+   ip address 10.199.242.4/31   
+
+interface Loopback0
+   description BGP-Router-ID
+   ip address 10.199.243.33/32 
+
+interface Loopback1
+   description VTEP-Source
+   ip address 10.199.244.33/32
+
+interface Management1
+   description OOB_Management
+   vrf MGMT
+   ip address 10.199.245.33/24
+
+interface Vxlan1
+   description VXLAN-Tunnel-Endpoint
+   vxlan source-interface Loopback1
+   vxlan udp-port 4789
+   ! Stretched VLAN 99 
+   vxlan vlan 99 vni 19999
+   ! L3VNI для VRF_13 и VRF_14 
+   vxlan vrf VRF_13 vni 19913
+   vxlan vrf VRF_14 vni 19914   
+
+
+ip routing
+service routing protocols model multi-agent
+ip routing vrf MGMT
+ip routing vrf VRF_13
+ip routing vrf VRF_14
+
+router bgp 65999
+   router-id 10.199.243.33
+   no bgp default ipv4-unicast
+   timers bgp 3 9
+   maximum-paths 10 ecmp 10
+
+ neighbor SPINE-EVPN peer group
+   neighbor SPINE-EVPN remote-as 65199
+   neighbor SPINE-EVPN update-source Loopback0
+   neighbor SPINE-EVPN ebgp-multihop 2
+   neighbor SPINE-EVPN send-community extended
+   neighbor SPINE-EVPN maximum-routes 12000 
+
+neighbor SPINE-UNDERLAY peer group
+   neighbor SPINE-UNDERLAY remote-as 65199
+   neighbor SPINE-UNDERLAY timers 3 9
+   neighbor SPINE-UNDERLAY send-community
+
+neighbor 10.199.241.5 peer group SPINE-UNDERLAY
+neighbor 10.199.242.5 peer group SPINE-UNDERLAY
+
+neighbor 10.199.243.11 peer group SPINE-EVPN
+neighbor 10.199.243.22 peer group SPINE-EVPN
+
+vlan 99
+      rd auto
+      route-target both 65199:19999
+      redistribute learned
+
+address-family evpn
+     neighbor SPINE-EVPN activate  
+
+address-family ipv4
+      neighbor SPINE-UNDERLAY activate
+      network 10.199.243.33/32
+      network 10.199.244.33/32
+
+vrf VRF_13
+      rd 65199:19913
+      route-target import evpn 65199:19913
+      route-target export evpn 65199:19913
+      !
+      address-family ipv4
+         redistribute connected
+
+ vrf VRF_14
+      rd 65199:19914
+      route-target import evpn 65199:19914
+      route-target export evpn 65199:19914
+      !
+      address-family ipv4
+         redistribute connected
+ ```
+
+</details>
+
+### 199-bgw02 (BGW 02)
+
+<details>
+<summary>199-bgw02 </summary>
+
+```bash
+hostname 199-bgw2
+spanning-tree mode mstp
+vlan 99
+   name VLAN99
+vrf instance VRF_13
+vrf instance VRF_14
+vrf instance MGMT
+
+interface Ethernet1
+   description to-199-sp01-Eth1/4
+   mtu 9214
+   no switchport
+   ip address 10.199.241.6/31
+
+interface Ethernet2
+   description to-199-sp02-Eth1/4
+   mtu 9214
+   no switchport
+   ip address 10.199.242.6/31
+
+interface Loopback0
+   description BGP-Router-ID
+   ip address 10.199.243.44/32
+
+interface Loopback1
+   description VTEP-Source
+   ip address 10.199.244.44/32
+
+interface Management1
+   description OOB_Management
+   vrf MGMT
+   ip address 10.199.245.4/24
+
+interface Vxlan1
+   description VXLAN-Tunnel-Endpoint
+   vxlan source-interface Loopback1
+   vxlan udp-port 4789
+   vxlan vlan 99 vni 19999
+   vxlan vrf VRF_13 vni 19913
+   vxlan vrf VRF_14 vni 19914
+
+ip routing
+ip routing vrf MGMT
+ip routing vrf VRF_13
+ip routing vrf VRF_14
+service routing protocols model multi-agent
+
+router bgp 65999
+   router-id 10.199.243.44
+   no bgp default ipv4-unicast
+   timers bgp 3 9
+   maximum-paths 10 ecmp 10
+   
+   neighbor SPINE-EVPN peer group
+   neighbor SPINE-EVPN remote-as 65199
+   neighbor SPINE-EVPN update-source Loopback0
+   neighbor SPINE-EVPN ebgp-multihop 2
+   neighbor SPINE-EVPN send-community extended
+   neighbor SPINE-EVPN maximum-routes 12000
+   
+   neighbor SPINE-UNDERLAY peer group
+   neighbor SPINE-UNDERLAY remote-as 65199
+   neighbor SPINE-UNDERLAY timers 3 9
+   neighbor SPINE-UNDERLAY send-community
+   
+   neighbor 10.199.241.7 peer group SPINE-UNDERLAY
+   neighbor 10.199.242.7 peer group SPINE-UNDERLAY
+   neighbor 10.199.243.11 peer group SPINE-EVPN
+   neighbor 10.199.243.22 peer group SPINE-EVPN
+   
+   vlan 99
+      rd auto
+      route-target both 65199:19999
+      redistribute learned
+
+ address-family evpn
+      neighbor SPINE-EVPN activate
+   
+ address-family ipv4
+      neighbor SPINE-UNDERLAY activate
+      network 10.199.243.44/32
+      network 10.199.244.44/32
+   
+   vrf VRF_13
+      rd 65199:19913
+      route-target import evpn 65199:19913
+      route-target export evpn 65199:19913
+      !
+      address-family ipv4
+         redistribute connected
+   
+   vrf VRF_14
+      rd 65199:19914
+      route-target import evpn 65199:19914
+      route-target export evpn 65199:19914
+      !
+      address-family ipv4
+         redistribute connected
+
+```
+
 </details>
 
 </details>
