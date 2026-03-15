@@ -2020,6 +2020,8 @@ vpc domain 1
   ip arp synchronize
   ipv6 nd synchronize
 
+route-map PERMIT_VRF permit 10
+
 udld aggressive
 
 interface port-channel34
@@ -2139,6 +2141,8 @@ interface nve1
   host-reachability protocol bgp
   advertise virtual-rmac
   source-interface loopback1
+  member vni 19913 associate-vrf
+  member vni 19914 associate-vrf
   member vni 19999
     ingress-replication protocol bgp
 
@@ -2179,10 +2183,12 @@ router bgp 65199
   vrf VRF_13
     log-neighbor-changes
     address-family ipv4 unicast
+    redistribute direct route-map PERMIT_VRF
          maximum-paths 4
   vrf VRF_14
     log-neighbor-changes
     address-family ipv4 unicast
+    redistribute direct route-map PERMIT_VRF
       maximum-paths 4
  ``` 
  
@@ -2211,6 +2217,7 @@ nv overlay evpn
 feature ngoam
 
 clock timezone MSK 3 0
+
 
 vlan 13
   name VLAN13
@@ -2257,6 +2264,7 @@ vpc domain 1
   ip arp synchronize
   ipv6 nd synchronize
 
+route-map PERMIT_VRF permit 10
 udld aggressive
 
 interface port-channel34
@@ -2374,6 +2382,8 @@ interface nve1
   host-reachability protocol bgp
   advertise virtual-rmac
   source-interface loopback1
+  member vni 19913 associate-vrf
+  member vni 19914 associate-vrf
   member vni 19999
     ingress-replication protocol bgp
 
@@ -2413,10 +2423,12 @@ router bgp 65199
   vrf VRF_13
     log-neighbor-changes
     address-family ipv4 unicast
+    redistribute direct route-map PERMIT_VRF
       maximum-paths 4
   vrf VRF_14
     log-neighbor-changes
     address-family ipv4 unicast
+    redistribute direct route-map PERMIT_VRF
       maximum-paths 4
 
 ```
@@ -2441,6 +2453,9 @@ nv overlay evpn
 feature ngoam
 
 clock timezone MSK 3 0
+
+route-map NEXTHOP permit 10
+   set ip next-hop unchanged
 
 interface mgmt0
   description OOB_Management
@@ -2505,12 +2520,14 @@ interface Ethernet1/4
     remote-as 65999
     timers 6 18
     address-family ipv4 unicast
+    next-hop-self
       soft-reconfiguration inbound always 
 
  template peer OVERLAY
     remote-as 65199
     timers 6 18
     address-family l2vpn evpn
+    route-map NEXTHOP out
       route-reflector-client
       send-community
       send-community extended 
@@ -2520,6 +2537,7 @@ template peer OVERLAY-EBGP
     timers 6 18
     ebgp-multihop 10
     address-family l2vpn evpn
+    route-map NEXTHOP out
       send-community
       send-community extended
 
@@ -2580,6 +2598,9 @@ feature ngoam
 
 clock timezone MSK 3 0
 
+route-map NEXTHOP permit 10
+   set ip next-hop unchanged
+
 interface mgmt0
   description OOB_Management
   vrf member management
@@ -2628,7 +2649,7 @@ router bgp 65199
     network 10.199.243.22/32
     maximum-paths 8
   address-family l2vpn evpn
-    maximum-paths 8
+      maximum-paths 8
 
  template peer UNDERLAY
     remote-as 65199
@@ -2642,12 +2663,14 @@ router bgp 65199
     remote-as 65999
     timers 6 18
     address-family ipv4 unicast
+    next-hop-self
       soft-reconfiguration inbound always   
 
   template peer OVERLAY
     remote-as 65199
     timers 6 18
     address-family l2vpn evpn
+    route-map NEXTHOP out
       route-reflector-client
       send-community
       send-community extended
@@ -2657,6 +2680,7 @@ router bgp 65199
     update-source loopback0
     timers 6 18
     address-family l2vpn evpn
+    route-map NEXTHOP out
       send-community
       send-community extended
 
@@ -2776,10 +2800,12 @@ neighbor 10.199.243.11 peer group SPINE-EVPN
 neighbor 10.199.243.22 peer group SPINE-EVPN
 
 vlan 99
-      rd evpn domain all 10.199.243.33
+      vlan 99
+      rd evpn domain all 65881:99
       route-target both 65199:19999
       route-target import export evpn domain remote 65099:99
       redistribute learned
+
 
 address-family evpn
      neighbor SPINE-EVPN activate  
@@ -2790,15 +2816,16 @@ address-family ipv4
       network 10.199.244.33/32
 
 vrf VRF_13
-      rd 65199:19913
+      rd 65881:19913
       route-target import evpn 65199:19913
       route-target export evpn 65199:19913
       !
       address-family ipv4
          redistribute connected
 
- vrf VRF_14
-      rd 65199:19914
+   
+   vrf VRF_14
+      rd 65881:19914
       route-target import evpn 65199:19914
       route-target export evpn 65199:19914
       !
@@ -2885,10 +2912,11 @@ router bgp 65999
    neighbor 10.199.243.22 peer group SPINE-EVPN
    
    vlan 99
-      rd evpn domain all 10.199.243.44
+      rd evpn domain all 65882:99
       route-target both 65199:19999
       route-target import export evpn domain remote 65099:99
       redistribute learned
+
 
  address-family evpn
       neighbor SPINE-EVPN activate
@@ -2898,23 +2926,23 @@ router bgp 65999
       network 10.199.243.44/32
       network 10.199.244.44/32
    
-   vrf VRF_13
-      rd 65199:19913
+    vrf VRF_13
+      rd 65882:19913
       route-target import evpn 65199:19913
       route-target export evpn 65199:19913
       !
       address-family ipv4
          redistribute connected
+
    
    vrf VRF_14
-      rd 65088:19914
+      rd 65882:19914
       route-target import evpn 65199:19914
       route-target export evpn 65199:19914
-      route-target import evpn 65088:19914
-      route-target export evpn 65088:19914
       !
       address-family ipv4
          redistribute connected
+
 
 ```
 
