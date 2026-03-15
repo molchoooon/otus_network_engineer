@@ -2518,6 +2518,7 @@ interface Ethernet1/4
 template peer OVERLAY-EBGP
     remote-as 65999
     timers 6 18
+    ebgp-multihop 10
     address-family l2vpn evpn
       send-community
       send-community extended
@@ -2775,8 +2776,9 @@ neighbor 10.199.243.11 peer group SPINE-EVPN
 neighbor 10.199.243.22 peer group SPINE-EVPN
 
 vlan 99
-      rd auto
+      rd evpn domain all 10.199.243.33
       route-target both 65199:19999
+      route-target import export evpn domain remote 65099:99
       redistribute learned
 
 address-family evpn
@@ -2883,8 +2885,9 @@ router bgp 65999
    neighbor 10.199.243.22 peer group SPINE-EVPN
    
    vlan 99
-      rd auto
+      rd evpn domain all 10.199.243.44
       route-target both 65199:19999
+      route-target import export evpn domain remote 65099:99
       redistribute learned
 
  address-family evpn
@@ -2904,9 +2907,11 @@ router bgp 65999
          redistribute connected
    
    vrf VRF_14
-      rd 65199:19914
+      rd 65088:19914
       route-target import evpn 65199:19914
       route-target export evpn 65199:19914
+      route-target import evpn 65088:19914
+      route-target export evpn 65088:19914
       !
       address-family ipv4
          redistribute connected
