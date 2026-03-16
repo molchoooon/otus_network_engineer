@@ -751,9 +751,11 @@ interface Ethernet5
    channel-group 5 mode active
 !
 interface Ethernet6
-   description 99-fw02 G1/0/0
+   description to-199-bgw1-Eth3
    mtu 9100
    no switchport
+   ip address 10.88.241.1/31
+   no shutdown
 !
 interface Ethernet7
    description Po78 lf2
@@ -770,6 +772,14 @@ interface Loopback0
 interface Loopback1
    description VXLAN-Tunnel-Endpoint
    ip address 10.99.244.1/32
+
+interface Loopback10
+   description BGP-Router-ID-DCI
+   ip address 10.88.243.1/32
+
+interface Loopback11
+   description VTEP-Source-DCI
+   ip address 10.88.244.1/32
 !
 interface Management1
    description MGMT
@@ -798,6 +808,7 @@ interface Vxlan1
    vxlan udp-port 4789
    vxlan vlan 10 vni 10010
    vxlan vlan 20 vni 10020
+   vxlan vlan 99 vni 19999
    vxlan vrf VRF_CORE_1 vni 10001
    vxlan vrf VRF_CORE_2 vni 10002
    vxlan vrf VRF_CORE_3 vni 10003
@@ -831,6 +842,21 @@ ip prefix-list VRF_CORES
 !
 ip prefix-list VRF_CORE_4
    seq 10 permit 192.168.4.0/24
+
+ip prefix-list PL_BLF_TO_SPINE seq 5 permit 10.99.243.1/32
+ip prefix-list PL_BLF_TO_SPINE seq 10 permit 10.99.244.1/32
+ip prefix-list PL_BLF_TO_SPINE seq 15 permit 10.88.243.1/32
+ip prefix-list PL_BLF_TO_SPINE seq 20 permit 10.88.244.1/32
+
+ip prefix-list PL_BLF_TO_DCI seq 5 permit 10.88.243.1/32
+ip prefix-list PL_BLF_TO_DCI seq 10 permit 10.88.244.1/32
+
+route-map RM_BLF_TO_SPINE permit 10
+   match ip address prefix-list PL_BLF_TO_SPINE
+
+route-map RM_BLF_TO_DCI permit 10
+   match ip address prefix-list PL_BLF_TO_DCI
+
 !
 mlag configuration
    domain-id 12
@@ -876,6 +902,19 @@ router bgp 65099
    neighbor 10.99.246.2 remote-as 65099
    neighbor 10.99.246.2 next-hop-self
    neighbor 10.99.246.2 send-community
+
+   neighbor DCI-EVPN peer group
+   neighbor DCI-EVPN remote-as 65999
+   neighbor DCI-EVPN update-source Loopback10
+   neighbor DCI-EVPN ebgp-multihop 2
+   neighbor DCI-EVPN send-community extended
+   neighbor DCI-UNDERLAY peer group
+   neighbor DCI-UNDERLAY remote-as 65999
+   neighbor DCI-UNDERLAY timers 3 9
+   neighbor DCI-UNDERLAY send-community
+   neighbor 10.88.241.0 peer group DCI-UNDERLAY
+   neighbor 10.88.243.33 peer group DCI-EVPN
+
    !
    vlan 10
       rd auto
@@ -884,13 +923,18 @@ router bgp 65099
    !
    address-family evpn
       neighbor SPINE-EVPN activate
+      neighbor DCI-EVPN activate
    !
    address-family ipv4
-      no neighbor SPINE-EVPN activate
-      neighbor SPINE-UNDERLAY activate
-      neighbor 10.99.246.2 activate
+      neighbor SPINE-UNDERLAY route-map RM_BLF_TO_SPINE out
+      neighbor DCI-UNDERLAY activate
+      neighbor DCI-UNDERLAY route-map RM_BLF_TO_DCI out
       network 10.99.243.1/32
       network 10.99.244.1/32
+      network 10.88.243.1/32
+      network 10.88.244.1/32
+      neighbor 10.99.246.2 activate
+      
    !
    vrf VRF_CORE_1
       rd 65099:1011
@@ -1084,9 +1128,11 @@ interface Ethernet5
    channel-group 5 mode active
 !
 interface Ethernet6
-   description 99-fw02 G1/0/1
+   description to-199-bgw2-Eth3
    mtu 9100
    no switchport
+   ip address 10.88.242.1/31
+   no shutdown
 !
 interface Ethernet7
    description Po78 lf1
@@ -1103,7 +1149,15 @@ interface Loopback0
 interface Loopback1
    description VTEP-Source
    ip address 10.99.244.2/32
+
+interface Loopback10
+   description BGP-Router-ID-DCI
+   ip address 10.88.243.2/32
 !
+interface Loopback11
+   description VTEP-Source-DCI
+   ip address 10.88.244.2/32
+
 interface Management1
    description MGMT
    vrf MGMT
@@ -1131,6 +1185,7 @@ interface Vxlan1
    vxlan udp-port 4789
    vxlan vlan 10 vni 10010
    vxlan vlan 20 vni 10020
+   vxlan vlan 99 vni 19999
    vxlan vrf VRF_CORE_1 vni 10001
    vxlan vrf VRF_CORE_2 vni 10002
    vxlan vrf VRF_CORE_3 vni 10003
@@ -1149,6 +1204,20 @@ ip routing vrf VRF_CORE_4
 ip prefix-list DEFAULT
    seq 10 permit 0.0.0.0/0
 !
+
+ip prefix-list PL_BLF_TO_SPINE seq 5 permit 10.99.243.2/32
+ip prefix-list PL_BLF_TO_SPINE seq 10 permit 10.99.244.2/32
+ip prefix-list PL_BLF_TO_SPINE seq 15 permit 10.88.243.2/32
+ip prefix-list PL_BLF_TO_SPINE seq 20 permit 10.88.244.2/32
+
+ip prefix-list PL_BLF_TO_DCI seq 5 permit 10.88.243.2/32
+ip prefix-list PL_BLF_TO_DCI seq 10 permit 10.88.244.2/32
+route-map RM_BLF_TO_SPINE permit 10
+   match ip address prefix-list PL_BLF_TO_SPINE
+
+route-map RM_BLF_TO_DCI permit 10
+   match ip address prefix-list PL_BLF_TO_DCI
+
 mlag configuration
    domain-id 12
    local-interface Vlan4094
@@ -1184,6 +1253,19 @@ router bgp 65099
    neighbor 10.99.246.1 remote-as 65099
    neighbor 10.99.246.1 next-hop-self
    neighbor 10.99.246.1 send-community
+
+   neighbor DCI-EVPN peer group
+   neighbor DCI-EVPN remote-as 65999
+   neighbor DCI-EVPN update-source Loopback10
+   neighbor DCI-EVPN ebgp-multihop 2
+   neighbor DCI-EVPN send-community extended
+   neighbor DCI-UNDERLAY peer group
+   neighbor DCI-UNDERLAY remote-as 65999
+   neighbor DCI-UNDERLAY timers 3 9
+   neighbor DCI-UNDERLAY send-community
+   neighbor 10.88.242.0 peer group DCI-UNDERLAY
+   neighbor 10.88.243.44 peer group DCI-EVPN
+
    !
    vlan 10
       rd auto
@@ -1192,12 +1274,18 @@ router bgp 65099
    !
    address-family evpn
       neighbor SPINE-EVPN activate
+      neighbor DCI-EVPN activate
    !
    address-family ipv4
       neighbor SPINE-UNDERLAY activate
       neighbor 10.99.246.1 activate
       network 10.99.243.2/32
       network 10.99.244.2/32
+      neighbor SPINE-UNDERLAY route-map RM_BLF_TO_SPINE out
+      neighbor DCI-UNDERLAY activate
+      neighbor DCI-UNDERLAY route-map RM_BLF_TO_DCI out
+      network 10.88.243.2/32
+      network 10.88.244.2/32
    !
    vrf VRF_CORE_1
       rd 65099:1012
@@ -2856,6 +2944,8 @@ address-family evpn
      neighbor DCI-EVPN activate
 
 address-family ipv4
+     neighbor DCI-UNDERLAY activate
+     neighbor SPINE-UNDERLAY activate
       neighbor SPINE-UNDERLAY route-map RM_BGW_TO_SPINE out
       neighbor DCI-UNDERLAY route-map RM_BGW_TO_DCI out
       network 10.199.243.33/32
