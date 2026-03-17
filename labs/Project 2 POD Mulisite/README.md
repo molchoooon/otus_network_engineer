@@ -4,7 +4,7 @@
 1. Настроить 2 POD POD-99 POD-199 
 2. Настроить DCI связность
 3. Сделать один растянутый влан под требования заказчика для L2 связности ВМ Заказчика между подами ( Vlan 99)
-4. Настроить два  VRF в POD -199 - VRF13(изолированный), VRF14 - затерминировать VRF14 на фаерволлах POD99 для связности с VRF POD99
+4. Настроить два  VRF в POD -199 - VRF13(изолированный, растянутый на оба цода), VRF14 - затерминировать VRF14 на фаерволлах POD99 для связности с VRF 1 и 4 в  POD99
 
 
 ---
@@ -3702,251 +3702,188 @@ end
 
 ## Проверка IP связности
  ## 1. Проверка маршрутной информации
- ```
- 199-sp02(config)# sh bgp ipv4 unicast summary
-BGP summary information for VRF default, address family IPv4 Unicast
-BGP router identifier 10.199.243.22, local AS number 65199
-BGP table version is 27, IPv4 Unicast config peers 4, capable peers 2
-6 network entries and 7 paths using 1640 bytes of memory
-BGP attribute entries [2/368], BGP AS path entries [0/0]
-BGP community entries [0/0], BGP clusterlist entries [0/0]
-6 received paths for inbound soft reconfiguration
-6 identical, 0 modified, 0 filtered received paths using 0 bytes
 
-Neighbor        V    AS MsgRcvd MsgSent   TblVer  InQ OutQ Up/Down  State/PfxRcd
-10.199.242.0    4 65199      69      69       27    0    0 00:06:28 3
-10.199.242.2    4 65199      70      71       27    0    0 00:02:33 3
-10.199.242.4    4 65199       0       0        0    0    0 00:06:35 Idle
-10.199.242.6    4 65199       0       0        0    0    0 00:06:35 Idle
-199-sp02(config)#
-199-sp02(config)# sh bgp l2vpn evpn summary
+ Проверим что на спайнах цода 199 и на блф все нужные сессии bgp подняты
+ ```
+ 199-sp02# sh bgp l2vpn evpn summary
 BGP summary information for VRF default, address family L2VPN EVPN
 BGP router identifier 10.199.243.22, local AS number 65199
-BGP table version is 9, L2VPN EVPN config peers 4, capable peers 2
-2 network entries and 2 paths using 504 bytes of memory
-BGP attribute entries [1/184], BGP AS path entries [0/0]
+BGP table version is 18890, L2VPN EVPN config peers 4, capable peers 4
+22 network entries and 26 paths using 6056 bytes of memory
+BGP attribute entries [18/3312], BGP AS path entries [3/30]
 BGP community entries [0/0], BGP clusterlist entries [0/0]
 
 Neighbor        V    AS MsgRcvd MsgSent   TblVer  InQ OutQ Up/Down  State/PfxRcd
-10.199.243.1    4 65199      64      64        9    0    0 00:05:58 1
-10.199.243.2    4 65199      64      65        9    0    0 00:02:35 1
-10.199.243.3    4 65199       0       0        0    0    0 00:06:06 Idle
-10.199.243.4    4 65199       0       0        0    0    0 00:06:06 Idle
-199-sp02(config)#
-199-sp02(config)# ^C
-199-sp02(config)# sh bgp l2vpn evpn
-BGP routing table information for VRF default, address family L2VPN EVPN
-BGP table version is 9, Local Router ID is 10.199.243.22
-Status: s-suppressed, x-deleted, S-stale, d-dampened, h-history, *-valid, >-best
-Path type: i-internal, e-external, c-confed, l-local, a-aggregate, r-redist, I-i
-njected
-Origin codes: i - IGP, e - EGP, ? - incomplete, | - multipath, & - backup, 2 - b
-est2
+10.199.243.1    4 65199   27677   27378    18890    0    0 01:05:17 5
+10.199.243.2    4 65199   30537   30408    18890    0    0 00:36:40 3
+10.199.243.33   4 65999   61549   50262    18890    0    0 00:00:11 10
+10.199.243.44   4 65999   40012   33336    18890    0    0 00:00:18 8
+199-sp02#
+199-sp02# sh bgp ipv4 unicast summary
+BGP summary information for VRF default, address family IPv4 Unicast
+BGP router identifier 10.199.243.22, local AS number 65199
+BGP table version is 6813, IPv4 Unicast config peers 4, capable peers 4
+10 network entries and 11 paths using 2648 bytes of memory
+BGP attribute entries [3/552], BGP AS path entries [1/6]
+BGP community entries [0/0], BGP clusterlist entries [0/0]
+10 received paths for inbound soft reconfiguration
+10 identical, 0 modified, 0 filtered received paths using 0 bytes
 
-   Network            Next Hop            Metric     LocPrf     Weight Path
-Route Distinguisher: 10.199.243.1:32866
-*>i[3]:[0]:[32]:[10.199.244.12]/88
-                      10.199.244.12                     100          0 i
+Neighbor        V    AS MsgRcvd MsgSent   TblVer  InQ OutQ Up/Down  State/PfxRcd
+10.199.242.0    4 65199   27424   27629     6813    0    0 00:36:50 3
+10.199.242.2    4 65199   30442   30504     6813    0    0 00:36:50 3
+10.199.242.4    4 65999   60544   52147     6813    0    0 00:00:18 2
+10.199.242.6    4 65999   40759   34907     6813    0    0 00:00:27 2
 
-Route Distinguisher: 10.199.243.2:32866
-*>i[3]:[0]:[32]:[10.199.244.12]/88
-                      10.199.244.12                     100          0 i
-
-
-```
-Также глянем таблицы bgp для VRF_CORE_2 и 4
-
-```
-99-blf1#sh ip bgp vrf VRF_CORE_2
-BGP routing table information for VRF VRF_CORE_2
-Router identifier 10.99.2.1, local AS number 65099
-AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Link Local Nexthop
-
-          Network                Next Hop              Metric  AIGP       LocPref Weight  Path
- * >      0.0.0.0/0              10.99.2.0             0       -          100     0       65098 ?
- *  Ec    0.0.0.0/0              10.99.244.2           0       -          100     0       65098 ? Or-ID: 10.99.243.2 C-LST: 10.99.243.22
- *  ec    0.0.0.0/0              10.99.244.2           0       -          100     0       65098 ? Or-ID: 10.99.243.2 C-LST: 10.99.243.11
- *        0.0.0.0/0              10.99.2.3             20      -          100     0       65098 ?
- * >E     10.99.2.0/31           -                     -       -          -       0       i
- *  e     10.99.2.0/31           -                     -       -          -       0       i
- * >Ec    10.99.2.2/31           10.99.244.2           0       -          100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.11
- *  ec    10.99.2.2/31           10.99.244.2           0       -          100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.22
- * >      192.168.2.0/24         -                     -       -          -       0       i
- *        192.168.2.0/24         10.99.244.2           0       -          100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.22
- *        192.168.2.0/24         10.99.244.2           0       -          100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.11
-
-99-blf1#sh ip bgp vrf VRF_CORE_4
-BGP routing table information for VRF VRF_CORE_4
-Router identifier 10.99.4.1, local AS number 65099
-Route status codes: s - suppressed, * - valid, > - active, E - ECMP head, e - ECMP
-                    S - Stale, c - Contributing to ECMP, b - backup, L - labeled-unicast
-                    % - Pending BGP convergence
-Origin codes: i - IGP, e - EGP, ? - incomplete
-RPKI Origin Validation codes: V - valid, I - invalid, U - unknown
-AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Link Local Nexthop
-
-          Network                Next Hop              Metric  AIGP       LocPref Weight  Path
- * >      0.0.0.0/0              10.99.4.0             0       -          100     0       65098 ?
- *  Ec    0.0.0.0/0              10.99.244.2           0       -          100     0       65098 ? Or-ID: 10.99.243.2 C-LST: 10.99.243.11
- *  ec    0.0.0.0/0              10.99.244.2           0       -          100     0       65098 ? Or-ID: 10.99.243.2 C-LST: 10.99.243.22
- *        0.0.0.0/0              10.99.4.3             20      -          100     0       65098 ?
- * >E     10.99.4.0/31           -                     -       -          -       0       i
- *  e     10.99.4.0/31           -                     -       -          -       0       i
- * >Ec    10.99.4.2/31           10.99.244.2           0       -          100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.11
- *  ec    10.99.4.2/31           10.99.244.2           0       -          100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.22
- * >Ec    192.168.4.0/24         10.99.244.3           0       -          100     0       i Or-ID: 10.99.243.3 C-LST: 10.99.243.11
- *  ec    192.168.4.0/24         10.99.244.3           0       -          100     0       i Or-ID: 10.99.243.3 C-LST: 10.99.243.22
- *  ec    192.168.4.0/24         10.99.244.4           0       -          100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.11
- *  ec    192.168.4.0/24         10.99.244.4           0       -          100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.22
- * >Ec    192.168.4.1/32         10.99.244.4           0       -          100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.22
- *  ec    192.168.4.1/32         10.99.244.4           0       -          100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.11
- *  ec    192.168.4.1/32         10.99.244.3           0       -          100     0       i Or-ID: 10.99.243.3 C-LST: 10.99.243.11
- *  ec    192.168.4.1/32         10.99.244.3           0       -          100     0       i Or-ID: 10.99.243.3 C-LST: 10.99.243.22
-
-
-```
-Видим что летят маршруты от хостов в этих vrf через несколько путей и несколько дефолтов с приоритетным по MED  с fw01 с значением 0, по-скольку в данный момент Активна первая нода fw 
-
-Таблица Тайп-5 роутов evpn также содержит все нужное
-
-```
-99-blf1#sh bgp evpn route-type ip-prefix ipv4
-BGP routing table information for VRF default
+99-blf1#sh bgp summary
+BGP summary information for VRF default
 Router identifier 10.99.243.1, local AS number 65099
-Route status codes: * - valid, > - active, S - Stale, E - ECMP head, e - ECMP
-                    c - Contributing to ECMP, % - Pending BGP convergence
-Origin codes: i - IGP, e - EGP, ? - incomplete
-AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Link Local Nexthop
+Neighbor              AS Session State AFI/SAFI                AFI/SAFI State   NLRI Rcd   NLRI Acc
+------------ ----------- ------------- ----------------------- -------------- ---------- ----------
+10.88.241.0        65999 Established   IPv4 Unicast            Negotiated             11         11
+10.88.243.33       65999 Established   L2VPN EVPN              Negotiated              5          5
+10.99.241.1        65099 Established   IPv4 Unicast            Negotiated              9          9
+10.99.242.1        65099 Established   IPv4 Unicast            Negotiated              9          9
+10.99.243.11       65099 Established   L2VPN EVPN              Negotiated             49         49
+10.99.243.22       65099 Established   L2VPN EVPN              Negotiated             49         49
+10.99.246.2        65099 Established   IPv4 Unicast            Negotiated             16         16
 
-          Network                Next Hop              Metric  LocPref Weight  Path
- * >      RD: 65099:1011 ip-prefix 0.0.0.0/0
-                                 -                     0       100     0       65098 ?
- * >Ec    RD: 65099:1012 ip-prefix 0.0.0.0/0
-                                 10.99.244.2           0       100     0       65098 ? Or-ID: 10.99.243.2 C-LST: 10.99.243.11
- *  ec    RD: 65099:1012 ip-prefix 0.0.0.0/0
-                                 10.99.244.2           0       100     0       65098 ? Or-ID: 10.99.243.2 C-LST: 10.99.243.22
- * >      RD: 65099:1021 ip-prefix 0.0.0.0/0
-                                 -                     0       100     0       65098 ?
- * >Ec    RD: 65099:1022 ip-prefix 0.0.0.0/0
-                                 10.99.244.2           0       100     0       65098 ? Or-ID: 10.99.243.2 C-LST: 10.99.243.22
- *  ec    RD: 65099:1022 ip-prefix 0.0.0.0/0
-                                 10.99.244.2           0       100     0       65098 ? Or-ID: 10.99.243.2 C-LST: 10.99.243.11
- * >      RD: 65099:1031 ip-prefix 0.0.0.0/0
-                                 -                     0       100     0       65098 ?
- * >Ec    RD: 65099:1032 ip-prefix 0.0.0.0/0
-                                 10.99.244.2           0       100     0       65098 ? Or-ID: 10.99.243.2 C-LST: 10.99.243.11
- *  ec    RD: 65099:1032 ip-prefix 0.0.0.0/0
-                                 10.99.244.2           0       100     0       65098 ? Or-ID: 10.99.243.2 C-LST: 10.99.243.22
- * >      RD: 65099:1041 ip-prefix 0.0.0.0/0
-                                 -                     0       100     0       65098 ?
- * >Ec    RD: 65099:1042 ip-prefix 0.0.0.0/0
-                                 10.99.244.2           0       100     0       65098 ? Or-ID: 10.99.243.2 C-LST: 10.99.243.11
- *  ec    RD: 65099:1042 ip-prefix 0.0.0.0/0
-                                 10.99.244.2           0       100     0       65098 ? Or-ID: 10.99.243.2 C-LST: 10.99.243.22
- * >Ec    RD: 65099:1011 ip-prefix 10.99.1.0/31
-                                 -                     -       -       0       i
- *  ec    RD: 65099:1011 ip-prefix 10.99.1.0/31
-                                 -                     -       -       0       i
- * >Ec    RD: 65099:1012 ip-prefix 10.99.1.2/31
-                                 10.99.244.2           -       100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.11
- *  ec    RD: 65099:1012 ip-prefix 10.99.1.2/31
-                                 10.99.244.2           -       100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.22
- * >Ec    RD: 65099:1021 ip-prefix 10.99.2.0/31
-                                 -                     -       -       0       i
- *  ec    RD: 65099:1021 ip-prefix 10.99.2.0/31
-                                 -                     -       -       0       i
- * >Ec    RD: 65099:1022 ip-prefix 10.99.2.2/31
-                                 10.99.244.2           -       100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.11
- *  ec    RD: 65099:1022 ip-prefix 10.99.2.2/31
-                                 10.99.244.2           -       100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.22
- * >Ec    RD: 65099:1031 ip-prefix 10.99.3.0/31
-                                 -                     -       -       0       i
- *  ec    RD: 65099:1031 ip-prefix 10.99.3.0/31
-                                 -                     -       -       0       i
- * >Ec    RD: 65099:1032 ip-prefix 10.99.3.2/31
-                                 10.99.244.2           -       100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.11
- *  ec    RD: 65099:1032 ip-prefix 10.99.3.2/31
-                                 10.99.244.2           -       100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.22
- * >Ec    RD: 65099:1041 ip-prefix 10.99.4.0/31
-                                 -                     -       -       0       i
- *  ec    RD: 65099:1041 ip-prefix 10.99.4.0/31
-                                 -                     -       -       0       i
- * >Ec    RD: 65099:1042 ip-prefix 10.99.4.2/31
-                                 10.99.244.2           -       100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.11
- *  ec    RD: 65099:1042 ip-prefix 10.99.4.2/31
-                                 10.99.244.2           -       100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.22
- * >      RD: 65099:1011 ip-prefix 192.168.1.0/24
-                                 -                     -       -       0       i
- * >Ec    RD: 65099:1012 ip-prefix 192.168.1.0/24
-                                 10.99.244.2           -       100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.11
- *  ec    RD: 65099:1012 ip-prefix 192.168.1.0/24
-                                 10.99.244.2           -       100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.22
- * >      RD: 65099:1021 ip-prefix 192.168.2.0/24
-                                 -                     -       -       0       i
- * >Ec    RD: 65099:1022 ip-prefix 192.168.2.0/24
-                                 10.99.244.2           -       100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.11
- *  ec    RD: 65099:1022 ip-prefix 192.168.2.0/24
-                                 10.99.244.2           -       100     0       i Or-ID: 10.99.243.2 C-LST: 10.99.243.22
- * >Ec    RD: 65099:1033 ip-prefix 192.168.3.0/24
-                                 10.99.244.3           -       100     0       i Or-ID: 10.99.243.3 C-LST: 10.99.243.22
- *  ec    RD: 65099:1033 ip-prefix 192.168.3.0/24
-                                 10.99.244.3           -       100     0       i Or-ID: 10.99.243.3 C-LST: 10.99.243.11
- * >Ec    RD: 65099:1034 ip-prefix 192.168.3.0/24
-                                 10.99.244.4           -       100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.11
- *  ec    RD: 65099:1034 ip-prefix 192.168.3.0/24
-                                 10.99.244.4           -       100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.22
- * >Ec    RD: 65099:1043 ip-prefix 192.168.4.0/24
-                                 10.99.244.3           -       100     0       i Or-ID: 10.99.243.3 C-LST: 10.99.243.11
- *  ec    RD: 65099:1043 ip-prefix 192.168.4.0/24
-                                 10.99.244.3           -       100     0       i Or-ID: 10.99.243.3 C-LST: 10.99.243.22
- * >Ec    RD: 65099:1044 ip-prefix 192.168.4.0/24
-                                 10.99.244.4           -       100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.11
- *  ec    RD: 65099:1044 ip-prefix 192.168.4.0/24
-                                 10.99.244.4           -       100     0       i Or-ID: 10.99.243.4 C-LST: 10.99.243.22
-99-blf1#
 
 ```
-Проверим маршруты на фаерволле
-```
-HRP_M<99-fw01>disp ip routing-table
-Route Flags: R - relay, D - download to fib
-------------------------------------------------------------------------------
-Routing Tables: Public
-         Destinations : 23       Routes : 23
-
-Destination/Mask    Proto   Pre  Cost      Flags NextHop         Interface
-
-        0.0.0.0/0   Static  60   0           D   0.0.0.0         NULL0
-      10.99.1.0/31  Direct  0    0           D   10.99.1.0       GigabitEthernet1/0/0.10
-      10.99.1.0/32  Direct  0    0           D   127.0.0.1       GigabitEthernet1/0/0.10
-      10.99.1.2/31  EBGP    255  0           D   10.99.1.1       GigabitEthernet1/0/0.10
-      10.99.2.0/31  Direct  0    0           D   10.99.2.0       GigabitEthernet1/0/0.20
-      10.99.2.0/32  Direct  0    0           D   127.0.0.1       GigabitEthernet1/0/0.20
-      10.99.2.2/31  EBGP    255  0           D   10.99.2.1       GigabitEthernet1/0/0.20
-      10.99.3.0/31  Direct  0    0           D   10.99.3.0       GigabitEthernet1/0/0.30
-      10.99.3.0/32  Direct  0    0           D   127.0.0.1       GigabitEthernet1/0/0.30
-      10.99.3.2/31  EBGP    255  0           D   10.99.3.1       GigabitEthernet1/0/0.30
-      10.99.4.0/31  Direct  0    0           D   10.99.4.0       GigabitEthernet1/0/0.40
-      10.99.4.0/32  Direct  0    0           D   127.0.0.1       GigabitEthernet1/0/0.40
-      10.99.4.2/31  EBGP    255  0           D   10.99.4.1       GigabitEthernet1/0/0.40
-   10.99.241.12/31  Direct  0    0           D   10.99.241.12    Eth-Trunk23
-   10.99.241.12/32  Direct  0    0           D   127.0.0.1       Eth-Trunk23
-      127.0.0.0/8   Direct  0    0           D   127.0.0.1       InLoopBack0
-      127.0.0.1/32  Direct  0    0           D   127.0.0.1       InLoopBack0
-    192.168.1.0/24  EBGP    255  0           D   10.99.1.1       GigabitEthernet1/0/0.10
-    192.168.2.0/24  EBGP    255  0           D   10.99.2.1       GigabitEthernet1/0/0.20
-    192.168.3.0/24  EBGP    255  0           D   10.99.3.1       GigabitEthernet1/0/0.30
-    192.168.3.1/32  EBGP    255  0           D   10.99.3.1       GigabitEthernet1/0/0.30
-    192.168.4.0/24  EBGP    255  0           D   10.99.4.1       GigabitEthernet1/0/0.40
-    192.168.4.1/32  EBGP    255  0           D   10.99.4.1       GigabitEthernet1/0/0.40
+Также глянем мак таблицу "растянутого" влана 99 
 
 ```
-Видим что летят специфики с хостов, в идеале нужно навесить RM чтоб отфильтровывать их и не добавлять в таблицу маршрутизации, но в данном размере инсталляции это не критично.
+199-lf01# sh mac address-table vlan 99
+Legend:
+        * - primary entry, G - Gateway MAC, (R) - Routed MAC, O - Overlay MAC
+        age - seconds since last seen,+ - primary entry using vPC Peer-Link,
+        (T) - True, (F) - False, C - ControlPlane MAC, ~ - vsan
+   VLAN     MAC Address      Type      age     Secure NTFY Ports
+---------+-----------------+--------+---------+------+----+------------------
+C   99     5000.00d5.5dc0   dynamic  0         F      F    nve1(10.199.244.33)
+*   99     5000.00d8.ac19   dynamic  0         F      F    Po5
+G   99     500d.0000.1b08   static   -         F      F    vPC Peer-Link(R)
+G   99     5018.0000.1b08   static   -         F      F    sup-eth1(R)
+
+```
+И проверим маршруты в наших VRF 13 и 14 
+```
+199-lf01# sh ip route vrf VRF_13
+IP Route Table for VRF "VRF_13"
+'*' denotes best ucast next-hop
+'**' denotes best mcast next-hop
+'[x/y]' denotes [preference/metric]
+'%<string>' in via output denotes VRF <string>
+
+192.168.13.0/24, ubest/mbest: 1/0, attached
+    *via 192.168.13.254, Vlan13, [0/0], 1d01h, direct
+192.168.13.1/32, ubest/mbest: 1/0, attached
+    *via 192.168.13.1, Vlan13, [190/0], 00:12:23, hmm
+192.168.13.2/32, ubest/mbest: 1/0, attached
+    *via 192.168.13.2, Vlan13, [190/0], 00:12:23, hmm
+192.168.13.254/32, ubest/mbest: 1/0, attached
+    *via 192.168.13.254, Vlan13, [0/0], 1d01h, local
+192.168.133.3/32, ubest/mbest: 1/0
+    *via 10.199.244.33%default, [200/0], 00:00:13, bgp-65199, internal, tag 6599
+9, segid: 19913 tunnelid: 0xac7f421 encap: VXLAN
+
+192.168.133.4/32, ubest/mbest: 1/0
+    *via 10.199.244.44%default, [200/0], 00:00:13, bgp-65199, internal, tag 6599
+9, segid: 19913 tunnelid: 0xac7f42c encap: VXLAN
+
+192.168.134.3/32, ubest/mbest: 1/0
+    *via 10.199.244.44%default, [200/0], 00:00:15, bgp-65199, internal, tag 6599
+9, segid: 19913 tunnelid: 0xac7f42c encap: VXLAN
+
+192.168.134.4/32, ubest/mbest: 1/0
+    *via 10.199.244.33%default, [200/0], 00:00:13, bgp-65199, internal, tag 6599
+9, segid: 19913 tunnelid: 0xac7f421 encap: VXLAN
+
+192.168.233.0/24, ubest/mbest: 1/0
+    *via 10.199.244.33%default, [200/0], 00:00:13, bgp-65199, internal, tag 6599
+9, segid: 19913 tunnelid: 0xac7f421 encap: VXLAN
+
+
+199-lf01# sh ip route vrf VRF_14
+IP Route Table for VRF "VRF_14"
+'*' denotes best ucast next-hop
+'**' denotes best mcast next-hop
+'[x/y]' denotes [preference/metric]
+'%<string>' in via output denotes VRF <string>
+
+0.0.0.0/0, ubest/mbest: 1/0
+    *via 10.199.244.44%default, [200/0], 00:00:22, bgp-65199, internal, tag 6599
+9, segid: 19914 tunnelid: 0xac7f42c encap: VXLAN
+
+10.99.14.0/31, ubest/mbest: 1/0
+    *via 10.199.244.44%default, [200/0], 00:00:31, bgp-65199, internal, tag 6599
+9, segid: 19914 tunnelid: 0xac7f42c encap: VXLAN
+
+10.99.14.2/31, ubest/mbest: 1/0
+    *via 10.199.244.44%default, [200/0], 00:00:32, bgp-65199, internal, tag 6599
+9, segid: 19914 tunnelid: 0xac7f42c encap: VXLAN
+
+192.168.14.0/24, ubest/mbest: 1/0, attached
+    *via 192.168.14.254, Vlan14, [0/0], 1d01h, direct
+192.168.14.1/32, ubest/mbest: 1/0, attached
+    *via 192.168.14.1, Vlan14, [190/0], 00:12:39, hmm
+192.168.14.2/32, ubest/mbest: 1/0, attached
+    *via 192.168.14.2, Vlan14, [190/0], 00:12:39, hmm
+192.168.14.254/32, ubest/mbest: 1/0, attached
+    *via 192.168.14.254, Vlan14, [0/0], 1d01h, local
+192.168.144.3/32, ubest/mbest: 1/0
+    *via 10.199.244.33%default, [200/0], 00:00:29, bgp-65199, internal, tag 6599
+9, segid: 19914 tunnelid: 0xac7f421 encap: VXLAN
+
+192.168.144.4/32, ubest/mbest: 1/0
+    *via 10.199.244.44%default, [200/0], 00:00:29, bgp-65199, internal, tag 6599
+9, segid: 19914 tunnelid: 0xac7f42c encap: VXLAN
+
+192.168.244.0/24, ubest/mbest: 1/0
+    *via 10.199.244.44%default, [200/0], 00:00:31, bgp-65199, internal, tag 6599
+9, segid: 19914 tunnelid: 0xac7f42c encap: VXLAN
+
+```
+Видим что во влане 99 связность есть, в VRF 13 видим маршруты лупбеков из другого цода 192.168.133.3/32 192.168.134.4/32 через разные БГВ
+В VRF 14 видим прилетающий с фаерволлов дефолт и маршруты до p2p интерфейсов с фаерволлами и лупбеков с хостами из обоих цодов
 
 
 ## 2. Проверка межсерверной связности между VM 
-Проверяем согласно правилам:
-1. 
+
+
+### 2.1. Проверим связность внутри Vlan 99
+| Device Name | Network Address |
+|-------------|-------------------|
+| 199-esx1    | 192.168.99.1/24   |
+| 99-esx1     | 192.168.99.11/24  |
+| 99-esx4     | 192.168.99.44/24  |
+
+```
+199-esx1#ping vrf VRF_99 192.168.99.11
+PING 192.168.99.11 (192.168.99.11) 72(100) bytes of data.
+80 bytes from 192.168.99.11: icmp_seq=1 ttl=64 time=25.1 ms
+80 bytes from 192.168.99.11: icmp_seq=2 ttl=64 time=23.5 ms
+80 bytes from 192.168.99.11: icmp_seq=3 ttl=64 time=18.5 ms
+80 bytes from 192.168.99.11: icmp_seq=4 ttl=64 time=36.9 ms
+80 bytes from 192.168.99.11: icmp_seq=5 ttl=64 time=28.6 ms
+
+--- 192.168.99.11 ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 85ms
+rtt min/avg/max/mdev = 18.581/26.560/36.913/6.102 ms, pipe 2, ipg/ewma 21.286/26.104 ms
+199-esx1#
+199-esx1#ping vrf VRF_99 192.168.99.44
+PING 192.168.99.44 (192.168.99.44) 72(100) bytes of data.
+80 bytes from 192.168.99.44: icmp_seq=1 ttl=64 time=49.4 ms
+80 bytes from 192.168.99.44: icmp_seq=2 ttl=64 time=50.2 ms
+80 bytes from 192.168.99.44: icmp_seq=3 ttl=64 time=40.9 ms
+80 bytes from 192.168.99.44: icmp_seq=4 ttl=64 time=37.6 ms
+80 bytes from 192.168.99.44: icmp_seq=5 ttl=64 time=30.8 ms
+
+--- 192.168.99.44 ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 43ms
+rtt min/avg/max/mdev = 30.853/41.837/50.245/7.316 ms, pipe 5, ipg/ewma 10.964/45.102 ms
+```
+
 2. 
 3. 
 
