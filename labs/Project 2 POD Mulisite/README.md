@@ -3851,7 +3851,7 @@ IP Route Table for VRF "VRF_14"
 ## 2. Проверка межсерверной связности между VM 
 
 
-### 2.1. Проверим связность внутри Vlan 99
+### 2.1. Проверка связности в Vlan 99
 | Device Name | Network Address |
 |-------------|-------------------|
 | 199-esx1    | 192.168.99.1/24   |
@@ -3884,152 +3884,153 @@ PING 192.168.99.44 (192.168.99.44) 72(100) bytes of data.
 rtt min/avg/max/mdev = 30.853/41.837/50.245/7.316 ms, pipe 5, ipg/ewma 10.964/45.102 ms
 ```
 
-2. 
-3. 
+### 2.2. Проверка связности в VRF_13
+
+| Device Name | Network Address |
+|-------------|-------------------|
+| 199-esx1    | 192.168.13.1/24   |
+| 199-lf01/02 | 192.168.13.254/24 |
+| 99-lf04 lo13| 192.168.134.4/32  |
+| 199-bgw1    | 192.168.133.3/32  |
 
 ```
-99-esx3#sh ip int br
-                                                                        Address
-Interface      IP Address        Status     Protocol              MTU   Owner
--------------- ----------------- ---------- ------------------ -------- -------
-Vlan30         192.168.3.1/24    up         up                   1500
-```
+199-esx1#ping vrf VRF_13 192.168.13.254
+PING 192.168.13.254 (192.168.13.254) 72(100) bytes of data.
 
-### 1. Permit 192.168.2.0/24 <-> 192.168.3.0/24
-```
-99-esx3#ping 192.168.2.1 source 192.168.3.1
-PING 192.168.2.1 (192.168.2.1) 72(100) bytes of data.
-80 bytes from 192.168.2.1: icmp_seq=1 ttl=59 time=72.5 ms
-80 bytes from 192.168.2.1: icmp_seq=2 ttl=59 time=66.6 ms
-80 bytes from 192.168.2.1: icmp_seq=3 ttl=59 time=57.9 ms
-80 bytes from 192.168.2.1: icmp_seq=4 ttl=59 time=50.5 ms
-80 bytes from 192.168.2.1: icmp_seq=5 ttl=59 time=43.3 ms
+--- 192.168.13.254 ping statistics ---
+5 packets transmitted, 0 received, 100% packet loss, time 159ms
 
---- 192.168.2.1 ping statistics ---
+199-esx1#
+199-esx1#ping vrf VRF_13 192.168.13.254
+PING 192.168.13.254 (192.168.13.254) 72(100) bytes of data.
+80 bytes from 192.168.13.254: icmp_seq=1 ttl=255 time=17.6 ms
+80 bytes from 192.168.13.254: icmp_seq=2 ttl=255 time=4.53 ms
+80 bytes from 192.168.13.254: icmp_seq=3 ttl=255 time=5.40 ms
+80 bytes from 192.168.13.254: icmp_seq=4 ttl=255 time=40.1 ms
+
+--- 192.168.13.254 ping statistics ---
+5 packets transmitted, 4 received, 20% packet loss, time 67ms
+rtt min/avg/max/mdev = 4.530/16.924/40.128/14.364 ms, pipe 2, ipg/ewma 16.850/17.855 ms
+199-esx1#
+199-esx1#ping vrf VRF_13 192.168.134.4
+PING 192.168.134.4 (192.168.134.4) 72(100) bytes of data.
+80 bytes from 192.168.134.4: icmp_seq=1 ttl=61 time=71.8 ms
+80 bytes from 192.168.134.4: icmp_seq=2 ttl=61 time=61.0 ms
+80 bytes from 192.168.134.4: icmp_seq=3 ttl=61 time=53.1 ms
+80 bytes from 192.168.134.4: icmp_seq=4 ttl=61 time=45.1 ms
+80 bytes from 192.168.134.4: icmp_seq=5 ttl=61 time=37.6 ms
+
+--- 192.168.134.4 ping statistics ---
 5 packets transmitted, 5 received, 0% packet loss, time 44ms
-rtt min/avg/max/mdev = 43.307/58.205/72.542/10.561 ms, pipe 5, ipg/ewma 11.074/64.595 ms
-```
+rtt min/avg/max/mdev = 37.603/53.756/71.859/11.963 ms, pipe 5, ipg/ewma 11.093/61.958 ms
+199-esx1#
+199-esx1#ping vrf VRF_13 192.168.133.3
+PING 192.168.133.3 (192.168.133.3) 72(100) bytes of data.
+80 bytes from 192.168.133.3: icmp_seq=1 ttl=63 time=17.4 ms
+80 bytes from 192.168.133.3: icmp_seq=2 ttl=63 time=11.4 ms
+80 bytes from 192.168.133.3: icmp_seq=3 ttl=63 time=10.6 ms
+80 bytes from 192.168.133.3: icmp_seq=4 ttl=63 time=39.3 ms
+80 bytes from 192.168.133.3: icmp_seq=5 ttl=63 time=31.0 ms
 
-### 2. Permit 192.168.1.0/24 <-> 192.168.4.0/24
+--- 192.168.133.3 ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 62ms
+rtt min/avg/max/mdev = 10.607/21.976/39.333/11.352 ms, pipe 2, ipg/ewma 15.738/20.390 ms
+
+199-esx1#tracer vrf VRF_13 192.168.134.4
+traceroute to 192.168.134.4 (192.168.134.4), 30 hops max, 60 byte packets
+ 1  _gateway (192.168.13.254)  6.178 ms  5.016 ms  31.834 ms
+ 2  192.168.133.3 (192.168.133.3)  33.280 ms  37.753 ms  39.276 ms
+ 3  192.168.233.11 (192.168.233.11)  57.508 ms  60.184 ms  64.006 ms
+ 4  192.168.134.4 (192.168.134.4)  85.399 ms  88.140 ms  93.686 ms
+
 ```
-99-esx1(config)#ping 192.168.4.1 source 192.168.1.1
+------------------------------------------------------------------------------------------------------
+
+### 2.3. Проверка связности в VRF_14
+
+| Device Name | Network Address   | VRF Name |
+|-------------|-------------------|------------|
+| 199-esx1    | 192.168.14.1/24   | VRF_14   |
+| 199-lf01/02 | 192.168.14.254/24 | VRF_14   |
+| 99-esx4     | 192.168.4.1/24    | VRF_CORE_4 |
+| 99-esx1     | 192.168.1.1/24    | VRF_CORE_1 |
+| 199-bgw2 LO14| 192.168.144.4/32 | VRF_14 |
+| 99-lf01 p2p fw01| 10.99.14.1/31  | VRF_14 |
+
+```
+199-esx1#ping vrf VRF_14 192.168.14.254
+PING 192.168.14.254 (192.168.14.254) 72(100) bytes of data.
+80 bytes from 192.168.14.254: icmp_seq=1 ttl=255 time=38.1 ms
+80 bytes from 192.168.14.254: icmp_seq=2 ttl=255 time=30.5 ms
+80 bytes from 192.168.14.254: icmp_seq=3 ttl=255 time=24.0 ms
+80 bytes from 192.168.14.254: icmp_seq=4 ttl=255 time=31.7 ms
+80 bytes from 192.168.14.254: icmp_seq=5 ttl=255 time=5.63 ms
+
+--- 192.168.14.254 ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 72ms
+rtt min/avg/max/mdev = 5.631/26.029/38.188/11.138 ms, pipe 4, ipg/ewma 18.149/31.419 ms
+199-esx1#
+199-esx1#ping vrf VRF_14 192.168.4.1
 PING 192.168.4.1 (192.168.4.1) 72(100) bytes of data.
-80 bytes from 192.168.4.1: icmp_seq=1 ttl=60 time=83.0 ms
-80 bytes from 192.168.4.1: icmp_seq=2 ttl=60 time=75.1 ms
-80 bytes from 192.168.4.1: icmp_seq=3 ttl=60 time=68.6 ms
-80 bytes from 192.168.4.1: icmp_seq=4 ttl=60 time=61.6 ms
-80 bytes from 192.168.4.1: icmp_seq=5 ttl=60 time=54.2 ms
+80 bytes from 192.168.4.1: icmp_seq=1 ttl=57 time=167 ms
+80 bytes from 192.168.4.1: icmp_seq=2 ttl=57 time=156 ms
+80 bytes from 192.168.4.1: icmp_seq=3 ttl=57 time=148 ms
+80 bytes from 192.168.4.1: icmp_seq=4 ttl=57 time=153 ms
+80 bytes from 192.168.4.1: icmp_seq=5 ttl=57 time=146 ms
 
 --- 192.168.4.1 ping statistics ---
-5 packets transmitted, 5 received, 0% packet loss, time 44ms
-rtt min/avg/max/mdev = 54.259/68.560/83.099/10.071 ms, pipe 5, ipg/ewma 11.201/75.099 ms
-```
-
-### 3. Permit Permit 192.168.3.0/24 -> 192.168.1.1/32 Правило открыто только в одну сторону 
-```
-99-esx3#ping 192.168.1.1
+5 packets transmitted, 5 received, 0% packet loss, time 43ms
+rtt min/avg/max/mdev = 146.055/154.562/167.779/7.599 ms, pipe 5, ipg/ewma 10.989/160.751 ms
+199-esx1#
+199-esx1#ping vrf VRF_14 192.168.1.1
 PING 192.168.1.1 (192.168.1.1) 72(100) bytes of data.
-80 bytes from 192.168.1.1: icmp_seq=1 ttl=60 time=39.9 ms
-80 bytes from 192.168.1.1: icmp_seq=2 ttl=60 time=40.1 ms
-80 bytes from 192.168.1.1: icmp_seq=3 ttl=60 time=55.4 ms
-80 bytes from 192.168.1.1: icmp_seq=4 ttl=60 time=48.0 ms
-80 bytes from 192.168.1.1: icmp_seq=5 ttl=60 time=41.1 ms
+80 bytes from 192.168.1.1: icmp_seq=1 ttl=59 time=35.8 ms
+80 bytes from 192.168.1.1: icmp_seq=2 ttl=59 time=32.4 ms
+80 bytes from 192.168.1.1: icmp_seq=3 ttl=59 time=28.0 ms
+80 bytes from 192.168.1.1: icmp_seq=4 ttl=59 time=32.7 ms
+80 bytes from 192.168.1.1: icmp_seq=5 ttl=59 time=29.1 ms
 
 --- 192.168.1.1 ping statistics ---
-5 packets transmitted, 5 received, 0% packet loss, time 74ms
-rtt min/avg/max/mdev = 39.942/44.955/55.489/6.059 ms, pipe 4, ipg/ewma 18.702/42.484 ms
-99-esx3#
+5 packets transmitted, 5 received, 0% packet loss, time 92ms
+rtt min/avg/max/mdev = 28.082/31.657/35.801/2.765 ms, pipe 3, ipg/ewma 23.226/33.623 ms
 
-99-esx1#ping 192.168.3.1 source 192.168.1.1
-PING 192.168.3.1 (192.168.3.1) from 192.168.1.1 : 72(100) bytes of data.
+199-esx1#
+199-esx1#ping vrf VRF_14 192.168.144.4
+PING 192.168.144.4 (192.168.144.4) 72(100) bytes of data.
+80 bytes from 192.168.144.4: icmp_seq=1 ttl=63 time=15.5 ms
+80 bytes from 192.168.144.4: icmp_seq=2 ttl=63 time=11.0 ms
+80 bytes from 192.168.144.4: icmp_seq=3 ttl=63 time=9.46 ms
+80 bytes from 192.168.144.4: icmp_seq=4 ttl=63 time=11.5 ms
+80 bytes from 192.168.144.4: icmp_seq=5 ttl=63 time=11.6 ms
 
---- 192.168.3.1 ping statistics ---
-5 packets transmitted, 0 received, 100% packet loss, time 44ms
-```
+--- 192.168.144.4 ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 55ms
+rtt min/avg/max/mdev = 9.463/11.853/15.532/2.000 ms, pipe 2, ipg/ewma 13.769/13.656 ms
+199-esx1#
+199-esx1#ping vrf VRF_14 10.99.14.1
+PING 10.99.14.1 (10.99.14.1) 72(100) bytes of data.
+80 bytes from 10.99.14.1: icmp_seq=1 ttl=62 time=28.4 ms
+80 bytes from 10.99.14.1: icmp_seq=2 ttl=62 time=19.9 ms
+80 bytes from 10.99.14.1: icmp_seq=3 ttl=62 time=19.1 ms
+80 bytes from 10.99.14.1: icmp_seq=4 ttl=62 time=20.4 ms
+80 bytes from 10.99.14.1: icmp_seq=5 ttl=62 time=23.4 ms
 
-### 4. Deny any <-> any
-```
-ping 192.168.4.1 source 192.168.3.1
-PING 192.168.4.1 (192.168.4.1) from 192.168.3.1 : 72(100) bytes of data.
+--- 10.99.14.1 ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 76ms
+rtt min/avg/max/mdev = 19.147/22.261/28.401/3.402 ms, pipe 3, ipg/ewma 19.015/25.310 ms
 
---- 192.168.4.1 ping statistics ---
-5 packets transmitted, 0 received, 100% packet loss, time 47ms
-```
 
-Также глянем на трассировки чтоб убедиться что трафик ходит через фаерволл
-```
-99-esx3#traceroute 192.168.1.1 source 192.168.3.1
-traceroute to 192.168.1.1 (192.168.1.1), 30 hops max, 60 byte packets
- 1  _gateway (192.168.3.254)  53.959 ms  59.580 ms  59.118 ms
- 2  10.99.3.1 (10.99.3.1)  64.585 ms  67.371 ms  72.484 ms
- 3  * * *
- 4  10.99.1.1 (10.99.1.1)  81.663 ms  90.553 ms  97.639 ms
- 5  192.168.1.1 (192.168.1.1)  147.651 ms  151.227 ms  158.305 ms
-
- 99-esx3#traceroute 192.168.4.1 source 192.168.3.1
+199-esx1#tracer vrf VRF_14 192.168.4.1
 traceroute to 192.168.4.1 (192.168.4.1), 30 hops max, 60 byte packets
- 1  _gateway (192.168.3.254)  42.000 ms  43.850 ms  45.862 ms
- 2  10.99.3.1 (10.99.3.1)  87.427 ms  92.298 ms  96.835 ms
- 3  * * *
- 4  * * *
- 5  * * *
- 6  * * *
+ 1  _gateway (192.168.14.254)  26.303 ms  35.961 ms  36.441 ms         AG 199-lf01/02
+ 2  192.168.144.4 (192.168.144.4)  37.824 ms  46.714 ms  48.555 ms     199-bgw02
+ 3  10.99.14.2 (10.99.14.2)  54.965 ms  58.040 ms  65.082 ms           99-blf02
+ 4  10.99.14.1 (10.99.14.1)  67.344 ms  73.256 ms  75.254 ms           99-blf01
+ 5  * * *                                                              99-fw01
+ 6  10.99.4.1 (10.99.4.1)  99.384 ms  96.924 ms  98.445 ms             99-blf01
+ 7  192.168.4.254 (192.168.4.254)  150.413 ms  148.469 ms  144.229 ms  AG 99-lf03/04
+ 8  192.168.4.1 (192.168.4.1)  167.248 ms  160.558 ms  186.858 ms      99-esx4
 
-99-esx1#traceroute 192.168.4.1 source 192.168.1.1
-traceroute to 192.168.4.1 (192.168.4.1), 30 hops max, 60 byte packets
- 1  192.168.1.254 (192.168.1.254)  53.269 ms  52.145 ms  53.001 ms
- 2  * * *
- 3  10.99.4.1 (10.99.4.1)  54.010 ms  73.348 ms  85.311 ms
- 4  192.168.4.254 (192.168.4.254)  118.831 ms  115.890 ms  119.739 ms
- 5  192.168.4.1 (192.168.4.1)  149.415 ms  150.610 ms  157.753 ms
-99-esx1#
-
-```
-
-Также любопытный момент, если посмотреть vxlan vni , то увидим, что каждый vni под vrf все равно мапится с вланом, но на каждом свиче это разные вланы, то есть единого L2 все же нет.
-
-```
-99-lf3#sh vxlan vni
-VNI to VLAN Mapping for Vxlan1
-VNI         VLAN       Source       Interface           802.1Q Tag
------------ ---------- ------------ ------------------- ----------
-10030       30         static       Ethernet3           30
-                                    Port-Channel3       30
-                                    Vxlan1              30
-10040       40         static       Ethernet4           40
-                                    Port-Channel4       40
-                                    Vxlan1              40
-
-VNI to dynamic VLAN Mapping for Vxlan1
-VNI         VLAN       VRF              Source
------------ ---------- ---------------- ------------
-10001       4094       VRF_CORE_1       evpn
-10002       4093       VRF_CORE_2       evpn
-10003       4091       VRF_CORE_3       evpn
-10004       4092       VRF_CORE_4       evpn
-
-99-blf1# sh vxlan vni
-VNI to VLAN Mapping for Vxlan1
-VNI         VLAN       Source       Interface           802.1Q Tag
------------ ---------- ------------ ------------------- ----------
-10010       10         static       Ethernet3           10
-                                    Ethernet5           10
-                                    Port-Channel3       10
-                                    Port-Channel5       10
-                                    Vxlan1              10
-10020       20         static       Ethernet3           20
-                                    Ethernet5           20
-                                    Port-Channel3       20
-                                    Port-Channel5       20
-                                    Vxlan1              20
-
-VNI to dynamic VLAN Mapping for Vxlan1
-VNI         VLAN       VRF              Source
------------ ---------- ---------------- ------------
-10001       4079       VRF_CORE_1       evpn
-10002       4084       VRF_CORE_2       evpn
-10003       4081       VRF_CORE_3       evpn
-10004       4080       VRF_CORE_4       evpn
 
 ```
 
