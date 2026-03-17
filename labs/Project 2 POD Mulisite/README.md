@@ -655,6 +655,17 @@ security-policy
 <summary>99-blf1 </summary>
 
 ```bash
+! Command: show running-config
+! device: 99-blf1 (vEOS-lab, EOS-4.29.1F)
+!
+! boot system flash:/vEOS-lab.swi
+!
+no aaa root
+!
+transceiver qsfp default-mode 4x10G
+!
+service routing protocols model multi-agent
+!
 hostname 99-blf1
 !
 spanning-tree mode mstp
@@ -675,6 +686,8 @@ vlan 4094
 vrf instance MGMT
 !
 vrf instance VRF_13
+!
+vrf instance VRF_14
 !
 vrf instance VRF_CORE_1
 !
@@ -730,6 +743,11 @@ interface Ethernet4.10
    encapsulation dot1q vlan 10
    vrf VRF_CORE_1
    ip address 10.99.1.1/31
+!
+interface Ethernet4.14
+   encapsulation dot1q vlan 14
+   vrf VRF_14
+   ip address 10.99.14.1/31
 !
 interface Ethernet4.20
    encapsulation dot1q vlan 20
@@ -793,6 +811,10 @@ interface Loopback13
    vrf VRF_13
    ip address 192.168.233.11/24
 !
+interface Loopback14
+   vrf VRF_14
+   ip address 192.168.244.11/24
+!
 interface Management1
    description MGMT
    vrf MGMT
@@ -822,6 +844,7 @@ interface Vxlan1
    vxlan vlan 20 vni 10020
    vxlan vlan 99 vni 19999
    vxlan vrf VRF_13 vni 19913
+   vxlan vrf VRF_14 vni 19914
    vxlan vrf VRF_CORE_1 vni 10001
    vxlan vrf VRF_CORE_2 vni 10002
    vxlan vrf VRF_CORE_3 vni 10003
@@ -833,6 +856,7 @@ ip virtual-router mac-address 00:00:00:00:00:01
 ip routing
 ip routing vrf MGMT
 ip routing vrf VRF_13
+ip routing vrf VRF_14
 ip routing vrf VRF_CORE_1
 ip routing vrf VRF_CORE_2
 ip routing vrf VRF_CORE_3
@@ -904,10 +928,11 @@ router bgp 65099
    neighbor DCI-EVPN peer group
    neighbor DCI-EVPN remote-as 65999
    neighbor DCI-EVPN update-source Loopback10
-   neighbor DCI-EVPN ebgp-multihop 5
+   neighbor DCI-EVPN ebgp-multihop 20
    neighbor DCI-EVPN send-community extended
    neighbor DCI-UNDERLAY peer group
    neighbor DCI-UNDERLAY remote-as 65999
+   neighbor DCI-UNDERLAY ebgp-multihop 10
    neighbor DCI-UNDERLAY timers 3 9
    neighbor DCI-UNDERLAY send-community
    neighbor SPINE-EVPN peer group
@@ -944,6 +969,7 @@ router bgp 65099
    !
    address-family evpn
       neighbor DCI-EVPN activate
+      neighbor DCI-EVPN default-route
       neighbor DCI-EVPN domain remote
       neighbor SPINE-EVPN activate
       domain identifier 2:2
@@ -967,6 +993,29 @@ router bgp 65099
       route-target export evpn 65199:19913
       !
       address-family ipv4
+         redistribute connected
+   !
+   vrf VRF_14
+      rd 65099:19914
+      route-target import evpn 65199:19914
+      route-target export evpn 65199:19914
+      router-id 10.99.14.1
+      timers bgp 60 180 min-hold-time 3
+      neighbor 10.99.14.0 remote-as 65098
+      neighbor 10.99.14.0 next-hop-self
+      neighbor 10.99.14.0 update-source Ethernet4.14
+      neighbor 10.99.14.0 route-map DEFAULT in
+      neighbor 10.99.14.3 remote-as 65098
+      neighbor 10.99.14.3 next-hop-self
+      neighbor 10.99.14.3 update-source Ethernet4.14
+      neighbor 10.99.14.3 ebgp-multihop 10
+      neighbor 10.99.14.3 route-map DEFAULT in
+      !
+      address-family ipv4
+         no neighbor 10.99.2.0 activate
+         neighbor 10.99.14.0 activate
+         neighbor 10.99.14.3 activate
+         network 10.99.14.0/31
          redistribute connected
    !
    vrf VRF_CORE_1
@@ -1016,9 +1065,7 @@ router bgp 65099
    vrf VRF_CORE_3
       rd 65099:1031
       route-target import evpn 65099:103
-      route-target import evpn 65199:19913
       route-target export evpn 65099:103
-      route-target export evpn 65199:19913
       router-id 10.99.3.1
       timers bgp 60 180 min-hold-time 3
       neighbor 10.99.3.0 remote-as 65098
@@ -1060,6 +1107,7 @@ router bgp 65099
          redistribute connected
 !
 end
+
 
 
  ```
