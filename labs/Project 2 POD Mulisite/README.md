@@ -666,11 +666,15 @@ vlan 10
 vlan 20
    name VLAN20
 !
+vlan 99
+!
 vlan 4094
    name MLAG-PEERLINK
    trunk group MLAG-PEERLINK
 !
 vrf instance MGMT
+!
+vrf instance VRF_13
 !
 vrf instance VRF_CORE_1
 !
@@ -683,7 +687,7 @@ vrf instance VRF_CORE_4
 interface Port-Channel3
    description 99-esx1
    mtu 9100
-   switchport trunk allowed vlan 10,20
+   switchport trunk allowed vlan 10,20,99
    switchport mode trunk
    mlag 3
 !
@@ -714,7 +718,7 @@ interface Ethernet2
 interface Ethernet3
    description to-99-esx1-Eth1
    mtu 9100
-   switchport trunk allowed vlan 10,20
+   switchport trunk allowed vlan 10,20,90
    switchport mode trunk
    channel-group 3 mode active
 !
@@ -755,7 +759,6 @@ interface Ethernet6
    mtu 9100
    no switchport
    ip address 10.88.241.1/31
-   no shutdown
 !
 interface Ethernet7
    description Po78 lf2
@@ -765,6 +768,10 @@ interface Ethernet8
    description Po78 lf2
    channel-group 78 mode active
 !
+interface Ethernet9
+!
+interface Ethernet10
+!
 interface Loopback0
    description Router-ID
    ip address 10.99.243.1/32
@@ -772,14 +779,19 @@ interface Loopback0
 interface Loopback1
    description VXLAN-Tunnel-Endpoint
    ip address 10.99.244.1/32
-
+   ip address 10.99.244.12/32 secondary
+!
 interface Loopback10
    description BGP-Router-ID-DCI
    ip address 10.88.243.1/32
-
+!
 interface Loopback11
    description VTEP-Source-DCI
    ip address 10.88.244.1/32
+!
+interface Loopback13
+   vrf VRF_13
+   ip address 192.168.233.11/24
 !
 interface Management1
    description MGMT
@@ -809,6 +821,7 @@ interface Vxlan1
    vxlan vlan 10 vni 10010
    vxlan vlan 20 vni 10020
    vxlan vlan 99 vni 19999
+   vxlan vrf VRF_13 vni 19913
    vxlan vrf VRF_CORE_1 vni 10001
    vxlan vrf VRF_CORE_2 vni 10002
    vxlan vrf VRF_CORE_3 vni 10003
@@ -819,6 +832,7 @@ ip virtual-router mac-address 00:00:00:00:00:01
 !
 ip routing
 ip routing vrf MGMT
+ip routing vrf VRF_13
 ip routing vrf VRF_CORE_1
 ip routing vrf VRF_CORE_2
 ip routing vrf VRF_CORE_3
@@ -837,26 +851,21 @@ ip prefix-list DEFAULT_4
    seq 20 permit 192.168.4.0/24 le 32
    seq 30 deny 192.168.0.0/16 le 32
 !
+ip prefix-list PL_BLF_TO_DCI
+   seq 5 permit 10.88.243.1/32
+   seq 10 permit 10.88.244.1/32
+!
+ip prefix-list PL_BLF_TO_SPINE
+   seq 5 permit 10.99.243.1/32
+   seq 10 permit 10.99.244.1/32
+   seq 15 permit 10.88.243.1/32
+   seq 20 permit 10.88.244.1/32
+!
 ip prefix-list VRF_CORES
    seq 10 permit 192.168.0.0/16 le 32
 !
 ip prefix-list VRF_CORE_4
    seq 10 permit 192.168.4.0/24
-
-ip prefix-list PL_BLF_TO_SPINE seq 5 permit 10.99.243.1/32
-ip prefix-list PL_BLF_TO_SPINE seq 10 permit 10.99.244.1/32
-ip prefix-list PL_BLF_TO_SPINE seq 15 permit 10.88.243.1/32
-ip prefix-list PL_BLF_TO_SPINE seq 20 permit 10.88.244.1/32
-
-ip prefix-list PL_BLF_TO_DCI seq 5 permit 10.88.243.1/32
-ip prefix-list PL_BLF_TO_DCI seq 10 permit 10.88.244.1/32
-
-route-map RM_BLF_TO_SPINE permit 10
-   match ip address prefix-list PL_BLF_TO_SPINE
-
-route-map RM_BLF_TO_DCI permit 10
-   match ip address prefix-list PL_BLF_TO_DCI
-
 !
 mlag configuration
    domain-id 12
@@ -871,6 +880,12 @@ ip route vrf MGMT 0.0.0.0/0 10.99.245.254
 route-map DEFAULT permit 10
    match ip address prefix-list DEFAULT
 !
+route-map RM_BLF_TO_DCI permit 10
+   match ip address prefix-list PL_BLF_TO_DCI
+!
+route-map RM_BLF_TO_SPINE permit 10
+   match ip address prefix-list PL_BLF_TO_SPINE
+!
 route-map VRFS_CORE permit 10
    match ip address prefix-list VRF_CORES
 !
@@ -884,7 +899,17 @@ router bgp 65099
    router-id 10.99.243.1
    no bgp default ipv4-unicast
    timers bgp 3 9
+   rd auto
    maximum-paths 10 ecmp 10
+   neighbor DCI-EVPN peer group
+   neighbor DCI-EVPN remote-as 65999
+   neighbor DCI-EVPN update-source Loopback10
+   neighbor DCI-EVPN ebgp-multihop 5
+   neighbor DCI-EVPN send-community extended
+   neighbor DCI-UNDERLAY peer group
+   neighbor DCI-UNDERLAY remote-as 65999
+   neighbor DCI-UNDERLAY timers 3 9
+   neighbor DCI-UNDERLAY send-community
    neighbor SPINE-EVPN peer group
    neighbor SPINE-EVPN remote-as 65099
    neighbor SPINE-EVPN update-source Loopback0
@@ -894,6 +919,8 @@ router bgp 65099
    neighbor SPINE-UNDERLAY remote-as 65099
    neighbor SPINE-UNDERLAY timers 3 9
    neighbor SPINE-UNDERLAY send-community
+   neighbor 10.88.241.0 peer group DCI-UNDERLAY
+   neighbor 10.88.243.33 peer group DCI-EVPN
    neighbor 10.99.1.3 ebgp-multihop 10
    neighbor 10.99.241.1 peer group SPINE-UNDERLAY
    neighbor 10.99.242.1 peer group SPINE-UNDERLAY
@@ -902,45 +929,52 @@ router bgp 65099
    neighbor 10.99.246.2 remote-as 65099
    neighbor 10.99.246.2 next-hop-self
    neighbor 10.99.246.2 send-community
-
-   neighbor DCI-EVPN peer group
-   neighbor DCI-EVPN remote-as 65999
-   neighbor DCI-EVPN update-source Loopback10
-   neighbor DCI-EVPN ebgp-multihop 2
-   neighbor DCI-EVPN send-community extended
-   neighbor DCI-UNDERLAY peer group
-   neighbor DCI-UNDERLAY remote-as 65999
-   neighbor DCI-UNDERLAY timers 3 9
-   neighbor DCI-UNDERLAY send-community
-   neighbor 10.88.241.0 peer group DCI-UNDERLAY
-   neighbor 10.88.243.33 peer group DCI-EVPN
-
    !
    vlan 10
       rd auto
       route-target both 65099:10010
       redistribute learned
    !
+   vlan 99
+      rd evpn domain all 10.88.243.1:99
+      route-target both 65099:19999
+      route-target import evpn domain remote 65999:19999
+      route-target export evpn domain remote 65999:19999
+      redistribute learned
+   !
    address-family evpn
-      neighbor SPINE-EVPN activate
       neighbor DCI-EVPN activate
+      neighbor DCI-EVPN domain remote
+      neighbor SPINE-EVPN activate
+      domain identifier 2:2
+      neighbor default next-hop-self received-evpn-routes route-type ip-prefix inter-domain
    !
    address-family ipv4
-      neighbor SPINE-UNDERLAY route-map RM_BLF_TO_SPINE out
       neighbor DCI-UNDERLAY activate
-      neighbor DCI-UNDERLAY route-map RM_BLF_TO_DCI out
-      network 10.99.243.1/32
-      network 10.99.244.1/32
+      no neighbor SPINE-EVPN activate
+      neighbor SPINE-UNDERLAY activate
+      neighbor SPINE-UNDERLAY route-map RM_BLF_TO_SPINE out
+      neighbor 10.99.246.2 activate
       network 10.88.243.1/32
       network 10.88.244.1/32
-      neighbor 10.99.246.2 activate
-      
+      network 10.99.243.1/32
+      network 10.99.244.1/32
+      network 10.99.244.12/32
+   !
+   vrf VRF_13
+      rd 65099:19913
+      route-target import evpn 65199:19913
+      route-target export evpn 65199:19913
+      !
+      address-family ipv4
+         redistribute connected
    !
    vrf VRF_CORE_1
       rd 65099:1011
       route-target import evpn 65099:101
       route-target export evpn 65099:101
       router-id 10.99.1.1
+      timers bgp 60 180 min-hold-time 3
       neighbor 10.99.1.0 remote-as 65098
       neighbor 10.99.1.0 next-hop-self
       neighbor 10.99.1.0 update-source Ethernet4.10
@@ -962,6 +996,7 @@ router bgp 65099
       route-target import evpn 65099:102
       route-target export evpn 65099:102
       router-id 10.99.2.1
+      timers bgp 60 180 min-hold-time 3
       neighbor 10.99.2.0 remote-as 65098
       neighbor 10.99.2.0 next-hop-self
       neighbor 10.99.2.0 update-source Ethernet4.20
@@ -981,8 +1016,11 @@ router bgp 65099
    vrf VRF_CORE_3
       rd 65099:1031
       route-target import evpn 65099:103
+      route-target import evpn 65199:19913
       route-target export evpn 65099:103
+      route-target export evpn 65199:19913
       router-id 10.99.3.1
+      timers bgp 60 180 min-hold-time 3
       neighbor 10.99.3.0 remote-as 65098
       neighbor 10.99.3.0 next-hop-self
       neighbor 10.99.3.0 update-source Ethernet4.30
@@ -1004,6 +1042,7 @@ router bgp 65099
       route-target import evpn 65099:104
       route-target export evpn 65099:104
       router-id 10.99.4.1
+      timers bgp 60 180 min-hold-time 3
       neighbor 10.99.4.0 remote-as 65098
       neighbor 10.99.4.0 next-hop-self
       neighbor 10.99.4.0 update-source Ethernet4.40
@@ -1020,6 +1059,8 @@ router bgp 65099
          network 10.99.4.0/31
          redistribute connected
 !
+end
+
 
  ```
  </details>
@@ -2818,150 +2859,134 @@ router bgp 65199
 
 ```bash
 hostname 199-bgw1
+!
 spanning-tree mode mstp
-
+!
 vlan 99
    name VLAN99
-
-vrf instance VRF_13
-vrf instance VRF_14 
+!
 vrf instance MGMT
-
-route-map RM_BGW_TO_SPINE permit 10
-   match ip address prefix-list PL_BGW_TO_SPINE
-route-map RM_BGW_TO_DCI permit 10
-   match ip address prefix-list PL_BGW_TO_DCI
-ip prefix-list PL_BGW_TO_SPINE seq 5 permit 10.199.243.33/32
-ip prefix-list PL_BGW_TO_SPINE seq 10 permit 10.199.244.33/32
-ip prefix-list PL_BGW_TO_DCI seq 5 permit 10.88.243.33/32
-ip prefix-list PL_BGW_TO_DCI seq 10 permit 10.88.244.33/32
-
+!
+vrf instance VRF_13
+!
+vrf instance VRF_14
+!
 interface Ethernet1
    description to-199-sp01-Eth1/3
    mtu 9214
    no switchport
    ip address 10.199.241.4/31
-
+!
 interface Ethernet2
    description to-199-sp02-Eth1/3
    mtu 9214
    no switchport
-   ip address 10.199.242.4/31   
-
+   ip address 10.199.242.4/31
+!
 interface Ethernet3
    description to-99-blf01-Eth6
    mtu 9214
    no switchport
    ip address 10.88.241.0/31
-
+!
+interface Ethernet4
+!
+interface Ethernet5
+!
+interface Ethernet6
+!
+interface Ethernet7
+!
+interface Ethernet8
+!
 interface Loopback0
    description BGP-Router-ID-POD199
-   ip address 10.199.243.33/32 
-
+   ip address 10.199.243.33/32
+!
 interface Loopback1
    description VTEP-Source-POD199
    ip address 10.199.244.33/32
-
+!
 interface Loopback10
    description BGP-Router-ID-DCI
    ip address 10.88.243.33/32
-
+!
 interface Loopback11
    description VTEP-Source-DCI
    ip address 10.88.244.33/32
-
+!
+interface Loopback13
+   vrf VRF_13
+   ip address 192.168.133.3/24
+!
+interface Loopback14
+   vrf VRF_14
+   ip address 192.168.144.3/24
+!
 interface Management1
    description OOB_Management
    vrf MGMT
    ip address 10.199.245.33/24
-
+!
 interface Vxlan1
    description VXLAN-Tunnel-Endpoint
    vxlan source-interface Loopback1
    vxlan udp-port 4789
-   ! Stretched VLAN 99 
    vxlan vlan 99 vni 19999
-   ! L3VNI для VRF_13 и VRF_14 
    vxlan vrf VRF_13 vni 19913
-   vxlan vrf VRF_14 vni 19914   
-
-
+   vxlan vrf VRF_14 vni 19914
+   vxlan learn-restrict any
+!
 ip routing
-service routing protocols model multi-agent
 ip routing vrf MGMT
 ip routing vrf VRF_13
 ip routing vrf VRF_14
-
+!
+ip prefix-list PL_BGW_TO_DCI seq 5 permit 10.88.243.33/32
+ip prefix-list PL_BGW_TO_DCI seq 10 permit 10.88.244.33/32
+ip prefix-list PL_BGW_TO_SPINE seq 5 permit 10.199.243.33/32
+ip prefix-list PL_BGW_TO_SPINE seq 10 permit 10.199.244.33/32
+!
+route-map RM_BGW_TO_DCI permit 10
+   match ip address prefix-list PL_BGW_TO_DCI
+!
+route-map RM_BGW_TO_SPINE!
+route-map TEST permit 10
+   match route-type vpn
+!
 router bgp 65999
-   router-id 10.199.243.33
-   no bgp default ipv4-unicast
-   timers bgp 3 9
-   maximum-paths 10 ecmp 10
-
- neighbor SPINE-EVPN peer group
-   neighbor SPINE-EVPN remote-as 65199
-   neighbor SPINE-EVPN update-source Loopback0
-   neighbor SPINE-EVPN ebgp-multihop 2
-   neighbor SPINE-EVPN send-community extended
-   neighbor SPINE-EVPN maximum-routes 12000 
-
-neighbor SPINE-UNDERLAY peer group
-   neighbor SPINE-UNDERLAY remote-as 65199
-   neighbor SPINE-UNDERLAY timers 3 9
-   neighbor SPINE-UNDERLAY send-community
-
-neighbor DCI-EVPN peer group
-   neighbor DCI-EVPN remote-as 65099
-   neighbor DCI-EVPN update-source Loopback10
-   neighbor DCI-EVPN ebgp-multihop 2
-   neighbor DCI-EVPN send-community extended
-
-neighbor DCI-UNDERLAY peer group
+   router-id 10.tended
+   neighbor DCI-UNDERLAY peer group
    neighbor DCI-UNDERLAY remote-as 65099
-   neighbor DCI-UNDERLAY timers 3 9
-   neighbor DCI-UNDERLAY send-community
-
-neighbor 10.199.241.5 peer group SPINE-UNDERLAY
-neighbor 10.199.242.5 peer group SPINE-UNDERLAY
-
-neighbor 10.199.243.11 peer group SPINE-EVPN
-neighbor 10.199.243.22 peer group SPINE-EVPN
-
-neighbor 10.88.241.1 peer group DCI-UNDERLAY
-neighbor 10.88.243.1 peer group DCI-EVPN
-
-
-vlan 99
-      vlan 99
-      rd evpn domain all 65881:99
+   neighbor DCI-UNDERLAY ebgp-muimum-routes 12000
+   neighbor SPINE-UNDERLAY peer group
+   neighbor SPINE-UNDERLAY remote-as 65199
+   neighbor SPINE
+      rd evpn domain all 10.88.243.33:99
       route-target both 65199:19999
-      route-target import export evpn domain remote 65099:99
-      redistribute learned
-
-
-address-family evpn
-     neighbor SPINE-EVPN activate  
-     neighbor DCI-EVPN activate
-
-address-family ipv4
-     neighbor DCI-UNDERLAY activate
-     neighbor SPINE-UNDERLAY activate
+      route-target import evpn domain
+   !
+   address-family evpn
+      neighbor DCI-EVPN activate
+      neighbor DCI-EVPN domain remote
+      neighborefault next-hop-self received-evpn-routes route-typ !
+   address-family ipv4
+      neighbor DCI-UNDERLAY activate
+      neighbor SPINE-UNDERLAY activate
       neighbor SPINE-UNDERLAY route-map RM_BGW_TO_SPINE out
-      neighbor DCI-UNDERLAY route-map RM_BGW_TO_DCI out
-      network 10.199.243.33/32
-      network 10.199.244.33/32
       network 10.88.243.33/32
       network 10.88.244.33/32
-
-vrf VRF_13
+      network 10.199.243.33/32
+      network 10.199.244.33/32
+   !
+   vrf VRF_13
       rd 65881:19913
       route-target import evpn 65199:19913
       route-target export evpn 65199:19913
       !
       address-family ipv4
          redistribute connected
-
-   
+   !
    vrf VRF_14
       rd 65881:19914
       route-target import evpn 65199:19914
@@ -2969,6 +2994,10 @@ vrf VRF_13
       !
       address-family ipv4
          redistribute connected
+!
+end
+
+
  ```
 
 </details>
