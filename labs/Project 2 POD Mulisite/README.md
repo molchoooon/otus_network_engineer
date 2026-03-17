@@ -276,6 +276,11 @@
 <summary>FW01 </summary>
 
 ```bash
+sysname 99-fw01
+#
+ undo l2tp sendaccm enable
+ l2tp domain suffix-separator @
+#
 router id 10.99.245.252
 #
 undo telnet server enable
@@ -289,10 +294,114 @@ clock timezone UTC add 00:00:00
  hrp adjust bgp-cost enable 10
  hrp track interface Eth-Trunk23
 #
-manager-user admin
-password cipher @%@%RqS9%jPme(=~B>N'q<F-QjAt,%-6KExumX]iVOO,O-}NjAwQ@%@%
-service-type ssh
-level 15
+ firewall packet-filter basic-protocol enable
+#
+ firewall detect ftp
+#
+ firewall defend action discard
+#
+ log type traffic enable
+ log type syslog enable
+ log type policy enable
+#
+ undo dataflow enable
+#
+ isp name "china mobile"
+ isp name "china mobile" set filename china-mobile.csv
+ isp name "china unicom"
+ isp name "china unicom" set filename china-unicom.csv
+ isp name "china telecom"
+ isp name "china telecom" set filename china-telecom.csv
+ isp name "china educationnet"
+ isp name "china educationnet" set filename china-educationnet.csv
+#
+ snmp-agent session history-max-number enable
+ snmp-agent session trap threshold 1600000
+ snmp-agent session-rate trap threshold 64000
+#
+ web-manager security version tlsv1 tlsv1.1
+ web-manager security enable
+#
+firewall dataplane to manageplane application-apperceive default-action drop
+#
+ update schedule ips-sdb daily 04:26
+ update schedule av-sdb daily 04:26
+ update schedule sa-sdb daily 04:26
+ update schedule cnc daily 04:26
+#
+ip vpn-instance default
+ ipv4-family
+#
+ time-range worktime
+  period-range 08:00:00 to 18:00:00 working-day
+#
+aaa
+ authentication-scheme default
+ authentication-scheme admin_local
+ authentication-scheme admin_radius_local
+ authentication-scheme admin_hwtacacs_local
+ authentication-scheme admin_ad_local
+ authentication-scheme admin_ldap_local
+ authentication-scheme admin_radius
+ authentication-scheme admin_hwtacacs
+ authentication-scheme admin_ad
+ authentication-scheme admin_ldap
+ authorization-scheme default
+ accounting-scheme default
+ domain default
+  service-type l2tp ike
+  reference user current-domain
+ manager-user password-modify enable
+ manager-user audit-admin
+  password cipher @%@%wFpR6#MRT1"egvP/@;R7[.2-$mp`2E[Z3&sM6LND_.:/.20[@%@%
+  service-type web terminal
+  level 15
+
+ manager-user api-admin
+  password cipher @%@%cnrC@:Yd#STb{d:Qm(_+]Q`4YkFgJCt)n&FtbJYE%1o;Q`7]@%@%
+  service-type api
+  level 15
+
+ manager-user admin
+  password cipher @%@%RqS9%jPme(=~B>N'q<F-QjAt,%-6KExumX]iVOO,O-}NjAwQ@%@%
+  service-type ssh
+  level 15
+
+ role system-admin
+  dashboard read-write
+  monitor read-write
+  policy read-write
+  object read-write
+  network read-write
+  system read-write
+ role device-admin
+  dashboard read-only
+  monitor read-only log log-traffic log-threat log-policy-matching report traffic-map threat-map session statistic statistic-acl
+  monitor none diagnose
+  policy read-write
+  object read-write
+  network read-write
+  system read-write high-reliability
+  system none configuration vsys license update-center mail-send feedback
+ role device-admin(monitor)
+  dashboard read-only
+  monitor read-only log log-traffic log-threat log-policy-matching report traffic-map threat-map session statistic statistic-acl
+  monitor none diagnose
+  policy read-only
+  object read-only
+  network read-only
+  system read-only high-reliability
+  system none configuration vsys license update-center mail-send feedback
+ role audit-admin
+  dashboard read-only
+  monitor read-write log-audit
+  monitor read-only log log-traffic log-threat log-syslog log-policy-matching report traffic-map threat-map
+  monitor none session statistic statistic-acl diagnose
+  policy none
+  object none
+  network none
+  system none
+ bind manager-user audit-admin role audit-admin
 #
 interface Eth-Trunk23
  description HRP LINK to 99-fw02
@@ -326,6 +435,12 @@ interface GigabitEthernet1/0/0.10
  vlan-type dot1q 10
  description Gateway_for_VRF_CORE_1_VLAN10
  ip address 10.99.1.0 255.255.255.254
+ service-manage ping permit
+#
+interface GigabitEthernet1/0/0.14
+ vlan-type dot1q 14
+ description Gateway_for_VRF_14_VLAN14
+ ip address 10.99.14.0 255.255.255.254
  service-manage ping permit
 #
 interface GigabitEthernet1/0/0.20
@@ -377,6 +492,7 @@ firewall zone trust
  add interface GigabitEthernet1/0/0.10
  add interface GigabitEthernet1/0/0
  add interface GigabitEthernet1/0/0.40
+ add interface GigabitEthernet1/0/0.14
 #
 firewall zone untrust
  set priority 5
@@ -386,7 +502,9 @@ firewall zone dmz
  add interface GigabitEthernet1/0/1
  add interface GigabitEthernet1/0/0.30
  add interface GigabitEthernet1/0/0.20
-
+#
+l2tp-group default-lns
+#
 bgp 65098
  group blf01 external
  peer blf01 as-number 65099
@@ -399,6 +517,8 @@ bgp 65098
  peer 10.99.3.1 group blf01
  peer 10.99.4.1 as-number 65099
  peer 10.99.4.1 group blf01
+ peer 10.99.14.1 as-number 65099
+ peer 10.99.14.1 group blf01
  group blf02 external
  peer blf02 as-number 65099
  peer blf02 ebgp-max-hop 10
@@ -411,6 +531,8 @@ bgp 65098
  peer 10.99.3.2 group blf02
  peer 10.99.4.2 as-number 65099
  peer 10.99.4.2 group blf02
+ peer 10.99.14.2 as-number 65099
+ peer 10.99.14.2 group blf02
  #
  ipv4-family unicast
   undo synchronization
@@ -425,6 +547,8 @@ bgp 65098
   peer 10.99.3.1 group blf01
   peer 10.99.4.1 enable
   peer 10.99.4.1 group blf01
+  peer 10.99.14.1 enable
+  peer 10.99.14.1 group blf01
   peer blf02 enable
   peer 10.99.1.2 enable
   peer 10.99.1.2 group blf02
@@ -434,6 +558,8 @@ bgp 65098
   peer 10.99.3.2 group blf02
   peer 10.99.4.2 enable
   peer 10.99.4.2 group blf02
+  peer 10.99.14.2 enable
+  peer 10.99.14.2 group blf02
 #
 ip route-static 0.0.0.0 0.0.0.0 NULL0
 #
@@ -447,12 +573,23 @@ user-interface vty 0 4
  authentication-mode aaa
  protocol inbound ssh
 user-interface vty 16 20
-
+#
+sa
+#
+location
+#
+ multi-interface
+  mode proportion-of-weight
+#
+right-manager server-group
+#
+api
+#
 security-policy
  rule name Underlay
-  source-address 10.99.0.0 21
+  source-address 10.99.0.0 16
   source-address 10.99.241.0 24
-  destination-address 10.99.0.0 21
+  destination-address 10.99.0.0 16
   destination-address 10.99.241.0 24
   action permit
  rule name VRF_10_30
@@ -462,6 +599,18 @@ security-policy
   destination-address 192.168.1.1 32
   action permit
 #
+traffic-policy
+#
+policy-based-route
+#
+nat-policy
+#
+pcp-policy
+#
+dns-transparent-policy
+#
+return
+
 
  ```
  </details>
@@ -471,7 +620,17 @@ security-policy
 <summary>FW02 </summary>
 
 ```bash
+sysname 99-fw02
+#
+ undo l2tp sendaccm enable
+ l2tp domain suffix-separator @
+#
 router id 10.99.245.253
+#
+undo telnet server enable
+undo telnet ipv6 server enable
+#
+clock timezone UTC add 00:00:00
 #
  hrp enable
  hrp standby-device
@@ -480,9 +639,114 @@ router id 10.99.245.253
  hrp adjust bgp-cost enable 20
  hrp track interface Eth-Trunk23
 #
+ firewall packet-filter basic-protocol enable
+#
+ firewall detect ftp
+#
+ firewall defend action discard
+#
+ log type traffic enable
+ log type syslog enable
+ log type policy enable
+#
+ undo dataflow enable
+#
+ isp name "china mobile"
+ isp name "china mobile" set filename china-mobile.csv
+ isp name "china unicom"
+ isp name "china unicom" set filename china-unicom.csv
+ isp name "china telecom"
+ isp name "china telecom" set filename china-telecom.csv
+ isp name "china educationnet"
+ isp name "china educationnet" set filename china-educationnet.csv
+#
+ snmp-agent session history-max-number enable
+ snmp-agent session trap threshold 1600000
+ snmp-agent session-rate trap threshold 64000
+#
+ web-manager security version tlsv1 tlsv1.1
+ web-manager security enable
+#
+firewall dataplane to manageplane application-apperceive default-action drop
+#
+ update schedule ips-sdb daily 00:15
+ update schedule av-sdb daily 00:15
+ update schedule sa-sdb daily 00:15
+ update schedule cnc daily 00:15
+#
 ip vpn-instance default
  ipv4-family
+#
+ time-range worktime
+  period-range 08:00:00 to 18:00:00 working-day
+#
+aaa
+ authentication-scheme default
+ authentication-scheme admin_local
+ authentication-scheme admin_radius_local
+ authentication-scheme admin_hwtacacs_local
+ authentication-scheme admin_ad_local
+ authentication-scheme admin_ldap_local
+ authentication-scheme admin_radius
+ authentication-scheme admin_hwtacacs
+ authentication-scheme admin_ad
+ authentication-scheme admin_ldap
+ authorization-scheme default
+ accounting-scheme default
+ domain default
+  service-type l2tp ike
+  reference user current-domain
+ manager-user password-modify enable
+ manager-user audit-admin
+  password cipher @%@%S;eN$Qpa>KYT7wGUp)v=Q#Pf2gKz'W2[8U_XmaTR/(K.#PiQ@%@%
+  service-type web terminal
+  level 15
 
+ manager-user api-admin
+  password cipher @%@%`-QYNJEv[Dvnwk4Pq>q(SPqi^9<BUWY8[FB'H]G1%6/VPqlS@%@%
+  service-type api
+  level 15
+
+ manager-user admin
+  password cipher @%@%6X1EXVD1TU(N)$B,}@y<o1Oft4EVWeI1X-mo(x>:8R2B1Oio@%@%
+  service-type ssh
+  level 15
+
+ role system-admin
+  dashboard read-write
+  monitor read-write
+  policy read-write
+  object read-write
+  network read-write
+  system read-write
+ role device-admin
+  dashboard read-only
+  monitor read-only log log-traffic log-threat log-policy-matching report traffic-map threat-map session statistic statistic-acl
+  monitor none diagnose
+  policy read-write
+  object read-write
+  network read-write
+  system read-write high-reliability
+  system none configuration vsys license update-center mail-send feedback
+ role device-admin(monitor)
+  dashboard read-only
+  monitor read-only log log-traffic log-threat log-policy-matching report traffic-map threat-map session statistic statistic-acl
+  monitor none diagnose
+  policy read-only
+  object read-only
+  network read-only
+  system read-only high-reliability
+  system none configuration vsys license update-center mail-send feedback
+ role audit-admin
+  dashboard read-only
+  monitor read-write log-audit
+  monitor read-only log log-traffic log-threat log-syslog log-policy-matching report traffic-map threat-map
+  monitor none session statistic statistic-acl diagnose
+  policy none
+  object none
+  network none
+  system none
+ bind manager-user audit-admin role audit-admin
 #
 interface Eth-Trunk23
  description HRP LINK to 99-fw01
@@ -517,6 +781,12 @@ interface GigabitEthernet1/0/0.10
  vlan-type dot1q 10
  description Gateway_for_VRF_CORE_1_VLAN10
  ip address 10.99.1.3 255.255.255.254
+ service-manage ping permit
+#
+interface GigabitEthernet1/0/0.14
+ vlan-type dot1q 14
+ description Gateway_for_VRF_14_VLAN14
+ ip address 10.99.14.3 255.255.255.254
  service-manage ping permit
 #
 interface GigabitEthernet1/0/0.20
@@ -568,6 +838,7 @@ firewall zone trust
  add interface GigabitEthernet1/0/0.10
  add interface GigabitEthernet1/0/0
  add interface GigabitEthernet1/0/0.40
+ add interface GigabitEthernet1/0/0.14
 #
 firewall zone untrust
  set priority 5
@@ -593,6 +864,8 @@ bgp 65098
  peer 10.99.3.1 group blf01
  peer 10.99.4.1 as-number 65099
  peer 10.99.4.1 group blf01
+ peer 10.99.14.1 as-number 65099
+ peer 10.99.14.1 group blf01
  group blf02 external
  peer blf02 as-number 65099
  peer blf02 timer keepalive 3 hold 9
@@ -604,6 +877,8 @@ bgp 65098
  peer 10.99.3.2 group blf02
  peer 10.99.4.2 as-number 65099
  peer 10.99.4.2 group blf02
+ peer 10.99.14.2 as-number 65099
+ peer 10.99.14.2 group blf02
  #
  ipv4-family unicast
   undo synchronization
@@ -618,6 +893,8 @@ bgp 65098
   peer 10.99.3.1 group blf01
   peer 10.99.4.1 enable
   peer 10.99.4.1 group blf01
+  peer 10.99.14.1 enable
+  peer 10.99.14.1 group blf01
   peer blf02 enable
   peer 10.99.1.2 enable
   peer 10.99.1.2 group blf02
@@ -627,15 +904,39 @@ bgp 65098
   peer 10.99.3.2 group blf02
   peer 10.99.4.2 enable
   peer 10.99.4.2 group blf02
+  peer 10.99.14.2 enable
+  peer 10.99.14.2 group blf02
 #
 ip route-static 0.0.0.0 0.0.0.0 NULL0
 #
+undo ssh server compatible-ssh1x enable
+stelnet server enable
+ssh authentication-type default password
+#
+user-interface con 0
+ authentication-mode aaa
+user-interface vty 0 4
+ authentication-mode aaa
+ protocol inbound ssh
+user-interface vty 16 20
+#
+sa
+#
+location
+#
+ multi-interface
+  mode proportion-of-weight
+#
+right-manager server-group
+#
+api
+#
 security-policy
  rule name Underlay
-  source-address 10.99.0.0 21
+  source-address 10.99.0.0 16
   source-address 10.99.241.0 24
   source-address 10.99.242.0 24
-  destination-address 10.99.0.0 21
+  destination-address 10.99.0.0 16
   destination-address 10.99.241.0 24
   destination-address 10.99.242.0 24
   action permit
@@ -645,6 +946,19 @@ security-policy
   source-address 192.168.3.0 24
   destination-address 192.168.1.1 32
   action permit
+#
+traffic-policy
+#
+policy-based-route
+#
+nat-policy
+#
+pcp-policy
+#
+dns-transparent-policy
+#
+return
+
 
  ```
 </details>
@@ -655,17 +969,6 @@ security-policy
 <summary>99-blf1 </summary>
 
 ```bash
-! Command: show running-config
-! device: 99-blf1 (vEOS-lab, EOS-4.29.1F)
-!
-! boot system flash:/vEOS-lab.swi
-!
-no aaa root
-!
-transceiver qsfp default-mode 4x10G
-!
-service routing protocols model multi-agent
-!
 hostname 99-blf1
 !
 spanning-tree mode mstp
@@ -1110,6 +1413,7 @@ end
 
 
 
+
  ```
  </details>
 
@@ -1131,11 +1435,17 @@ vlan 10
 vlan 20
    name VLAN20
 !
+vlan 99
+!
 vlan 4094
    name MLAG-PEERLINK
    trunk group MLAG-PEERLINK
 !
 vrf instance MGMT
+!
+vrf instance VRF_13
+!
+vrf instance VRF_14
 !
 vrf instance VRF_CORE_1
 !
@@ -1148,7 +1458,7 @@ vrf instance VRF_CORE_4
 interface Port-Channel3
    description 99-esx1
    mtu 9100
-   switchport trunk allowed vlan 10,20
+   switchport trunk allowed vlan 10,20,99
    switchport mode trunk
    mlag 3
 !
@@ -1193,6 +1503,11 @@ interface Ethernet4.10
    vrf VRF_CORE_1
    ip address 10.99.1.2/31
 !
+interface Ethernet4.14
+   encapsulation dot1q vlan 14
+   vrf VRF_14
+   ip address 10.99.14.2/31
+!
 interface Ethernet4.20
    encapsulation dot1q vlan 20
    vrf VRF_CORE_2
@@ -1221,7 +1536,6 @@ interface Ethernet6
    mtu 9100
    no switchport
    ip address 10.88.242.1/31
-   no shutdown
 !
 interface Ethernet7
    description Po78 lf1
@@ -1231,6 +1545,10 @@ interface Ethernet8
    description Po78 lf1
    channel-group 78 mode active
 !
+interface Ethernet9
+!
+interface Ethernet10
+!
 interface Loopback0
    description Router-ID
    ip address 10.99.243.2/32
@@ -1238,7 +1556,8 @@ interface Loopback0
 interface Loopback1
    description VTEP-Source
    ip address 10.99.244.2/32
-
+   ip address 10.99.244.12/32 secondary
+!
 interface Loopback10
    description BGP-Router-ID-DCI
    ip address 10.88.243.2/32
@@ -1246,7 +1565,7 @@ interface Loopback10
 interface Loopback11
    description VTEP-Source-DCI
    ip address 10.88.244.2/32
-
+!
 interface Management1
    description MGMT
    vrf MGMT
@@ -1275,6 +1594,8 @@ interface Vxlan1
    vxlan vlan 10 vni 10010
    vxlan vlan 20 vni 10020
    vxlan vlan 99 vni 19999
+   vxlan vrf VRF_13 vni 19913
+   vxlan vrf VRF_14 vni 19914
    vxlan vrf VRF_CORE_1 vni 10001
    vxlan vrf VRF_CORE_2 vni 10002
    vxlan vrf VRF_CORE_3 vni 10003
@@ -1285,6 +1606,8 @@ ip virtual-router mac-address 00:00:00:00:00:01
 !
 ip routing
 ip routing vrf MGMT
+ip routing vrf VRF_13
+ip routing vrf VRF_14
 ip routing vrf VRF_CORE_1
 ip routing vrf VRF_CORE_2
 ip routing vrf VRF_CORE_3
@@ -1293,20 +1616,16 @@ ip routing vrf VRF_CORE_4
 ip prefix-list DEFAULT
    seq 10 permit 0.0.0.0/0
 !
-
-ip prefix-list PL_BLF_TO_SPINE seq 5 permit 10.99.243.2/32
-ip prefix-list PL_BLF_TO_SPINE seq 10 permit 10.99.244.2/32
-ip prefix-list PL_BLF_TO_SPINE seq 15 permit 10.88.243.2/32
-ip prefix-list PL_BLF_TO_SPINE seq 20 permit 10.88.244.2/32
-
-ip prefix-list PL_BLF_TO_DCI seq 5 permit 10.88.243.2/32
-ip prefix-list PL_BLF_TO_DCI seq 10 permit 10.88.244.2/32
-route-map RM_BLF_TO_SPINE permit 10
-   match ip address prefix-list PL_BLF_TO_SPINE
-
-route-map RM_BLF_TO_DCI permit 10
-   match ip address prefix-list PL_BLF_TO_DCI
-
+ip prefix-list PL_BLF_TO_DCI
+   seq 5 permit 10.88.243.2/32
+   seq 10 permit 10.88.244.2/32
+!
+ip prefix-list PL_BLF_TO_SPINE
+   seq 5 permit 10.99.243.2/32
+   seq 10 permit 10.99.244.2/32
+   seq 15 permit 10.88.243.2/32
+   seq 20 permit 10.88.244.2/32
+!
 mlag configuration
    domain-id 12
    local-interface Vlan4094
@@ -1320,11 +1639,27 @@ ip route vrf MGMT 0.0.0.0/0 10.99.245.254
 route-map DEFAULT permit 10
    match ip address prefix-list DEFAULT
 !
+route-map RM_BLF_TO_DCI permit 10
+   match ip address prefix-list PL_BLF_TO_DCI
+!
+route-map RM_BLF_TO_SPINE permit 10
+   match ip address prefix-list PL_BLF_TO_SPINE
+!
 router bgp 65099
    router-id 10.99.243.2
    no bgp default ipv4-unicast
    timers bgp 3 9
    maximum-paths 10 ecmp 10
+   neighbor DCI-EVPN peer group
+   neighbor DCI-EVPN remote-as 65999
+   neighbor DCI-EVPN update-source Loopback10
+   neighbor DCI-EVPN ebgp-multihop 20
+   neighbor DCI-EVPN send-community extended
+   neighbor DCI-UNDERLAY peer group
+   neighbor DCI-UNDERLAY remote-as 65999
+   neighbor DCI-UNDERLAY ebgp-multihop 10
+   neighbor DCI-UNDERLAY timers 3 9
+   neighbor DCI-UNDERLAY send-community
    neighbor SPINE-EVPN peer group
    neighbor SPINE-EVPN remote-as 65099
    neighbor SPINE-EVPN update-source Loopback0
@@ -1332,9 +1667,10 @@ router bgp 65099
    neighbor SPINE-EVPN send-community extended
    neighbor SPINE-UNDERLAY peer group
    neighbor SPINE-UNDERLAY remote-as 65099
-   neighbor SPINE-UNDERLAY bfd
    neighbor SPINE-UNDERLAY timers 3 9
    neighbor SPINE-UNDERLAY send-community
+   neighbor 10.88.242.0 peer group DCI-UNDERLAY
+   neighbor 10.88.243.44 peer group DCI-EVPN
    neighbor 10.99.241.3 peer group SPINE-UNDERLAY
    neighbor 10.99.242.3 peer group SPINE-UNDERLAY
    neighbor 10.99.243.11 peer group SPINE-EVPN
@@ -1342,39 +1678,74 @@ router bgp 65099
    neighbor 10.99.246.1 remote-as 65099
    neighbor 10.99.246.1 next-hop-self
    neighbor 10.99.246.1 send-community
-
-   neighbor DCI-EVPN peer group
-   neighbor DCI-EVPN remote-as 65999
-   neighbor DCI-EVPN update-source Loopback10
-   neighbor DCI-EVPN ebgp-multihop 2
-   neighbor DCI-EVPN send-community extended
-   neighbor DCI-UNDERLAY peer group
-   neighbor DCI-UNDERLAY remote-as 65999
-   neighbor DCI-UNDERLAY timers 3 9
-   neighbor DCI-UNDERLAY send-community
-   neighbor 10.88.242.0 peer group DCI-UNDERLAY
-   neighbor 10.88.243.44 peer group DCI-EVPN
-
    !
    vlan 10
       rd auto
       route-target both 65099:10010
       redistribute learned
    !
+   vlan 99
+      rd auto
+      route-target both 65099:19999
+      route-target import export evpn domain remote 65199:19999
+      route-target import export evpn domain remote 65999:19999
+      redistribute learned
+   !
    address-family evpn
-      neighbor SPINE-EVPN activate
       neighbor DCI-EVPN activate
+      neighbor DCI-EVPN default-route
+      neighbor DCI-EVPN domain remote
+      neighbor SPINE-EVPN activate
+      domain identifier 2:2
+      neighbor default next-hop-self received-evpn-routes route-type ip-prefix inter-domain
    !
    address-family ipv4
-      neighbor SPINE-UNDERLAY activate
-      neighbor 10.99.246.1 activate
-      network 10.99.243.2/32
-      network 10.99.244.2/32
-      neighbor SPINE-UNDERLAY route-map RM_BLF_TO_SPINE out
       neighbor DCI-UNDERLAY activate
-      neighbor DCI-UNDERLAY route-map RM_BLF_TO_DCI out
+      neighbor SPINE-UNDERLAY activate
+      neighbor SPINE-UNDERLAY route-map RM_BLF_TO_SPINE out
+      no neighbor 10.99.4.0 activate
+      no neighbor 10.99.4.3 activate
+      no neighbor 10.99.14.0 activate
+      no neighbor 10.99.14.3 activate
+      neighbor 10.99.246.1 activate
       network 10.88.243.2/32
       network 10.88.244.2/32
+      network 10.99.243.2/32
+      network 10.99.244.2/32
+      network 10.99.244.12/32
+   !
+   vrf VRF_13
+      rd 65099:19913
+      route-target import evpn 65199:19913
+      route-target export evpn 65199:19913
+      !
+      address-family ipv4
+         redistribute connected
+   !
+   vrf VRF_14
+      rd 65092:19914
+      route-target import evpn 65199:19914
+      route-target export evpn 65199:19914
+      router-id 10.99.14.2
+      timers bgp 60 180 min-hold-time 3
+      neighbor 10.99.14.0 remote-as 65098
+      neighbor 10.99.14.0 next-hop-self
+      neighbor 10.99.14.0 update-source Ethernet4.14
+      neighbor 10.99.14.0 ebgp-multihop 10
+      neighbor 10.99.14.0 route-map DEFAULT in
+      neighbor 10.99.14.3 remote-as 65098
+      neighbor 10.99.14.3 next-hop-self
+      neighbor 10.99.14.3 update-source Ethernet4.14
+      neighbor 10.99.14.3 ebgp-multihop 10
+      neighbor 10.99.14.3 route-map DEFAULT in
+      !
+      address-family ipv4
+         no neighbor 10.99.4.0 activate
+         no neighbor 10.99.4.3 activate
+         neighbor 10.99.14.0 activate
+         neighbor 10.99.14.3 activate
+         network 10.99.14.2/31
+         redistribute connected
    !
    vrf VRF_CORE_1
       rd 65099:1012
@@ -1460,6 +1831,9 @@ router bgp 65099
          network 10.99.4.2/31
          redistribute connected
 !
+end
+
+
 
  ```
 </details>
@@ -1470,6 +1844,10 @@ router bgp 65099
 <summary>99-Lf3 </summary>
 
 ```bash
+transceiver qsfp default-mode 4x10G
+!
+service routing protocols model multi-agent
+!
 hostname 99-lf3
 !
 spanning-tree mode mstp
@@ -1486,7 +1864,11 @@ vlan 30
 vlan 40
    name VLAN40
 !
+vlan 99
+!
 vrf instance MGMT
+!
+vrf instance VRF_13
 !
 vrf instance VRF_CORE_1
 !
@@ -1507,7 +1889,7 @@ interface Port-Channel3
    lacp system-id 0000.0000.3403
 !
 interface Port-Channel4
-   switchport trunk allowed vlan 40
+   switchport trunk allowed vlan 40,99
    switchport mode trunk
    !
    evpn ethernet-segment
@@ -1558,6 +1940,10 @@ interface Loopback1
    description VTEP-Source
    ip address 10.99.244.3/32
 !
+interface Loopback13
+   vrf VRF_13
+   ip address 192.168.134.3/32
+!
 interface Management1
    vrf MGMT
    ip address 10.99.245.3/24
@@ -1580,6 +1966,8 @@ interface Vxlan1
    vxlan udp-port 4789
    vxlan vlan 30 vni 10030
    vxlan vlan 40 vni 10040
+   vxlan vlan 99 vni 19999
+   vxlan vrf VRF_13 vni 19913
    vxlan vrf VRF_CORE_1 vni 10001
    vxlan vrf VRF_CORE_2 vni 10002
    vxlan vrf VRF_CORE_3 vni 10003
@@ -1590,6 +1978,7 @@ ip virtual-router mac-address 00:00:00:00:00:01
 !
 ip routing
 ip routing vrf MGMT
+ip routing vrf VRF_13
 ip routing vrf VRF_CORE_1
 ip routing vrf VRF_CORE_2
 ip routing vrf VRF_CORE_3
@@ -1609,7 +1998,6 @@ router bgp 65099
    neighbor SPINE-EVPN send-community extended
    neighbor SPINE-UNDERLAY peer group
    neighbor SPINE-UNDERLAY remote-as 65099
-   neighbor SPINE-UNDERLAY bfd
    neighbor SPINE-UNDERLAY timers 3 9
    neighbor SPINE-UNDERLAY send-community
    neighbor 10.99.241.5 peer group SPINE-UNDERLAY
@@ -1627,6 +2015,11 @@ router bgp 65099
       route-target both 65099:10040
       redistribute learned
    !
+   vlan 99
+      rd auto
+      route-target both 65099:19999
+      redistribute learned
+   !
    address-family evpn
       neighbor SPINE-EVPN activate
    !
@@ -1634,6 +2027,16 @@ router bgp 65099
       neighbor SPINE-UNDERLAY activate
       network 10.99.243.3/32
       network 10.99.244.3/32
+   !
+   vrf VRF_13
+      rd 65881:19913
+      route-target import evpn 65099:103
+      route-target import evpn 65199:19913
+      route-target export evpn 65099:103
+      route-target export evpn 65199:19913
+      !
+      address-family ipv4
+         redistribute connected
    !
    vrf VRF_CORE_1
       rd 65099:1013
@@ -1667,6 +2070,8 @@ router bgp 65099
       address-family ipv4
          redistribute connected
 !
+end
+
 
  ```
 </details>
@@ -1677,8 +2082,12 @@ router bgp 65099
 <summary>99-Lf4 </summary>
 
 ```bash
-
-
+no aaa root
+!
+transceiver qsfp default-mode 4x10G
+!
+service routing protocols model multi-agent
+!
 hostname 99-lf4
 !
 spanning-tree mode mstp
@@ -1695,7 +2104,11 @@ vlan 30
 vlan 40
    name vlan40
 !
+vlan 99
+!
 vrf instance MGMT
+!
+vrf instance VRF_13
 !
 vrf instance VRF_CORE_1
 !
@@ -1716,7 +2129,7 @@ interface Port-Channel3
    lacp system-id 0000.0000.3403
 !
 interface Port-Channel4
-   switchport trunk allowed vlan 40
+   switchport trunk allowed vlan 40,99
    switchport mode trunk
    !
    evpn ethernet-segment
@@ -1767,6 +2180,10 @@ interface Loopback1
    description VTEP-Source
    ip address 10.99.244.4/32
 !
+interface Loopback13
+   vrf VRF_13
+   ip address 192.168.134.4/32
+!
 interface Management1
    vrf MGMT
    ip address 10.99.245.4/24
@@ -1789,6 +2206,8 @@ interface Vxlan1
    vxlan udp-port 4789
    vxlan vlan 30 vni 10030
    vxlan vlan 40 vni 10040
+   vxlan vlan 99 vni 19999
+   vxlan vrf VRF_13 vni 19913
    vxlan vrf VRF_CORE_1 vni 10001
    vxlan vrf VRF_CORE_2 vni 10002
    vxlan vrf VRF_CORE_3 vni 10003
@@ -1799,6 +2218,7 @@ ip virtual-router mac-address 00:00:00:00:00:01
 !
 ip routing
 ip routing vrf MGMT
+ip routing vrf VRF_13
 ip routing vrf VRF_CORE_1
 ip routing vrf VRF_CORE_2
 ip routing vrf VRF_CORE_3
@@ -1835,6 +2255,11 @@ router bgp 65099
       route-target both 65099:10040
       redistribute learned
    !
+   vlan 99
+      rd auto
+      route-target both 65099:19999
+      redistribute learned
+   !
    address-family evpn
       neighbor SPINE-EVPN activate
    !
@@ -1842,6 +2267,14 @@ router bgp 65099
       neighbor SPINE-UNDERLAY activate
       network 10.99.243.4/32
       network 10.99.244.4/32
+   !
+   vrf VRF_13
+      rd 65099:19913
+      route-target import evpn 65199:19913
+      route-target export evpn 65199:19913
+      !
+      address-family ipv4
+         redistribute connected
    !
    vrf VRF_CORE_1
       rd 65099:1014
@@ -1876,6 +2309,7 @@ router bgp 65099
          redistribute connected
 !
 end
+
 
  ```
 </details>
