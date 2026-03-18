@@ -9,7 +9,7 @@
 
 ---
 ## Презентация
-![ Презентация ](Multiotus_network_engineer/labs/Project 2 POD Mulisite/Multisite EVPN.pptx)
+![ Презентация ](Multisite_EVPN.pptx)
 
 ## Топология сети
 ![Схема Сети ](fabric_scheme.jpg)
