@@ -3895,11 +3895,6 @@ rtt min/avg/max/mdev = 30.853/41.837/50.245/7.316 ms, pipe 5, ipg/ewma 10.964/45
 | 199-bgw1    | 192.168.133.3/32  |
 
 ```
-199-esx1#ping vrf VRF_13 192.168.13.254
-PING 192.168.13.254 (192.168.13.254) 72(100) bytes of data.
-
---- 192.168.13.254 ping statistics ---
-5 packets transmitted, 0 received, 100% packet loss, time 159ms
 
 199-esx1#
 199-esx1#ping vrf VRF_13 192.168.13.254
